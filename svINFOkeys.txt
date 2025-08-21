@@ -1,0 +1,31 @@
+KEY	LINE
+IMPRECISE	##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">
+NOVEL	##INFO=<ID=NOVEL,Number=0,Type=Flag,Description="Indicates a novel structural variation">
+END	##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">
+SVTYPE	##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+SVLEN	##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">
+CIPOS	##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">
+CIEND	##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">
+HOMLEN	##INFO=<ID=HOMLEN,Number=A,Type=Integer,Description="Length of base pair identical micro-homology at breakpoints">
+HOMSEQ	##INFO=<ID=HOMSEQ,Number=A,Type=String,Description="Sequence of base pair identical micro-homology at breakpoints">
+BKPTID	##INFO=<ID=BKPTID,Number=A,Type=String,Description="ID of the assembled alternate allele in the assembly file">
+MEINFO	##INFO=<ID=MEINFO,Number=.,Type=String,Description="Mobile element info of the form NAME,START,END,POLARITY">
+METRANS	##INFO=<ID=METRANS,Number=.,Type=String,Description="Mobile element transduction info of the form CHR,START,END,POLARITY">
+DGVID	##INFO=<ID=DGVID,Number=A,Type=String,Description="ID of this element in Database of Genomic Variation">
+DBVARID	##INFO=<ID=DBVARID,Number=A,Type=String,Description="ID of this element in DBVAR">
+DBRIPID	##INFO=<ID=DBRIPID,Number=A,Type=String,Description="ID of this element in DBRIP">
+MATEID	##INFO=<ID=MATEID,Number=A,Type=String,Description="ID of mate breakend">
+PARID	##INFO=<ID=PARID,Number=A,Type=String,Description="ID of partner breakend">
+EVENT	##INFO=<ID=EVENT,Number=A,Type=String,Description="ID of associated event">
+EVENTTYPE	##INFO=<ID=EVENTTYPE,Number=A,Type=String,Description="Type of associated event">
+CILEN	##INFO=<ID=CILEN,Number=.,Type=Integer,Description="Confidence interval for the SVLEN field">
+CN	##INFO=<ID=CN,Number=A,Type=Float,Description="Copy number of CNV/breakpoint">
+CICN	##INFO=<ID=CICN,Number=.,Type=Float,Description="Confidence interval around copy number">
+SVCLAIM	##INFO=<ID=SVCLAIM,Number=A,Type=String,Description="Claim made by the structural variant call. Valid values are D, J, DJ for abundance, adjacency and both respectively">##INFO=<ID=RN,Number=A,Type=Integer,Description="Total number of repeat sequences in this allele">
+RUS	##INFO=<ID=RUS,Number=.,Type=String,Description="Repeat unit sequence of the corresponding repeat sequence">
+RUL	##INFO=<ID=RUL,Number=.,Type=Integer,Description="Repeat unit length of the corresponding repeat sequence">
+RUC	##INFO=<ID=RUC,Number=.,Type=Float,Description="Repeat unit count of corresponding repeat sequence">
+RB	##INFO=<ID=RB,Number=.,Type=Integer,Description="Total number of bases in the corresponding repeat sequence">
+CIRUC	##INFO=<ID=CIRUC,Number=.,Type=Float,Description="Confidence interval around RUC">
+CIRB	##INFO=<ID=CIRB,Number=.,Type=Integer,Description="Confidence interval around RB">
+RUB	##INFO=<ID=RUB,Number=.,Type=Integer,Description="Number of bases in each individual repeat unit">
