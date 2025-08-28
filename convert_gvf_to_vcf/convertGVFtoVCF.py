@@ -552,6 +552,7 @@ def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, list_of
     for pragma in pragmas_to_add:
         if pragma not in unique_pragmas_to_add:
             unique_pragmas_to_add.append(pragma)
+
     #TODO: add the pragmas for the GVF non-essentials
     return unique_pragmas_to_add
 
