@@ -670,6 +670,14 @@ def format_vcf_datalines(list_of_vcf_objects):
     return formatted_vcf_datalines
 
 def main():
+    print("Running the GVF to VCF converter")
+    # step 1
+    parser = argparse.ArgumentParser()
+    parser.add_argument("gvf_input", help="GVF input file.")
+    parser.add_argument("vcf_output", help="VCF output file.")
+    args = parser.parse_args()
+    print("The provided input file is: ", args.gvf_input)
+    print("The provided output file is: ", args.vcf_output)
     # Dictionary for all possible VCF meta-information lines
     all_possible_ALT_lines = {}
     all_possible_INFO_lines = {}  # dictionary, ID => INFO meta-information line for that particular ID
@@ -722,12 +730,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print("Running the GVF to VCF converter")
-    # step 1
-    parser = argparse.ArgumentParser()
-    parser.add_argument("gvf_input", help="GVF input file.")
-    parser.add_argument("vcf_output", help="VCF output file.")
-    args = parser.parse_args()
-    print("The provided input file is: ", args.gvf_input)
-    print("The provided output file is: ", args.vcf_output)
     main()
