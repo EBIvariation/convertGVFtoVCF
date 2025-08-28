@@ -466,6 +466,7 @@ class VcfLine:
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
         self.format = "pending" #TODO: set this in convertgvfattributes
+
         # # each item in the list exclude_from_info has its own place in the VCF file, so not part of info
         # exclude_from_info = ["ID", # done above
         #                      "Variant_seq", # done above
@@ -510,19 +511,7 @@ class VcfLine:
             return "." # TODO: how shall we fill this in with this scenario?
 
     def __str__(self):
-        string_to_return = (self.chrom + "\t" +
-                            self.pos + "\t" +
-                            self.key + "\t" +
-                            self.qual + "\t" +
-                            self.filter + "\t" +
-                            self.info + "\t" +
-                            self.source + "\t" +
-                            self.phase + "\t" +
-                            self.end + "\t" +
-                            self.so_type + "\t" +
-                            self.sample_name + "\t" +
-                            self.format
-                            )
+        string_to_return = '\t'.join((self.chrom, self.pos, self.key, self.qual, self.filter, self.info, self.source, self.phase, self.end, self.so_type, self.sample_name, self.format))
         return string_to_return
 
 #step 9 using custom unstructured meta-information line = generate_custom_unstructured_metainfomation_line
