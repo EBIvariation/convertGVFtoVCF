@@ -509,7 +509,7 @@ class VcfLine:
         else:
             return "." # TODO: how shall we fill this in with this scenario?
 
-    def get_string(self):
+    def __str__(self):
         string_to_return = (self.chrom + "\t" +
                             self.pos + "\t" +
                             self.key + "\t" +
