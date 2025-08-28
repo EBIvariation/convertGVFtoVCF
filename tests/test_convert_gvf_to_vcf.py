@@ -13,8 +13,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.input_file = os.path.join(input_folder, "input", "zebrafish.gvf")
         self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'convert_gvf_to_vcf'))
         # the inputs below are INFO attribute files
-        self.dgva_input_file = os.path.join(self.input_folder_parent, "etc","dgvaINFOattributes.txt")
-        self.gvf_input_file = os.path.join(self.input_folder_parent, "etc","gvfINFOattributes.txt")
+        self.dgva_input_file = os.path.join(self.input_folder_parent, "etc","dgvaINFOattributes.tsv")
+        self.gvf_input_file = os.path.join(self.input_folder_parent, "etc","gvfINFOattributes.tsv")
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
 
     def test_read_in_gvf_file(self):

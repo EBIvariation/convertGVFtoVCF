@@ -42,7 +42,7 @@ def read_reserved_info_key(all_possible_INFO_lines):
     :param reservedinfokeysfile: File to a tab-delimited table of Reserved INFO keys in Table 1 of VCF specification
     :return: all_possible_INFO_lines
     """
-    reserved_info_keys_file = os.path.join(etc_folder, 'ReservedINFOkeys.txt')
+    reserved_info_keys_file = os.path.join(etc_folder, 'ReservedINFOkeys.tsv')
     with open(reserved_info_keys_file) as info_keys_file:
         next(info_keys_file)
         info_keys_content = info_keys_file.readlines()
@@ -63,7 +63,7 @@ def read_sv_info_key(all_possible_INFO_lines):
     :param svinfokeysfile: File to tab delimited table of INFO keys used in Structural Variants and their VCF header
     :return: all_possible_INFO_lines
     """
-    sv_info_keys_file = os.path.join(etc_folder, 'svINFOkeys.txt')
+    sv_info_keys_file = os.path.join(etc_folder, 'svINFOkeys.tsv')
     with open(sv_info_keys_file) as svinfokeys:
         next(svinfokeys)
         sv_info_keys_content = svinfokeys.readlines()
@@ -81,7 +81,7 @@ def read_reserved_format_key(all_possible_FORMAT_lines):
     :param reservedformatkeysfile: file that is a tab delimited table of reserved FORMAT keys in Table 2 of VCF specification
     :return:
     """
-    reserved_format_keys_file = os.path.join(etc_folder, "ReservedFORMATkeys.txt")
+    reserved_format_keys_file = os.path.join(etc_folder, "ReservedFORMATkeys.tsv")
     with open(reserved_format_keys_file) as format_keys_file:
         next(format_keys_file)
         format_keys_content = format_keys_file.readlines()
@@ -101,7 +101,7 @@ def read_sv_format_keys(all_possible_FORMAT_lines):
     :param svformatkeysfile: File to tab delimited table of FORMAT keys used in Structural Variants and their VCF header
     :return: all_possible_FORMAT_lines
     """
-    sv_format_keys_file = os.path.join(etc_folder, "svFORMATkeys.txt")
+    sv_format_keys_file = os.path.join(etc_folder, "svFORMATkeys.tsv")
     with open(sv_format_keys_file) as sv_format_keys:
         next(sv_format_keys)
         sv_format_keys_content = sv_format_keys.readlines()
@@ -113,13 +113,13 @@ def read_sv_format_keys(all_possible_FORMAT_lines):
     return all_possible_FORMAT_lines
 
 # for ALT
-def read_sv_alt_keys(all_possible_ALT_lines, svaltkeysfile="svALTkeys.txt"):
+def read_sv_alt_keys(all_possible_ALT_lines, svaltkeysfile="svALTkeys.tsv"):
     """ Reads in ALT keys for structural variants and return a list of all_possible_ALT_lines
 
     :param svaltkeysfile: File to tab delimited table of ALT keys used in Structural Variants and their VCF header
     :return: all_possible_ALT_lines
     """
-    sv_alt_keys_file = os.path.join(etc_folder, "svALTkeys.txt")
+    sv_alt_keys_file = os.path.join(etc_folder, "svALTkeys.tsv")
     with open(sv_alt_keys_file) as sv_alt_keys:
         next(sv_alt_keys)
         sv_alt_keys_content = sv_alt_keys.readlines()
@@ -265,8 +265,8 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_vals = {}
     catching_for_review = []
-    # created a rough guide to attributes_for_custom_structured_metainfomation in dgvaINFOattributes.txt = this probably should be refined at a later date
-    # TODO: edit dgvaINFOattributes.txt i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
+    # created a rough guide to attributes_for_custom_structured_metainfomation in dgvaINFOattributes.tsv = this probably should be refined at a later date
+    # TODO: edit dgvaINFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
     for attrib_key in gvf_attribute_dictionary:
         # if dgva specific key, create custom string otherwise do standard
         if attrib_key in dgva_attribute_dict:
@@ -695,8 +695,8 @@ def main():
 
 
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
-    dgva_attribute_dict = read_dgva_info_attributes(dgva_info_attributes_file="convert_gvf_to_vcf/etc/dgvaINFOattributes.txt") # needed to generate custom strings
-    gvf_attribute_dict = read_gvf_info_attributes(gvf_info_attributes_file="convert_gvf_to_vcf/etc/gvfINFOattributes.txt")
+    dgva_attribute_dict = read_dgva_info_attributes(dgva_info_attributes_file="convert_gvf_to_vcf/etc/dgvaINFOattributes.tsv") # needed to generate custom strings
+    gvf_attribute_dict = read_gvf_info_attributes(gvf_info_attributes_file="convert_gvf_to_vcf/etc/gvfINFOattributes.tsv")
     vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                       dgva_attribute_dict,
                                                                       gvf_attribute_dict,
