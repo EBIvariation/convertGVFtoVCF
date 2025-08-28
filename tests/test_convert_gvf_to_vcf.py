@@ -4,7 +4,7 @@ import unittest
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_metainfomation_line, read_in_gvf_file, \
     read_dgva_info_attributes, read_gvf_info_attributes, gvf_features_to_vcf_objects, format_vcf_datalines, \
     generate_vcf_metainformation, write_to_vcf_file
-from convert_gvf_to_vcf.convertGVFtoVCF import VcfDataObj, GvfFeatureline
+from convert_gvf_to_vcf.convertGVFtoVCF import VcfLine, GvfFeatureline
 
 
 class TestConvertGVFtoVCF(unittest.TestCase):
@@ -81,18 +81,18 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         all_possible_FILTER_lines = {}
         all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
 
-        v = VcfDataObj(line_object,
-                       dgva_attribute_dict,
-                       gvf_attribute_dict,
-                       lines_custom_structured,
-                       lines_standard_ALT,
-                       lines_standard_INFO,
-                       lines_standard_FILTER,
-                       lines_standard_FORMAT,
-                       all_possible_ALT_lines,
-                       all_possible_INFO_lines,
-                       all_possible_FILTER_lines,
-                       all_possible_FORMAT_lines)
+        v = VcfLine(line_object,
+                    dgva_attribute_dict,
+                    gvf_attribute_dict,
+                    lines_custom_structured,
+                    lines_standard_ALT,
+                    lines_standard_INFO,
+                    lines_standard_FILTER,
+                    lines_standard_FORMAT,
+                    all_possible_ALT_lines,
+                    all_possible_INFO_lines,
+                    all_possible_FILTER_lines,
+                    all_possible_FORMAT_lines)
         reference_allele = v.get_ref()
         assert reference_allele == "."
 

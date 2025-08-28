@@ -416,7 +416,7 @@ def read_in_gvf_file(gvf_input):
 
 #step 8
 #TODO: ID this can be a semi-colon separated list or a '.' (if no value = '.'; one value = value; more than one = value;value)
-class VcfDataObj:
+class VcfLine:
     def __init__(self, gvf_feature_line_object,
                  dgva_attribute_dict,
                  gvf_attribute_dict,
@@ -628,18 +628,18 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     # add the newly created vcf object to the vcf data line it belongs to
     # (1:many; key=chrom_pos; 1 key: many vcf objects)
     for gvf_featureline in gvf_lines_obj_list:
-        vcf_object = VcfDataObj(gvf_featureline,
-                                dgva_attribute_dict,
-                                gvf_attribute_dict,
-                                lines_custom_structured,
-                                lines_standard_ALT,
-                                lines_standard_INFO,
-                                lines_standard_FILTER,
-                                lines_standard_FORMAT,
-                                all_possible_ALT_lines,
-                                all_possible_INFO_lines,
-                                all_possible_FILTER_lines,
-                                all_possible_FORMAT_lines)
+        vcf_object = VcfLine(gvf_featureline,
+                             dgva_attribute_dict,
+                             gvf_attribute_dict,
+                             lines_custom_structured,
+                             lines_standard_ALT,
+                             lines_standard_INFO,
+                             lines_standard_FILTER,
+                             lines_standard_FORMAT,
+                             all_possible_ALT_lines,
+                             all_possible_INFO_lines,
+                             all_possible_FILTER_lines,
+                             all_possible_FORMAT_lines)
         list_of_vcf_objects.append(vcf_object)
         if vcf_object.key in vcf_data_lines:
             vcf_data_lines[vcf_object.key].append(vcf_object)
