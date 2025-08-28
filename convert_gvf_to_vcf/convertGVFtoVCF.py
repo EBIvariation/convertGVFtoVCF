@@ -127,13 +127,13 @@ def generate_all_standard_structured_metainformation_line(vcfkey, all_possible_A
         # generate all possible lines for the reserved info keys
         read_reserved_info_key(all_possible_INFO_lines, reservedinfokeysfile="convert_gvf_to_vcf/etc/ReservedINFOkeys.txt")
         read_sv_info_key(all_possible_INFO_lines, svinfokeysfile="convert_gvf_to_vcf/etc/svINFOkeys.txt")
-        return all_possible_INFO_lines
+        return all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines
     elif vcfkey=="FORMAT":
         # TABLE 2
         # FORMAT KEYS FOR STRUCTURAL VARIANTS
         read_reserved_format_key(all_possible_FORMAT_lines, reservedformatkeysfile="convert_gvf_to_vcf/etc/ReservedFORMATkeys.txt")
         read_sv_format_keys(all_possible_FORMAT_lines, svformatkeysfile="convert_gvf_to_vcf/etc/svFORMATkeys.txt")
-        return all_possible_FORMAT_lines
+        return all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines
     elif vcfkey=="FILTER":
         # MAY NOT BE NEEDED
         pass
@@ -141,7 +141,7 @@ def generate_all_standard_structured_metainformation_line(vcfkey, all_possible_A
         # note: svALTkey may be an incomplete list at the moment
         # no reserved alt keys
         read_sv_alt_keys(all_possible_ALT_lines, svaltkeysfile="convert_gvf_to_vcf/etc/svALTkeys.txt")
-        return all_possible_ALT_lines
+        return all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines
     else:
         print("Please provide a key: INFO, FORMAT,FILTER, ALT")
         return None
@@ -668,9 +668,9 @@ def main():
     all_possible_FILTER_lines = {}
     all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
 
-    generate_all_standard_structured_metainformation_line("INFO", all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines)
-    generate_all_standard_structured_metainformation_line("ALT", all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines)
-    generate_all_standard_structured_metainformation_line("FORMAT", all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines)
+    all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines = generate_all_standard_structured_metainformation_line("INFO", all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines)
+    all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines = generate_all_standard_structured_metainformation_line("ALT", all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines)
+    all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines = generate_all_standard_structured_metainformation_line("FORMAT", all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines)
     # custom meta-information lines for this VCF file
     lines_custom_structured = []
     lines_custom_unstructured = []
