@@ -1,5 +1,10 @@
 import argparse
+import os
 
+
+# setting up paths to useful directories
+convert_gvf_to_vcf_folder = os.path.dirname(__file__)
+etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
 # step 3
 def generate_custom_structured_metainfomation_line(lines_custom_structured,
@@ -31,16 +36,16 @@ def generate_custom_structured_metainfomation_line(lines_custom_structured,
 
 # extra functions for step 4
 # for INFO
-def read_reserved_info_key(all_possible_INFO_lines, reservedinfokeysfile="convert_gvf_to_vcf/etc/ReservedINFOkeys.txt"):
+def read_reserved_info_key(all_possible_INFO_lines):
     """ Reads in the reserved INFO keys and returns a list of all_possible_INFO_lines which can be used to populate the header
 
     :param reservedinfokeysfile: File to a tab-delimited table of Reserved INFO keys in Table 1 of VCF specification
     :return: all_possible_INFO_lines
     """
-
-    with open(reservedinfokeysfile) as infokeysfile:
-        next(infokeysfile)
-        info_keys_content = infokeysfile.readlines()
+    reserved_info_keys_file = os.path.join(etc_folder, 'ReservedINFOkeys.txt')
+    with open(reserved_info_keys_file) as info_keys_file:
+        next(info_keys_file)
+        info_keys_content = info_keys_file.readlines()
         for info in info_keys_content:
             info_tokens = info.rstrip().split("\t")
             keyid = info_tokens[0]
@@ -125,7 +130,7 @@ def generate_all_standard_structured_metainformation_line(vcfkey, all_possible_A
     #, vcfkey_id,vcf_number, vcf_type, vcf_description):
     if vcfkey=="INFO":
         # generate all possible lines for the reserved info keys
-        read_reserved_info_key(all_possible_INFO_lines, reservedinfokeysfile="convert_gvf_to_vcf/etc/ReservedINFOkeys.txt")
+        read_reserved_info_key(all_possible_INFO_lines)
         read_sv_info_key(all_possible_INFO_lines, svinfokeysfile="convert_gvf_to_vcf/etc/svINFOkeys.txt")
         return all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines
     elif vcfkey=="FORMAT":
