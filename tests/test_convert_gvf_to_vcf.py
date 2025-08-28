@@ -43,11 +43,20 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_INFO = []
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
+        # Dictionary for all possible VCF meta-information lines
+        all_possible_ALT_lines = {}
         all_possible_INFO_lines = {}  # dictionary, ID => INFO meta-information line for that particular ID
+        all_possible_FILTER_lines = {}
+        all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, dgva_attribute_dict,
                                                                           gvf_attribute_dict, lines_custom_structured,
                                                                           lines_standard_ALT, lines_standard_INFO,
-                                                                          lines_standard_FILTER, lines_standard_FORMAT)
+                                                                          lines_standard_FILTER, lines_standard_FORMAT,
+                                                                          all_possible_ALT_lines,
+                                                                          all_possible_INFO_lines,
+                                                                          all_possible_FILTER_lines,
+                                                                          all_possible_FORMAT_lines
+                                                                          )
         assert len(vcf_data_lines) > 1
         assert len(list_of_vcf_objects) > 1
 
@@ -66,8 +75,24 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_INFO = []
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
+        # Dictionary for all possible VCF meta-information lines
+        all_possible_ALT_lines = {}
         all_possible_INFO_lines = {}  # dictionary, ID => INFO meta-information line for that particular ID
-        v = VcfDataObj(line_object, dgva_attribute_dict, gvf_attribute_dict, lines_custom_structured, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
+        all_possible_FILTER_lines = {}
+        all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
+
+        v = VcfDataObj(line_object,
+                       dgva_attribute_dict,
+                       gvf_attribute_dict,
+                       lines_custom_structured,
+                       lines_standard_ALT,
+                       lines_standard_INFO,
+                       lines_standard_FILTER,
+                       lines_standard_FORMAT,
+                       all_possible_ALT_lines,
+                       all_possible_INFO_lines,
+                       all_possible_FILTER_lines,
+                       all_possible_FORMAT_lines)
         reference_allele = v.get_ref()
         assert reference_allele == "."
 
@@ -83,8 +108,24 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_INFO = []
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
+        # Dictionary for all possible VCF meta-information lines
+        all_possible_ALT_lines = {}
         all_possible_INFO_lines = {}  # dictionary, ID => INFO meta-information line for that particular ID
-        vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, dgva_attribute_dict, gvf_attribute_dict, lines_custom_structured, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
+        all_possible_FILTER_lines = {}
+        all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
+        vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
+                                                                          dgva_attribute_dict,
+                                                                          gvf_attribute_dict,
+                                                                          lines_custom_structured,
+                                                                          lines_standard_ALT,
+                                                                          lines_standard_INFO,
+                                                                          lines_standard_FILTER,
+                                                                          lines_standard_FORMAT,
+                                                                          all_possible_ALT_lines,
+                                                                          all_possible_INFO_lines,
+                                                                          all_possible_FILTER_lines,
+                                                                          all_possible_FORMAT_lines
+                                                                          )
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects)
         assert len(formatted_vcf_datalines) > 1
 
@@ -100,8 +141,24 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_INFO = []
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
+        # Dictionary for all possible VCF meta-information lines
+        all_possible_ALT_lines = {}
         all_possible_INFO_lines = {}  # dictionary, ID => INFO meta-information line for that particular ID
-        vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, dgva_attribute_dict, gvf_attribute_dict, lines_custom_structured, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
+        all_possible_FILTER_lines = {}
+        all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
+        vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
+                                                                          dgva_attribute_dict,
+                                                                          gvf_attribute_dict,
+                                                                          lines_custom_structured,
+                                                                          lines_standard_ALT,
+                                                                          lines_standard_INFO,
+                                                                          lines_standard_FILTER,
+                                                                          lines_standard_FORMAT,
+                                                                          all_possible_ALT_lines,
+                                                                          all_possible_INFO_lines,
+                                                                          all_possible_FILTER_lines,
+                                                                          all_possible_FORMAT_lines
+                                                                          )
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects)
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
         unique_pragmas_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, list_of_vcf_objects)

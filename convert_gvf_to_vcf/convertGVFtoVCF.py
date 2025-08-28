@@ -1,14 +1,6 @@
 import argparse
 
 
-#TODO:remove these global dictionaries
-
-# Dictionary for all possible VCF meta-information lines
-all_possible_ALT_lines = {}
-all_possible_INFO_lines = {} # dictionary, ID => INFO meta-information line for that particular ID
-all_possible_FILTER_lines = {}
-all_possible_FORMAT_lines = {} # dictionary, ID => FORMAT meta-information line for that particular ID
-
 # step 3
 def generate_custom_structured_metainfomation_line(lines_custom_structured,
                                                    vcfkey,
@@ -39,7 +31,7 @@ def generate_custom_structured_metainfomation_line(lines_custom_structured,
 
 # extra functions for step 4
 # for INFO
-def read_reserved_info_key(reservedinfokeysfile="convert_gvf_to_vcf/etc/ReservedINFOkeys.txt"):
+def read_reserved_info_key(all_possible_INFO_lines, reservedinfokeysfile="convert_gvf_to_vcf/etc/ReservedINFOkeys.txt"):
     """ Reads in the reserved INFO keys and returns a list of all_possible_INFO_lines which can be used to populate the header
 
     :param reservedinfokeysfile: File to a tab-delimited table of Reserved INFO keys in Table 1 of VCF specification
@@ -60,7 +52,7 @@ def read_reserved_info_key(reservedinfokeysfile="convert_gvf_to_vcf/etc/Reserved
             all_possible_INFO_lines[keyid] = reserved_info_string
     return all_possible_INFO_lines
 
-def read_sv_info_key(svinfokeysfile="svINFOkeys.txt"):
+def read_sv_info_key(all_possible_INFO_lines, svinfokeysfile="svINFOkeys.txt"):
     """ Reads in INFO keys for structural variants and return a list of all_possible_INFO_lines
 
     :param svinfokeysfile: File to tab delimited table of INFO keys used in Structural Variants and their VCF header
@@ -113,7 +105,7 @@ def read_sv_format_keys(svformatkeysfile="svFORMATkeys.txt"):
     return all_possible_FORMAT_lines
 
 # for ALT
-def read_sv_alt_keys(svaltkeysfile="svALTkeys.txt"):
+def read_sv_alt_keys(all_possible_ALT_lines, svaltkeysfile="svALTkeys.txt"):
     """ Reads in ALT keys for structural variants and return a list of all_possible_ALT_lines
 
     :param svaltkeysfile: File to tab delimited table of ALT keys used in Structural Variants and their VCF header
@@ -129,12 +121,12 @@ def read_sv_alt_keys(svaltkeysfile="svALTkeys.txt"):
             all_possible_ALT_lines[svkeyid] = svaltline
         return all_possible_ALT_lines
 
-def generate_all_standard_structured_metainformation_line(vcfkey):
+def generate_all_standard_structured_metainformation_line(vcfkey, all_possible_ALT_lines, all_possible_INFO_lines):
     #, vcfkey_id,vcf_number, vcf_type, vcf_description):
     if vcfkey=="INFO":
         # generate all possible lines for the reserved info keys
-        read_reserved_info_key(reservedinfokeysfile="convert_gvf_to_vcf/etc/ReservedINFOkeys.txt")
-        read_sv_info_key(svinfokeysfile="convert_gvf_to_vcf/etc/svINFOkeys.txt")
+        read_reserved_info_key(all_possible_INFO_lines, reservedinfokeysfile="convert_gvf_to_vcf/etc/ReservedINFOkeys.txt")
+        read_sv_info_key(all_possible_INFO_lines, svinfokeysfile="convert_gvf_to_vcf/etc/svINFOkeys.txt")
         return all_possible_INFO_lines
     elif vcfkey=="FORMAT":
         # TABLE 2
@@ -148,14 +140,14 @@ def generate_all_standard_structured_metainformation_line(vcfkey):
     elif vcfkey=="ALT":
         # note: svALTkey may be an incomplete list at the moment
         # no reserved alt keys
-        read_sv_alt_keys(svaltkeysfile="convert_gvf_to_vcf/etc/svALTkeys.txt")
+        read_sv_alt_keys(all_possible_ALT_lines, svaltkeysfile="convert_gvf_to_vcf/etc/svALTkeys.txt")
         return all_possible_ALT_lines
     else:
         print("Please provide a key: INFO, FORMAT,FILTER, ALT")
         return None
 
 # step 4
-def generate_standard_structured_metainformation_line(vcfkey, vcfkeyid, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT):
+def generate_standard_structured_metainformation_line(vcfkey, vcfkeyid, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_ALT_lines):
     standard_structured_line = ""
     if vcfkey=="INFO":
         # print("# A start")
@@ -255,8 +247,11 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                                          lines_standard_ALT,
                                          lines_standard_INFO,
                                          lines_standard_FILTER,
-                                         lines_standard_FORMAT
-                                         ):
+                                         lines_standard_FORMAT,
+                                         all_possible_ALT_lines,
+                                         all_possible_INFO_lines,
+                                         all_possible_FILTER_lines,
+                                         all_possible_FORMAT_lines):
 
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_vals = {}
@@ -274,7 +269,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                                                            optional_extrafields=None)
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
         elif attrib_key == "allele_count":
-            generate_standard_structured_metainformation_line("INFO", "AC", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
+            generate_standard_structured_metainformation_line("INFO", "AC", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines)
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
             # print("# VCF start")
             # print([-1])
@@ -414,9 +409,31 @@ def read_in_gvf_file(gvf_input):
 #step 8
 #TODO: ID this can be a semi-colon separated list or a '.' (if no value = '.'; one value = value; more than one = value;value)
 class VcfDataObj:
-    def __init__(self, gvf_feature_line_object, dgva_attribute_dict, gvf_attribute_dict, lines_custom_structured, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT):
+    def __init__(self, gvf_feature_line_object,
+                 dgva_attribute_dict,
+                 gvf_attribute_dict,
+                 lines_custom_structured,
+                 lines_standard_ALT,
+                 lines_standard_INFO,
+                 lines_standard_FILTER,
+                 lines_standard_FORMAT,
+                 all_possible_ALT_lines,
+                 all_possible_INFO_lines,
+                 all_possible_FILTER_lines,
+                 all_possible_FORMAT_lines):
         # ATTRIBUTES
-        self.vcf_value = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, dgva_attribute_dict, gvf_attribute_dict, lines_custom_structured, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
+        self.vcf_value = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes,
+                                                              dgva_attribute_dict,
+                                                              gvf_attribute_dict,
+                                                              lines_custom_structured,
+                                                              lines_standard_ALT,
+                                                              lines_standard_INFO,
+                                                              lines_standard_FILTER,
+                                                              lines_standard_FORMAT,
+                                                              all_possible_ALT_lines,
+                                                              all_possible_INFO_lines,
+                                                              all_possible_FILTER_lines,
+                                                              all_possible_FORMAT_lines)
 
         # DATALINE
         self.chrom = gvf_feature_line_object.seqid
@@ -569,7 +586,18 @@ def generate_vcf_header_line(samples):
     vcf_header = '\t'.join(vcf_header_fields)
     return vcf_header
 
-def gvf_features_to_vcf_objects(gvf_lines_obj_list, dgva_attribute_dict, gvf_attribute_dict, lines_custom_structured, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT):
+def gvf_features_to_vcf_objects(gvf_lines_obj_list,
+                                dgva_attribute_dict,
+                                gvf_attribute_dict,
+                                lines_custom_structured,
+                                lines_standard_ALT,
+                                lines_standard_INFO,
+                                lines_standard_FILTER,
+                                lines_standard_FORMAT,
+                                all_possible_ALT_lines,
+                                all_possible_INFO_lines,
+                                all_possible_FILTER_lines,
+                                all_possible_FORMAT_lines):
     """ Creates VCF objects from GVF feature lines and stores the VCF objects.
     :param lines_custom_structured: list to store custom structured metainformation lines
     :param gvf_lines_obj_list: list of GVF feature line objects
@@ -584,7 +612,18 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list, dgva_attribute_dict, gvf_att
     # add the newly created vcf object to the vcf data line it belongs to
     # (1:many; key=chrom_pos; 1 key: many vcf objects)
     for gvf_featureline in gvf_lines_obj_list:
-        vcf_object = VcfDataObj(gvf_featureline, dgva_attribute_dict, gvf_attribute_dict, lines_custom_structured, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
+        vcf_object = VcfDataObj(gvf_featureline,
+                                dgva_attribute_dict,
+                                gvf_attribute_dict,
+                                lines_custom_structured,
+                                lines_standard_ALT,
+                                lines_standard_INFO,
+                                lines_standard_FILTER,
+                                lines_standard_FORMAT,
+                                all_possible_ALT_lines,
+                                all_possible_INFO_lines,
+                                all_possible_FILTER_lines,
+                                all_possible_FORMAT_lines)
         list_of_vcf_objects.append(vcf_object)
         if vcf_object.key in vcf_data_lines:
             vcf_data_lines[vcf_object.key].append(vcf_object)
@@ -623,9 +662,15 @@ def format_vcf_datalines(list_of_vcf_objects):
     return formatted_vcf_datalines
 
 def main():
-    generate_all_standard_structured_metainformation_line("INFO")
-    generate_all_standard_structured_metainformation_line("ALT")
-    generate_all_standard_structured_metainformation_line("FORMAT")
+    # Dictionary for all possible VCF meta-information lines
+    all_possible_ALT_lines = {}
+    all_possible_INFO_lines = {}  # dictionary, ID => INFO meta-information line for that particular ID
+    all_possible_FILTER_lines = {}
+    all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
+
+    generate_all_standard_structured_metainformation_line("INFO", all_possible_ALT_lines, all_possible_INFO_lines)
+    generate_all_standard_structured_metainformation_line("ALT", all_possible_ALT_lines, all_possible_INFO_lines)
+    generate_all_standard_structured_metainformation_line("FORMAT", all_possible_ALT_lines, all_possible_INFO_lines)
     # custom meta-information lines for this VCF file
     lines_custom_structured = []
     lines_custom_unstructured = []
@@ -634,16 +679,23 @@ def main():
     lines_standard_INFO = []
     lines_standard_FILTER = []
     lines_standard_FORMAT = []
-    # Dictionary for all possible VCF meta-information lines
-    all_possible_ALT_lines = {}
-    all_possible_INFO_lines = {}  # dictionary, ID => INFO meta-information line for that particular ID
-    all_possible_FILTER_lines = {}
-    all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
+
 
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
     dgva_attribute_dict = read_dgva_info_attributes(dgva_info_attributes_file="convert_gvf_to_vcf/etc/dgvaINFOattributes.txt") # needed to generate custom strings
     gvf_attribute_dict = read_gvf_info_attributes(gvf_info_attributes_file="convert_gvf_to_vcf/etc/gvfINFOattributes.txt")
-    vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, dgva_attribute_dict, gvf_attribute_dict, lines_custom_structured, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
+    vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
+                                                                      dgva_attribute_dict,
+                                                                      gvf_attribute_dict,
+                                                                      lines_custom_structured,
+                                                                      lines_standard_ALT,
+                                                                      lines_standard_INFO,
+                                                                      lines_standard_FILTER,
+                                                                      lines_standard_FORMAT,
+                                                                      all_possible_ALT_lines,
+                                                                      all_possible_INFO_lines,
+                                                                      all_possible_FILTER_lines,
+                                                                      all_possible_FORMAT_lines)
 
     # 10c
     print("Writing to the following VCF output: ", args.vcf_output)
