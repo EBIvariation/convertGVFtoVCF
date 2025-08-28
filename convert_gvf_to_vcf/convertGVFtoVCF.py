@@ -392,14 +392,13 @@ def read_in_gvf_file(gvf_input):
     gvf_lines_obj_list = []  # list of objects when reading in gvf files, one object represents a gvf line
     print("Reading in the following GVF input: " + gvf_input)
     with open(gvf_input) as gvf_file:
-        gvf_content = gvf_file.readlines()
-    for line in gvf_content:
-        if line.startswith("##"):
-            gvf_pragmas.append(line.rstrip())
-        elif line.startswith("#"):
-            gvf_non_essential.append(line.rstrip())
-        else:
-            features.append(line.rstrip())
+        for line in gvf_file:
+            if line.startswith("##"):
+                gvf_pragmas.append(line.rstrip())
+            elif line.startswith("#"):
+                gvf_non_essential.append(line.rstrip())
+            else:
+                features.append(line.rstrip())
     for feature in features:
         f_list = feature.split("\t")
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
