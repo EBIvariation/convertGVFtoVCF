@@ -69,7 +69,7 @@ def read_sv_info_key(all_possible_INFO_lines, svinfokeysfile="svINFOkeys.txt"):
     return all_possible_INFO_lines
 
 # for FORMAT
-def read_reserved_format_key(reservedformatkeysfile="ReservedFORMATkeys.txt"):
+def read_reserved_format_key(all_possible_FORMAT_lines, reservedformatkeysfile="ReservedFORMATkeys.txt"):
     """ Reads in the reserved FORMAT keys and returns a list of all_possible_FORMAT_lines which can be used to populate the header
 
     :param reservedformatkeysfile: file that is a tab delimited table of reserved FORMAT keys in Table 2 of VCF specification
@@ -88,7 +88,7 @@ def read_reserved_format_key(reservedformatkeysfile="ReservedFORMATkeys.txt"):
             all_possible_FORMAT_lines[keyid] = reserved_format_string
     return all_possible_FORMAT_lines
 
-def read_sv_format_keys(svformatkeysfile="svFORMATkeys.txt"):
+def read_sv_format_keys(all_possible_FORMAT_lines, svformatkeysfile="svFORMATkeys.txt"):
     """ Reads in FORMAT keys for strucural variants and returns a list of all_possible_FORMAT_lines
 
     :param svformatkeysfile: File to tab delimited table of FORMAT keys used in Structural Variants and their VCF header
@@ -121,7 +121,7 @@ def read_sv_alt_keys(all_possible_ALT_lines, svaltkeysfile="svALTkeys.txt"):
             all_possible_ALT_lines[svkeyid] = svaltline
         return all_possible_ALT_lines
 
-def generate_all_standard_structured_metainformation_line(vcfkey, all_possible_ALT_lines, all_possible_INFO_lines):
+def generate_all_standard_structured_metainformation_line(vcfkey, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines):
     #, vcfkey_id,vcf_number, vcf_type, vcf_description):
     if vcfkey=="INFO":
         # generate all possible lines for the reserved info keys
@@ -131,8 +131,8 @@ def generate_all_standard_structured_metainformation_line(vcfkey, all_possible_A
     elif vcfkey=="FORMAT":
         # TABLE 2
         # FORMAT KEYS FOR STRUCTURAL VARIANTS
-        read_reserved_format_key(reservedformatkeysfile="convert_gvf_to_vcf/etc/ReservedFORMATkeys.txt")
-        read_sv_format_keys(svformatkeysfile="convert_gvf_to_vcf/etc/svFORMATkeys.txt")
+        read_reserved_format_key(all_possible_FORMAT_lines, reservedformatkeysfile="convert_gvf_to_vcf/etc/ReservedFORMATkeys.txt")
+        read_sv_format_keys(all_possible_FORMAT_lines, svformatkeysfile="convert_gvf_to_vcf/etc/svFORMATkeys.txt")
         return all_possible_FORMAT_lines
     elif vcfkey=="FILTER":
         # MAY NOT BE NEEDED
@@ -668,9 +668,9 @@ def main():
     all_possible_FILTER_lines = {}
     all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
 
-    generate_all_standard_structured_metainformation_line("INFO", all_possible_ALT_lines, all_possible_INFO_lines)
-    generate_all_standard_structured_metainformation_line("ALT", all_possible_ALT_lines, all_possible_INFO_lines)
-    generate_all_standard_structured_metainformation_line("FORMAT", all_possible_ALT_lines, all_possible_INFO_lines)
+    generate_all_standard_structured_metainformation_line("INFO", all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines)
+    generate_all_standard_structured_metainformation_line("ALT", all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines)
+    generate_all_standard_structured_metainformation_line("FORMAT", all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FORMAT_lines)
     # custom meta-information lines for this VCF file
     lines_custom_structured = []
     lines_custom_unstructured = []
