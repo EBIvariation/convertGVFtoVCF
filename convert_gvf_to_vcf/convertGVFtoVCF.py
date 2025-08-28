@@ -75,15 +75,16 @@ def read_sv_info_key(all_possible_INFO_lines):
     return all_possible_INFO_lines
 
 # for FORMAT
-def read_reserved_format_key(all_possible_FORMAT_lines, reservedformatkeysfile="ReservedFORMATkeys.txt"):
+def read_reserved_format_key(all_possible_FORMAT_lines):
     """ Reads in the reserved FORMAT keys and returns a list of all_possible_FORMAT_lines which can be used to populate the header
 
     :param reservedformatkeysfile: file that is a tab delimited table of reserved FORMAT keys in Table 2 of VCF specification
     :return:
     """
-    with open(reservedformatkeysfile) as formatkeysfile:
-        next(formatkeysfile)
-        format_keys_content = formatkeysfile.readlines()
+    reserved_format_keys_file = os.path.join(etc_folder, "ReservedFORMATkeys.txt")
+    with open(reserved_format_keys_file) as format_keys_file:
+        next(format_keys_file)
+        format_keys_content = format_keys_file.readlines()
         for format_key_line in format_keys_content:
             format_tokens = format_key_line.rstrip().split("\t")
             keyid = format_tokens[0]
@@ -137,7 +138,7 @@ def generate_all_standard_structured_metainformation_line(vcfkey, all_possible_A
     elif vcfkey=="FORMAT":
         # TABLE 2
         # FORMAT KEYS FOR STRUCTURAL VARIANTS
-        read_reserved_format_key(all_possible_FORMAT_lines, reservedformatkeysfile="convert_gvf_to_vcf/etc/ReservedFORMATkeys.txt")
+        read_reserved_format_key(all_possible_FORMAT_lines)
         read_sv_format_keys(all_possible_FORMAT_lines, svformatkeysfile="convert_gvf_to_vcf/etc/svFORMATkeys.txt")
         return all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines
     elif vcfkey=="FILTER":
