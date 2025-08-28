@@ -119,9 +119,10 @@ def read_sv_alt_keys(all_possible_ALT_lines, svaltkeysfile="svALTkeys.txt"):
     :param svaltkeysfile: File to tab delimited table of ALT keys used in Structural Variants and their VCF header
     :return: all_possible_ALT_lines
     """
-    with open(svaltkeysfile) as svaltkeys:
-        next(svaltkeys)
-        sv_alt_keys_content = svaltkeys.readlines()
+    sv_alt_keys_file = os.path.join(etc_folder, "svALTkeys.txt")
+    with open(sv_alt_keys_file) as sv_alt_keys:
+        next(sv_alt_keys)
+        sv_alt_keys_content = sv_alt_keys.readlines()
         for svalt in sv_alt_keys_content:
             svalt_tokens = svalt.rstrip().split()
             svkeyid = svalt_tokens[0]
@@ -148,7 +149,7 @@ def generate_all_standard_structured_metainformation_line(vcfkey, all_possible_A
     elif vcfkey=="ALT":
         # note: svALTkey may be an incomplete list at the moment
         # no reserved alt keys
-        read_sv_alt_keys(all_possible_ALT_lines, svaltkeysfile="convert_gvf_to_vcf/etc/svALTkeys.txt")
+        read_sv_alt_keys(all_possible_ALT_lines)
         return all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines
     else:
         print("Please provide a key: INFO, FORMAT,FILTER, ALT")
