@@ -599,10 +599,18 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                 all_possible_FILTER_lines,
                                 all_possible_FORMAT_lines):
     """ Creates VCF objects from GVF feature lines and stores the VCF objects.
-    :param lines_custom_structured: list to store custom structured metainformation lines
     :param gvf_lines_obj_list: list of GVF feature line objects
-    :param dgva_attribute_dict: dictionary af DGVa specific INFO attributes
     :param gvf_attribute_dict: dictionary of GVF INFO attributes
+    :param dgva_attribute_dict: dictionary af DGVa specific INFO attributes
+    :param lines_custom_structured: list to store custom structured metainformation lines
+    :param lines_standard_ALT: ALT lines for this VCF file
+    :param lines_standard_INFO: INFO lines for this VCF file
+    :param lines_standard_FILTER: FILTER lines for this VCF file
+    :param lines_standard_FORMAT: FORMAT lines for this VCF file
+    :param all_possible_ALT_lines: dict of all possible ALT lines
+    :param all_possible_INFO_lines: dict of all possible INFO lines
+    :param all_possible_FILTER_lines: dict of all possible FILTER lines
+    :param all_possible_FORMAT_lines: dict of all possible FORMAT lines
     :return: vcf_data_lines, list_of_vcf_objects: dictionary of lists and a list of VCF objects
     """
     vcf_data_lines = {}  # DICTIONARY OF LISTS
