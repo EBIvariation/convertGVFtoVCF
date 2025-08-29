@@ -695,8 +695,10 @@ def main():
 
 
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
-    dgva_attribute_dict = read_dgva_info_attributes(dgva_info_attributes_file="convert_gvf_to_vcf/etc/dgvaINFOattributes.tsv") # needed to generate custom strings
-    gvf_attribute_dict = read_gvf_info_attributes(gvf_info_attributes_file="convert_gvf_to_vcf/etc/gvfINFOattributes.tsv")
+    dgva_info_attributes_file = os.path.join(etc_folder, 'dgvaINFOattributes.tsv')
+    gvf_info_attributes_file = os.path.join(etc_folder, 'gvfINFOattributes.tsv')
+    dgva_attribute_dict = read_dgva_info_attributes(dgva_info_attributes_file=dgva_info_attributes_file) # needed to generate custom strings
+    gvf_attribute_dict = read_gvf_info_attributes(gvf_info_attributes_file=gvf_info_attributes_file)
     vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                       dgva_attribute_dict,
                                                                       gvf_attribute_dict,
