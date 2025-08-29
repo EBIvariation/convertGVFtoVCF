@@ -693,7 +693,6 @@ def main():
     lines_standard_FILTER = []
     lines_standard_FORMAT = []
 
-
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
     dgva_info_attributes_file = os.path.join(etc_folder, 'dgvaINFOattributes.tsv')
     gvf_info_attributes_file = os.path.join(etc_folder, 'gvfINFOattributes.tsv')
