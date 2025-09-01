@@ -1,0 +1,9 @@
+KEY	LINE
+CN	##FORMAT=<ID=CN,Number=1,Type=Float,Description="Copy number">
+CICN	##FORMAT=<ID=CICN,Number=2,Type=Float,Description="Confidence interval around copy number">
+CNQ	##FORMAT=<ID=CNQ,Number=1,Type=Float,Description="Copy number genotype quality">
+CNL	##FORMAT=<ID=CNL,Number=G,Type=Float,Description="Copy number genotype likelihood">
+CNP	##FORMAT=<ID=CNP,Number=G,Type=Float,Description="Copy number posterior probabilities">
+NQ	##FORMAT=<ID=NQ,Number=1,Type=Integer,Description="Phred style probability score that the variant is novel">
+HAP	##FORMAT=<ID=HAP,Number=1,Type=Integer,Description="Unique haplotype identifier">
+AHAP	##FORMAT=<ID=AHAP,Number=1,Type=Integer,Description="Unique identifier of ancestral haplotype">
