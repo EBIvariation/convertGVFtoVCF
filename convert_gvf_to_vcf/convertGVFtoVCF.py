@@ -381,7 +381,7 @@ class GvfFeatureline:
         self.phase = phase
         self.attributes = attributes
 
-    def print_gvffeatureline(self):
+    def __str__(self):
         """
         Helper to print variables of the GVF feature line
         :return:line_to_print
