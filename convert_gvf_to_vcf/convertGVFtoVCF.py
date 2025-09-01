@@ -113,7 +113,7 @@ def read_sv_format_keys(all_possible_FORMAT_lines):
     return all_possible_FORMAT_lines
 
 # for ALT
-def read_sv_alt_keys(all_possible_ALT_lines, svaltkeysfile="svALTkeys.tsv"):
+def read_sv_alt_keys(all_possible_ALT_lines):
     """ Reads in ALT keys for structural variants and return a list of all_possible_ALT_lines
 
     :param svaltkeysfile: File to tab delimited table of ALT keys used in Structural Variants and their VCF header
