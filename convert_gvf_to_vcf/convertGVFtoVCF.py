@@ -20,7 +20,7 @@ def generate_custom_structured_metainfomation_line(lines_custom_structured,
     :param vcfkey_number: The number of values that can be included or special character: A or R or G or .
     :param vcfkey_type: Values are Integer, Float, Character, String
     :param vcfkey_description: Description
-    :param lines_custom_structured:
+    :param lines_custom_structured: a list of custom structured lines
     :param optional_extrafields: an optional field, dictionary of custom fields and their values
     :return: custom_structured_string
     """
@@ -170,28 +170,10 @@ def generate_all_possible_standard_structured_format_lines():
     return all_possible_FORMAT_lines
 
 # step 4
-def generate_standard_structured_metainformation_line(vcfkey, vcfkeyid, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines):
-    standard_structured_line = ""
-    if vcfkey=="INFO":
-        # print("# A start")
-        # print(all_possible_INFO_lines)
-        # print("# A end")
-        if vcfkeyid in all_possible_INFO_lines:
-            standard_structured_line = all_possible_INFO_lines[vcfkeyid]
-            lines_standard_INFO.append(standard_structured_line)
-            # print(standard_structured_line)
-    elif vcfkey=="FORMAT":
-        standard_structured_line = all_possible_FORMAT_lines[vcfkeyid]
-        lines_standard_FORMAT.append(standard_structured_line)
-    elif vcfkey=="FILTER":
-        standard_structured_line = all_possible_FILTER_lines[vcfkeyid]
-        lines_standard_FILTER.append(standard_structured_line)
-    elif vcfkey=="ALT":
-        standard_structured_line = all_possible_ALT_lines[vcfkeyid]
-        lines_standard_ALT.append(standard_structured_line)
-    else:
-        print("Please provide a key: INFO, FORMAT,FILTER, ALT")
-    return standard_structured_line
+def generate_standard_structured_metainformation_line(vcf_key_id, standard_lines_for_vcfkey, all_possible_lines):
+    standard_structured_line = all_possible_lines[vcf_key_id]
+    standard_lines_for_vcfkey.append(standard_structured_line)
+    return standard_lines_for_vcfkey
 
 # step 5
 def generate_custom_unstructured_metainfomation_line(vcf_unstructured_key, vcf_unstructured_value, lines_custom_unstructured):
@@ -286,27 +268,20 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                                                            optional_extrafields=None)
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
         elif attrib_key == "allele_count":
-            generate_standard_structured_metainformation_line("INFO", "AC", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
-            vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
-            # print("# VCF start")
-            # print([-1])
-            # print(vcf_vals["allele_count"])
-            # print("# VCF END")
+            #generate_standard_structured_metainformation_line("INFO", "AC", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
+            lines_standard_INFO = generate_standard_structured_metainformation_line("AC", lines_standard_INFO, all_possible_INFO_lines)
         elif attrib_key == "allele_frequency":
-            generate_standard_structured_metainformation_line("INFO", "AF", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
-            # print(attrib_key + "=" + str(gvf_attribute_dictionary[attrib_key])) # add this to the INFO
+            lines_standard_INFO = generate_standard_structured_metainformation_line("AF", lines_standard_INFO, all_possible_INFO_lines)
         elif attrib_key == "ciend":
-            generate_standard_structured_metainformation_line("INFO", "CIEND", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
-            # print(attrib_key + "=" + str(gvf_attribute_dictionary[attrib_key])) # add this to the INFO
+            lines_standard_INFO = generate_standard_structured_metainformation_line("CIEND", lines_standard_INFO, all_possible_INFO_lines)
         elif attrib_key == "copy_number":
-            generate_standard_structured_metainformation_line("INFO", "CN", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
-            # print(attrib_key + "=" + str(gvf_attribute_dictionary[attrib_key])) # add this to the INFO
+            lines_standard_INFO = generate_standard_structured_metainformation_line("CN", lines_standard_INFO, all_possible_INFO_lines)
         elif attrib_key == "insertion_length":
-            generate_standard_structured_metainformation_line("INFO", "SVLEN", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
-            # print(attrib_key + "=" + str(gvf_attribute_dictionary[attrib_key])) # add this to the INFO
+            lines_standard_INFO = generate_standard_structured_metainformation_line("SVLEN", lines_standard_INFO,
+                                                                                    all_possible_INFO_lines)
         elif attrib_key == "mate_id":
-            generate_standard_structured_metainformation_line("INFO","MATEID", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
-            # print(attrib_key + "=" + str(gvf_attribute_dictionary[attrib_key])) # add this to the INFO
+            lines_standard_INFO = generate_standard_structured_metainformation_line("MATEID", lines_standard_INFO,
+                                                                                    all_possible_INFO_lines)
         elif attrib_key == "sample_name":
             #sample_names.append(sample_names)
             pass

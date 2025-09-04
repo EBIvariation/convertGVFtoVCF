@@ -46,10 +46,11 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_ALT_lines = {}
-        all_possible_INFO_lines = {}  # dictionary, ID => INFO meta-information line for that particular ID
-        all_possible_FILTER_lines = {}
-        all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
+        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
+        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
+        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
+        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, dgva_attribute_dict,
                                                                           gvf_attribute_dict, lines_custom_structured,
                                                                           lines_standard_ALT, lines_standard_INFO,
@@ -78,10 +79,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_ALT_lines = {}
-        all_possible_INFO_lines = {}  # dictionary, ID => INFO meta-information line for that particular ID
-        all_possible_FILTER_lines = {}
-        all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
+        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
+        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
+        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
+        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
 
         v = VcfLine(line_object,
                     dgva_attribute_dict,
@@ -111,10 +112,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_ALT_lines = {}
-        all_possible_INFO_lines = {}  # dictionary, ID => INFO meta-information line for that particular ID
-        all_possible_FILTER_lines = {}
-        all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
+        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
+        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
+        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
+        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
@@ -144,10 +145,11 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_ALT_lines = {}
-        all_possible_INFO_lines = {}  # dictionary, ID => INFO meta-information line for that particular ID
-        all_possible_FILTER_lines = {}
-        all_possible_FORMAT_lines = {}  # dictionary, ID => FORMAT meta-information line for that particular ID
+        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
+        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
+        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
+        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
