@@ -171,6 +171,12 @@ def generate_all_possible_standard_structured_format_lines():
 
 # step 4
 def generate_standard_structured_metainformation_line(vcf_key_id, standard_lines_for_vcfkey, all_possible_lines):
+    """Generates a list of standard structured metainformation lines.
+    :param vcf_key_id: VCF tag key id
+    :param standard_lines_for_vcfkey: lines_standard_NAME i.e a list of standard lines for this VCF file regarding INFO or ALT or FILTER or FORMAT
+    :param all_possible_lines: all_possible_NAME_lines i.e list of all possible lines for INFO or ALT or FILTER or FORMAT
+    :return: standard_lines_for_vcfkey
+    """
     standard_structured_line = all_possible_lines[vcf_key_id]
     standard_lines_for_vcfkey.append(standard_structured_line)
     return standard_lines_for_vcfkey
