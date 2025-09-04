@@ -232,12 +232,6 @@ def generate_custom_unstructured_metainfomation_line(vcf_unstructured_key, vcf_u
     lines_custom_unstructured.append(custom_unstructured_string)
     return custom_unstructured_string
 
-# additional support for writing to file
-def write_to_vcf_file(vcf_output_file, string_to_add):
-    with open(vcf_output_file, "a") as vcf:
-        vcf.write(string_to_add)
-        vcf.write("\n")
-
 # additional support function for step 6
 def read_dgva_info_attributes(dgva_info_attributes_file):
     """ Read in the file containing DGVa specific INFO attributes.
@@ -752,16 +746,18 @@ def main():
     # 10c
     print("Writing to the following VCF output: ", args.vcf_output)
     print("Generating the VCF header and the meta-information lines")
-    unique_pragmas_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, list_of_vcf_objects)
-    for pragma in unique_pragmas_to_add:
-        write_to_vcf_file(args.vcf_output, pragma)
-    samples = ["samA"] # TODO: this is a placeholder, need to add a function to read gvf pragmas and collect the samples into a list
-    header_fields = generate_vcf_header_line(samples)
-    write_to_vcf_file(args.vcf_output, header_fields)
-    print("Generating the VCF datalines")
-    formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects)
-    for line in formatted_vcf_datalines:
-        write_to_vcf_file(args.vcf_output, line)
+    with open(args.vcf_output, "w") as vcf_output:
+        unique_pragmas_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, list_of_vcf_objects)
+        for pragma in unique_pragmas_to_add:
+            vcf_output.writelines("%s\n" % pragma)
+        samples = ["samA"] # TODO: this is a placeholder, need to add a function to read gvf pragmas and collect the samples into a list
+        header_fields = generate_vcf_header_line(samples)
+        vcf_output.writelines("%s\n" % header_fields)
+        print("Generating the VCF datalines")
+        formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects)
+        for line in formatted_vcf_datalines:
+            vcf_output.writelines("%s\n" % line)
+    vcf_output.close()
     print("GVF to VCF conversion complete")
 
 
