@@ -3,7 +3,9 @@ import unittest
 
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_metainfomation_line, read_in_gvf_file, \
     read_dgva_info_attributes, read_gvf_info_attributes, gvf_features_to_vcf_objects, format_vcf_datalines, \
-    generate_vcf_metainformation, write_to_vcf_file
+    generate_vcf_metainformation, write_to_vcf_file, generate_all_possible_standard_structured_info_lines, \
+    generate_all_possible_standard_structured_alt_lines, generate_all_possible_standard_structured_filter_lines, \
+    generate_all_possible_standard_structured_format_lines
 from convert_gvf_to_vcf.convertGVFtoVCF import VcfLine, GvfFeatureline
 
 
@@ -176,6 +178,24 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         #self.assertIn(test_string, self.output_file)
         output_file_size = os.path.getsize(self.output_file)
         assert output_file_size > 0
+
+    def test_generate_all_possible_standard_structured_info_lines(self):
+        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
+        assert len(all_possible_INFO_lines) > 0
+
+    def test_generate_all_possible_standard_structured_alt_lines(self):
+        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
+        assert len(all_possible_ALT_lines) > 0
+
+    #TODO: uncomment this test once the function generate_all_possible_standard_structured_filter_lines has been filled in
+
+    # def test_generate_all_possible_standard_structured_filter_lines(self):
+    #     all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
+    #     assert len(all_possible_FILTER_lines) > 0
+
+    def test_generate_all_possible_standard_structured_format_lines(self):
+        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        assert len(all_possible_FORMAT_lines) > 0
 
 if __name__ == '__main__':
     unittest.main()
