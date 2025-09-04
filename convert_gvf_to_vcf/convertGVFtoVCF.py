@@ -510,10 +510,6 @@ def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, list_of
     # MANDATORY: file format for VCF
     pragma_fileformat = generate_custom_unstructured_metainfomation_line("fileformat", "VCFv4.4",lines_custom_unstructured)
     pragmas_to_add.append(pragma_fileformat)
-    # print("# PRAGMA start 1")
-    # print(pragma_fileformat)
-    # print(pragmas_to_add[-1])
-    # print("# PRAGMA end 1")
     #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
     for pragma in gvf_pragmas:
         # file date
@@ -619,10 +615,6 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
             vcf_data_line_objects_list = []
             vcf_data_line_objects_list.append(vcf_object)
             vcf_data_lines[vcf_object.key] = vcf_data_line_objects_list
-        # print("# start - creating vcf object - 1")
-        # print(vcf_data_lines[vcf_object.key][-1].get_string())
-        # print("# end - creating vcf object - 1")
-        # print("number of keys in dict", len(vcf_data_lines.keys()))
         # check the number of objects to see if they are merged
         # for key in vcf_data_lines.keys():
         #     vcf_obj_list = vcf_data_lines[key]
