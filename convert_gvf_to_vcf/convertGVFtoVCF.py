@@ -695,14 +695,14 @@ def main():
     with open(args.vcf_output, "w") as vcf_output:
         unique_pragmas_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, list_of_vcf_objects)
         for pragma in unique_pragmas_to_add:
-            vcf_output.writelines("%s\n" % pragma)
+            vcf_output.write(f"{pragma}\n")
         samples = ["samA"] # TODO: this is a placeholder, need to add a function to read gvf pragmas and collect the samples into a list
         header_fields = generate_vcf_header_line(samples)
-        vcf_output.writelines("%s\n" % header_fields)
+        vcf_output.write(f"{header_fields}\n")
         print("Generating the VCF datalines")
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects)
         for line in formatted_vcf_datalines:
-            vcf_output.writelines("%s\n" % line)
+            vcf_output.write(f"{line}\n")
     vcf_output.close()
     print("GVF to VCF conversion complete")
 
