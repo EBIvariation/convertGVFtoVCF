@@ -588,7 +588,6 @@ def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non
                 if sample_info.startswith("sample_name"):
                     sample_name = sample_info.split("=")[1]
                     sample_names.append(sample_name)
-                    # TODO: add sample to the header and ensure value is present under the header
         else:
             pass
     print("Total number of samples in this VCF: ", len(sample_names))
