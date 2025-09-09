@@ -504,18 +504,21 @@ class VcfLine:
         return string_to_return
 
 #step 9 using custom unstructured meta-information line = generate_custom_unstructured_metainfomation_line
-def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, list_of_vcf_objects):
+def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential,  list_of_vcf_objects):
     """ Generates a list of metainformation lines for the VCF header
     :param lines_custom_unstructured: a list of formatted unstructured metainformation lines using a custom key value pair
     :param gvf_pragmas: list of gvf pragmas to convert
+    :param gvf_non_essential: list of non-essential gvf pragmas to convert
     :param list_of_vcf_objects: list of vcf objects
-    :return: unique_pragmas_to_add: a list of pragmas, this list contains no duplicates
+    :return: unique_pragmas_to_add, sample_names: a list of pragmas (this list contains no duplicates), list of sample names
     """
     pragmas_to_add = []
     unique_pragmas_to_add = []
+    sample_names = []
     # MANDATORY: file format for VCF
     pragma_fileformat = generate_custom_unstructured_metainfomation_line("fileformat", "VCFv4.4",lines_custom_unstructured)
     pragmas_to_add.append(pragma_fileformat)
+    #Go through essential pragmas
     #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
     for pragma in gvf_pragmas:
         # file date
@@ -548,15 +551,58 @@ def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, list_of
             pragmas_to_add.append(pragma_genome_build)
         else:
             pass
+    # Go through non-essential pragmas
+    for non_essential_pragma in gvf_non_essential:
+        if non_essential_pragma.startswith("#Study_accession"):
+            study_accession = non_essential_pragma.split(": ")[1]
+            non_essential_pragma_study_accession = generate_custom_unstructured_metainfomation_line("Study_accession", study_accession, lines_custom_unstructured)
+            pragmas_to_add.append(non_essential_pragma_study_accession)
+        elif non_essential_pragma.startswith("#Study_type"):
+            study_type = non_essential_pragma.split(": ")[1]
+            non_essential_pragma_study_type = generate_custom_unstructured_metainfomation_line("Study_type", study_type, lines_custom_unstructured)
+            pragmas_to_add.append(non_essential_pragma_study_type)
+        elif non_essential_pragma.startswith("#Display_name"):
+            display_name = non_essential_pragma.split(": ")[1]
+            non_essential_pragma_display_name = generate_custom_unstructured_metainfomation_line("Display_name", display_name,lines_custom_unstructured)
+            pragmas_to_add.append(non_essential_pragma_display_name)
+        elif non_essential_pragma.startswith("#Publication"):
+            publication = non_essential_pragma.split(": ")[1]
+            non_essential_pragma_publication = generate_custom_unstructured_metainfomation_line("Publication", publication, lines_custom_unstructured)
+            pragmas_to_add.append(non_essential_pragma_publication)
+        elif non_essential_pragma.startswith("#Study"):
+            study = non_essential_pragma.split(": ")[1]
+            non_essential_pragma_study = generate_custom_unstructured_metainfomation_line("Study", study, lines_custom_unstructured)
+            pragmas_to_add.append(non_essential_pragma_study)
+        elif non_essential_pragma.startswith("#Assembly_name"):
+            assembly_name = non_essential_pragma.split(": ")[1]
+            non_essential_pragma_assembly_name = generate_custom_unstructured_metainfomation_line("Assembly_name", assembly_name, lines_custom_unstructured)
+            pragmas_to_add.append(non_essential_pragma_assembly_name)
+        elif non_essential_pragma.startswith("#subject"):
+            subject = non_essential_pragma.split(": ")[1]
+            non_essential_pragma_subject = generate_custom_unstructured_metainfomation_line("subject", subject, lines_custom_unstructured)
+            pragmas_to_add.append(non_essential_pragma_subject)
+        elif non_essential_pragma.startswith("#sample"):
+            sample_information = non_essential_pragma.split(": ")[1]
+            list_of_sample_information = sample_information.split(";")
+            for sample_info in list_of_sample_information:
+                if sample_info.startswith("sample_name"):
+                    sample_name = sample_info.split("=")[1]
+                    sample_names.append(sample_name)
+                    # TODO: add sample to the header and ensure value is present under the header
+        else:
+            pass
+    print("Total number of samples in this VCF: ", len(sample_names))
+    print(sample_names)
+
     for pragma in pragmas_to_add:
         if pragma not in unique_pragmas_to_add:
             unique_pragmas_to_add.append(pragma)
 
     #TODO: add the pragmas for the GVF non-essentials
-    return unique_pragmas_to_add
+
+    return unique_pragmas_to_add, sample_names
 
 # step 10
-# TODO: finish the below for sample names
 def generate_vcf_header_line(samples):
     """ Generates the VCF header line
     :param samples: list of samples, these will appear in the header line
@@ -627,23 +673,32 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
             # print("for ", key, " the number of vcf objects is: ", len(vcf_obj_list))
     return vcf_data_lines, list_of_vcf_objects
 
-def format_vcf_datalines(list_of_vcf_objects):
-    """ Iterates through a list of VCF objects and formats them as a VCF dataline.
+def format_vcf_datalines(list_of_vcf_objects, sample_names):
+    """ Iterates through a list of VCF objects and sample names and formats them as a VCF dataline.
     :param list_of_vcf_objects: list of vcf objects
+    :param sample_names: list of sample names
     :return: formatted_vcf_datalines: list of formatted vcf datalines
     """
+    sample_name_format_value = {}
+    for sample in sample_names:
+        sample_name_format_value[sample] = "sampleFORMAThere" #TODO: fill this in
+    sample_format_values = ""
+    for key in sample_name_format_value:
+        sample_format_values = sample_format_values + sample_name_format_value[key] + "\t"
+
     formatted_vcf_datalines = []
     for vcf_obj in list_of_vcf_objects:
         vcf_line = (f"{vcf_obj.chrom}\t"
-                    f"{vcf_obj.pos}\t"
-                    f"{vcf_obj.id}\t"
-                    f"{vcf_obj.ref}\t" #TODO: should this always be empty
-                    f"{vcf_obj.alt}\t" #TODO: should this always be empty
-                    f"{vcf_obj.qual}\t" #TODO: should this always be empty
-                    f"{vcf_obj.filter}\t" #TODO: should this always be empty
-                    f"{vcf_obj.info}\t"
-                    f"{vcf_obj.format}\tsampleFORMAThere" #TODO: fill this in
-                    )
+                        f"{vcf_obj.pos}\t"
+                        f"{vcf_obj.id}\t"
+                        f"{vcf_obj.ref}\t" #TODO: should this always be empty
+                        f"{vcf_obj.alt}\t" #TODO: should this always be empty
+                        f"{vcf_obj.qual}\t" #TODO: should this always be empty
+                        f"{vcf_obj.filter}\t" #TODO: should this always be empty
+                        f"{vcf_obj.info}\t"
+                        f"{vcf_obj.format}\t"
+                        f"{sample_format_values}"
+                        )
         formatted_vcf_datalines.append(vcf_line)
     return formatted_vcf_datalines
 
@@ -693,14 +748,15 @@ def main():
     print("Writing to the following VCF output: ", args.vcf_output)
     print("Generating the VCF header and the meta-information lines")
     with open(args.vcf_output, "w") as vcf_output:
-        unique_pragmas_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, list_of_vcf_objects)
+        unique_pragmas_to_add, samples = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects)
         for pragma in unique_pragmas_to_add:
             vcf_output.write(f"{pragma}\n")
-        samples = ["samA"] # TODO: this is a placeholder, need to add a function to read gvf pragmas and collect the samples into a list
+
+        #samples = ["samA"] # TODO: this is a placeholder, need to add a function to read gvf pragmas and collect the samples into a list
         header_fields = generate_vcf_header_line(samples)
         vcf_output.write(f"{header_fields}\n")
         print("Generating the VCF datalines")
-        formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects)
+        formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
         for line in formatted_vcf_datalines:
             vcf_output.write(f"{line}\n")
     vcf_output.close()
