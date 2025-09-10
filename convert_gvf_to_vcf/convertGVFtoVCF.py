@@ -583,6 +583,9 @@ def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non
             pragmas_to_add.append(non_essential_pragma_subject)
         elif non_essential_pragma.startswith("#sample"):
             sample_information = non_essential_pragma.split(": ")[1]
+            non_essential_pragma_sample = generate_custom_unstructured_metainfomation_line("sample", sample_information,
+                                                                                            lines_custom_unstructured)
+            pragmas_to_add.append(non_essential_pragma_sample)
             list_of_sample_information = sample_information.split(";")
             for sample_info in list_of_sample_information:
                 if sample_info.startswith("sample_name"):
