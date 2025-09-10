@@ -679,6 +679,10 @@ def populate_sample_formats(list_of_sample_names):
     return sample_name_format_value
 
 def format_sample_values(sample_name_format_value):
+    """ Creates a partial vcf data line of sample format values.
+    :param sample_name_format_value: dictionary of sample names => sample format value
+    :return: sample_format_values_string: formatted string
+    """
     sample_format_values_string = ""
     for key in sample_name_format_value:
         sample_format_values_string = sample_format_values_string + sample_name_format_value[key] + "\t"
