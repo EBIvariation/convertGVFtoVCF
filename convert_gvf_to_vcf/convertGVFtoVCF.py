@@ -667,18 +667,31 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
             # print("for ", key, " the number of vcf objects is: ", len(vcf_obj_list))
     return vcf_data_lines, list_of_vcf_objects
 
-def format_vcf_datalines(list_of_vcf_objects, sample_names):
-    """ Iterates through a list of VCF objects and sample names and formats them as a VCF dataline.
-    :param list_of_vcf_objects: list of vcf objects
-    :param sample_names: list of sample names
-    :return: formatted_vcf_datalines: list of formatted vcf datalines
+
+def populate_sample_formats(list_of_sample_names):
+    """ Populates a dictionary using a list of sample names. Dictionary key is sample name, value is the sample's format value.
+    :param list_of_sample_names: list of sample names
+    :return:sample_name_format_value: dictionary of sample names => sample format value
     """
     sample_name_format_value = {}
-    for sample in sample_names:
+    for sample in list_of_sample_names:
         sample_name_format_value[sample] = "sampleFORMAThere" #TODO: fill this in
-    sample_format_values = ""
+    return sample_name_format_value
+
+def format_sample_values(sample_name_format_value):
+    sample_format_values_string = ""
     for key in sample_name_format_value:
-        sample_format_values = sample_format_values + sample_name_format_value[key] + "\t"
+        sample_format_values_string = sample_format_values_string + sample_name_format_value[key] + "\t"
+    return sample_format_values_string
+
+def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
+    """ Iterates through a list of VCF objects and sample names and formats them as a VCF dataline.
+    :param list_of_vcf_objects: list of vcf objects
+    :param list_of_sample_names: list of sample names
+    :return: formatted_vcf_datalines: list of formatted vcf datalines
+    """
+    sample_name_format_value = populate_sample_formats(list_of_sample_names)
+    sample_format_values_string = format_sample_values(sample_name_format_value)
 
     formatted_vcf_datalines = []
     for vcf_obj in list_of_vcf_objects:
@@ -691,7 +704,7 @@ def format_vcf_datalines(list_of_vcf_objects, sample_names):
                         f"{vcf_obj.filter}\t" #TODO: should this always be empty
                         f"{vcf_obj.info}\t"
                         f"{vcf_obj.format}\t"
-                        f"{sample_format_values}"
+                        f"{sample_format_values_string}"
                         )
         formatted_vcf_datalines.append(vcf_line)
     return formatted_vcf_datalines
@@ -738,15 +751,13 @@ def main():
                                                                       all_possible_FILTER_lines,
                                                                       all_possible_FORMAT_lines)
 
-    # 10c
     print("Writing to the following VCF output: ", args.vcf_output)
     print("Generating the VCF header and the meta-information lines")
+
     with open(args.vcf_output, "w") as vcf_output:
         unique_pragmas_to_add, samples = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects)
         for pragma in unique_pragmas_to_add:
             vcf_output.write(f"{pragma}\n")
-
-        #samples = ["samA"] # TODO: this is a placeholder, need to add a function to read gvf pragmas and collect the samples into a list
         header_fields = generate_vcf_header_line(samples)
         vcf_output.write(f"{header_fields}\n")
         print("Generating the VCF datalines")
