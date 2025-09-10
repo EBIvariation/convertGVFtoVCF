@@ -589,7 +589,7 @@ def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non
                     sample_name = sample_info.split("=")[1]
                     sample_names.append(sample_name)
         else:
-            pass
+            print("Skipping unknown non-essential GVF pragma:", non_essential_pragma)
     print("Total number of samples in this VCF: ", len(sample_names))
     for pragma in pragmas_to_add:
         if pragma not in unique_pragmas_to_add:

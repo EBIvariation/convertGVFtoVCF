@@ -12,11 +12,12 @@
 #subject: subject_name=Wilds2-3
 #subject: subject_name=Zon9
 #subject: subject_name=JenMale7;subject_sex=Male
+#subject: subject_name=JenMale6;subject_sex=Male
 #sample: sample_name=JenMale6;subject_name=JenMale6
 #sample: sample_name=Wilds2-3;subject_name=Wilds2-3
 #sample: sample_name=Zon9;subject_name=Zon9
 #sample: sample_name=JenMale7;subject_name=JenMale7
-#subject: subject_name=JenMale6;subject_sex=Male
+#testing_unknown_pragma
 1	DGVa	copy_number_loss	776614	786127	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=.
 1	DGVa	copy_number_loss	1277246	1320592	.	+	.	ID=12;Name=nssv1406143;Alias=CNV22899;variant_call_so_id=SO:0001743;parent=nsv811095;Start_range=.,1277246;End_range=1320592,.;submitter_variant_call_id=CNV22899;sample_name=Zon9;remap_score=.87402;Variant_seq=.
 1	DGVa	copy_number_gain	1284210	1320592	.	+	.	ID=13;Name=nssv1389474;Alias=CNV6230;variant_call_so_id=SO:0001742;parent=nsv811095;Start_range=.,1284210;End_range=1320592,.;submitter_variant_call_id=CNV6230;sample_name=JenMale7;remap_score=.69625;Variant_seq=.
