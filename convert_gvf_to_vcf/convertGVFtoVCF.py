@@ -517,7 +517,7 @@ class VcfLine:
             return self.vcf_value["Reference_seq"] # attributes:reference_seq
         else:
             reference_allele = extract_reference_allele(self.assembly, self.chrom, self.pos)
-            return reference_allele # TODO: how shall we fill this in with this scenario?
+            return reference_allele
 
     def __str__(self):
         string_to_return = '\t'.join((self.chrom, self.pos, self.key, self.qual, self.filter, self.info, self.source, self.phase, self.end, self.so_type, self.sample_name, self.format))
