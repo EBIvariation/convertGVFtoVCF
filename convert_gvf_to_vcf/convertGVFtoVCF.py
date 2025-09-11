@@ -775,8 +775,6 @@ def main():
     gvf_attribute_dict = read_gvf_info_attributes(gvf_info_attributes_file=gvf_info_attributes_file)
     if args.assembly:
         assembly_file = os.path.abspath(args.assembly)
-        #read_assembly_file(assembly_file)
-        # create function to read the assembly file
     else:
         assembly_file = None
 
