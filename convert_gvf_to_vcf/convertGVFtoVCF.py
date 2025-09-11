@@ -724,9 +724,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("gvf_input", help="GVF input file.")
     parser.add_argument("vcf_output", help="VCF output file.")
+    parser.add_argument("-a", "--assembly", help="FASTA assembly file")
     args = parser.parse_args()
     print("The provided input file is: ", args.gvf_input)
     print("The provided output file is: ", args.vcf_output)
+    if args.assembly:
+        print("The provided assembly file is: ", args.assembly)
 
     all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
     all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
