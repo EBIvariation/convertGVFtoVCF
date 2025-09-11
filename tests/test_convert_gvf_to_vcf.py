@@ -19,6 +19,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.dgva_input_file = os.path.join(self.input_folder_parent, "etc","dgvaINFOattributes.tsv")
         self.gvf_input_file = os.path.join(self.input_folder_parent, "etc","gvfINFOattributes.tsv")
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
+        self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
 
     def test_read_in_gvf_file(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
@@ -38,6 +39,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
@@ -53,7 +55,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
 
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, dgva_attribute_dict,
-                                                                          gvf_attribute_dict, lines_custom_structured,
+                                                                          gvf_attribute_dict,
+                                                                          assembly_file,
+                                                                          lines_custom_structured,
                                                                           lines_standard_ALT, lines_standard_INFO,
                                                                           lines_standard_FILTER, lines_standard_FORMAT,
                                                                           all_possible_ALT_lines,
@@ -65,12 +69,13 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert len(list_of_vcf_objects) > 1
 
     def test_get_ref(self):
-        gvf_feature_line = "1	DGVa	copy_number_loss	776614	786127	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
+        gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
@@ -88,6 +93,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         v = VcfLine(line_object,
                     dgva_attribute_dict,
                     gvf_attribute_dict,
+                    assembly_file,
                     lines_custom_structured,
                     lines_standard_ALT,
                     lines_standard_INFO,
@@ -98,12 +104,13 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     all_possible_FILTER_lines,
                     all_possible_FORMAT_lines)
         reference_allele = v.get_ref()
-        assert reference_allele == "."
+        assert len(reference_allele) != 0
 
     def test_generate_vcf_metainformation(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
@@ -121,6 +128,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
+                                                                          assembly_file,
                                                                           lines_custom_structured,
                                                                           lines_standard_ALT,
                                                                           lines_standard_INFO,
@@ -255,6 +263,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
@@ -272,6 +281,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
+                                                                          assembly_file,
                                                                           lines_custom_structured,
                                                                           lines_standard_ALT,
                                                                           lines_standard_INFO,
