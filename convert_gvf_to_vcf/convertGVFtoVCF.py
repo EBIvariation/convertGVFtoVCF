@@ -516,7 +516,11 @@ class VcfLine:
         if "Reference_seq" in self.vcf_value.keys():
             return self.vcf_value["Reference_seq"] # attributes:reference_seq
         else:
-            reference_allele = extract_reference_allele(self.assembly, self.chrom, self.pos)
+            if self.assembly:
+                reference_allele = extract_reference_allele(self.assembly, self.chrom, self.pos)
+            else:
+                print("WARNING: No reference provided. Placeholder inserted for Reference allele.")
+                reference_allele = "."
             return reference_allele
 
     def __str__(self):
