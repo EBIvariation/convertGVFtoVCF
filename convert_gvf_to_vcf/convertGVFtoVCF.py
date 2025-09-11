@@ -227,7 +227,6 @@ def read_gvf_info_attributes(gvf_info_attributes_file):
 
 def extract_reference_allele(fasta_file, chromosome_name, position):
     """ Extracts the reference allele from the assembly.
-
     :param fasta_file: FASTA file of the assembly
     :param chromosome_name: name of the sequence
     :param position: position
