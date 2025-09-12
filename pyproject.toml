@@ -1,0 +1,47 @@
+[build-system]
+requires = [
+    "setuptools >= 64",
+    "setuptools_scm[toml] >= 8",
+    "setuptools_scm_git_archive",
+    "wheel >= 0.29.0",
+]
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'convertGVFtoVCF'
+description = 'EBI EVA - Tool to convert GVF files from DGVa database into VCF files that can be used by the EVA'
+dynamic = ["version", 'requires-python', 'dependencies']
+readme = 'README.md'
+classifiers = [
+    'Development Status :: 2 - Pre-Alpha',
+    'Environment :: Console',
+    'Intended Audience :: Science/Research',
+    'Natural Language :: English',
+    'Operating System :: POSIX :: Linux',
+    'Operating System :: MacOS :: MacOS X',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Topic :: Scientific/Engineering :: Bio-Informatics',
+    'Topic :: File Formats',
+    'License :: OSI Approved :: Apache Software License',
+]
+
+[project.scripts]
+'convertGVFtoVCF.py'='convert_gvf_to_vcf.convertGVFtoVCF:main'
+
+[tool.setuptools]
+packages = ['convert_gvf_to_vcf']
+
+[tool.setuptools.package-data]
+'convert_gvf_to_vcf'=['etc/*']
+
+[tool.setuptools.dynamic]
+dependencies = {file = 'requirements.txt'}
+
+[tool.setuptools_scm]
+write_to = 'convert_gvf_to_vcf/_version.py'
+
