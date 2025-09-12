@@ -2,11 +2,11 @@ import os.path
 import unittest
 
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_metainfomation_line, read_in_gvf_file, \
-    read_dgva_info_attributes, read_gvf_info_attributes, gvf_features_to_vcf_objects, format_vcf_datalines, \
+    gvf_features_to_vcf_objects, format_vcf_datalines, \
     generate_vcf_metainformation, generate_all_possible_standard_structured_info_lines, \
     generate_all_possible_standard_structured_alt_lines, generate_all_possible_standard_structured_filter_lines, \
     generate_all_possible_standard_structured_format_lines, generate_vcf_header_line, populate_sample_formats, \
-    format_sample_values
+    format_sample_values, read_info_attributes
 from convert_gvf_to_vcf.convertGVFtoVCF import VcfLine, GvfFeatureline
 
 
@@ -27,18 +27,16 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert len(gvf_non_essential) > 1
         assert len(gvf_lines_obj_list) > 1
 
-    def test_read_dgva_info_attributes(self):
-        dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
+    def test_read_info_attributes(self):
+        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         assert len(dgva_attribute_dict) > 1
-
-    def test_read_gvf_info_attributes(self):
-        gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         assert len(gvf_attribute_dict) > 1
 
     def test_gvf_features_to_vcf_objects(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
+        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
@@ -73,8 +71,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         f_list = gvf_feature_line.split("\t")
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
+        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
@@ -108,8 +106,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_generate_vcf_metainformation(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
+        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
@@ -146,8 +144,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
     def test_generate_vcf_header_line(self):
     def test_generate_vcf_metainformation(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
+        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
@@ -224,8 +222,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_populate_sample_formats(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
+        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
@@ -263,8 +261,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_format_sample_values(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
+        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
@@ -302,8 +300,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_format_vcf_datalines(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
+        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
