@@ -232,9 +232,7 @@ def extract_reference_allele(fasta_file, chromosome_name, position):
     :param position: position
     :return: reference_allele: base found at this chromosome_name at this position within this fasta_file
     """
-    # commented out the below due to low memory efficiency:  https://biopython.org/docs/1.76/api/Bio.SeqIO.html#input-multiple-records
-    # with open(fasta_file) as assembly:
-        # records_dictionary = SeqIO.to_dict(SeqIO.parse(assembly, "fasta"))
+    # using .index instead of .todict for memory efficiency:  https://biopython.org/docs/1.76/api/Bio.SeqIO.html#input-multiple-records
     records_dictionary = SeqIO.index(fasta_file, "fasta")
     zero_indexed_position = position - 1 # minus one because zero indexed
     reference_allele =  records_dictionary[chromosome_name].seq[zero_indexed_position]
