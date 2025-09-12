@@ -125,6 +125,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
+                                                                          self.assembly,
                                                                           lines_custom_structured,
                                                                           lines_standard_ALT,
                                                                           lines_standard_INFO,
@@ -276,7 +277,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
         all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
         all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
-
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
