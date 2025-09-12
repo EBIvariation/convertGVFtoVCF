@@ -6,45 +6,15 @@ from Bio import SeqIO
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
-# step 3
-def generate_custom_structured_metainfomation_line(lines_custom_structured,
-                                                   vcfkey,
-                                                   vcfkey_id,
-                                                   vcfkey_number,
-                                                   vcfkey_type,
-                                                   vcfkey_description,
-                                                   optional_extrafields=None):
-    """ Generates a custom structured meta-information line for INFO/FILTER/FORMAT/ALT
-    :param vcfkey: required field INFO, FILTER, FORMAT, ALT
-    :param vcfkey_id: required field for structured lines ID
-    :param vcfkey_number: The number of values that can be included or special character: A or R or G or .
-    :param vcfkey_type: Values are Integer, Float, Character, String
-    :param vcfkey_description: Description
-    :param lines_custom_structured: a list of custom structured lines
-    :param optional_extrafields: an optional field, dictionary of custom fields and their values
-    :return: custom_structured_string
+def read_reserved_key(header_type):
     """
-    extrakeys_kvlines = []
-    if optional_extrafields:
-        for extra_field in optional_extrafields:
-            kv_line = "," + extra_field + "=" + "\"" + optional_extrafields[extra_field] + "\""
-            extrakeys_kvlines.append(kv_line)
-    vcfkey_extrakeys = ''.join(extrakeys_kvlines)
-    custom_structured_string = f"##{vcfkey}=<ID=\"{vcfkey_id}\",Number=\"{vcfkey_number}\",Type=\"{vcfkey_type}\",Description=\"{vcfkey_description}\"{vcfkey_extrakeys}>"
-    lines_custom_structured.append(custom_structured_string)
-    return custom_structured_string
-
-# extra functions for step 4
-# for INFO
-def read_reserved_info_key(all_possible_INFO_lines):
-    """ Reads in the reserved INFO keys and returns a list of all_possible_INFO_lines which can be used to populate the header
-
-    :param reservedinfokeysfile: File to a tab-delimited table of Reserved INFO keys in Table 1 of VCF specification
-    :return: all_possible_INFO_lines
+    Reads in the reserved INFO or FORMAT keys and returns a dictionary of the reserved INFO_lines which can be used to
+    populate the header
     """
-    reserved_info_keys_file = os.path.join(etc_folder, 'ReservedINFOkeys.tsv')
+    reserved_lines = {}
+    reserved_info_keys_file = os.path.join(etc_folder, f'Reserved{header_type}keys.tsv')
     with open(reserved_info_keys_file) as info_keys_file:
-        next(info_keys_file)
+        next(info_keys_file) # Skip the header
         info_keys_content = info_keys_file.readlines()
         for info in info_keys_content:
             info_tokens = info.rstrip().split("\t")
@@ -52,93 +22,56 @@ def read_reserved_info_key(all_possible_INFO_lines):
             number=info_tokens[1]
             type_for_key=info_tokens[2]
             description=info_tokens[3]
-            reserved_info_string = f"##INFO=<ID=\"{keyid}\",Number=\"{number}\",Type=\"{type_for_key}\",Description=\"{description}\">"
-            #all_possible_INFO_lines.append(reserved_info_string)
-            all_possible_INFO_lines[keyid] = reserved_info_string
-    return all_possible_INFO_lines
+            reserved_info_string = f'##{header_type}=<ID="{keyid}",Number="{number}",Type="{type_for_key}",Description="{description}">'
+            reserved_lines[keyid] = reserved_info_string
+    return reserved_lines
 
-def read_sv_info_key(all_possible_INFO_lines):
-    """ Reads in INFO keys for structural variants and return a list of all_possible_INFO_lines
-
-    :param svinfokeysfile: File to tab delimited table of INFO keys used in Structural Variants and their VCF header
-    :return: all_possible_INFO_lines
+def read_sv_key(header_type):
     """
-    sv_info_keys_file = os.path.join(etc_folder, 'svINFOkeys.tsv')
-    with open(sv_info_keys_file) as svinfokeys:
-        next(svinfokeys)
-        sv_info_keys_content = svinfokeys.readlines()
-        for svinfo in sv_info_keys_content:
-            svinfo_tokens = svinfo.rstrip().split("\t")
-            svkeyid = svinfo_tokens[0]
-            svinfoline = svinfo_tokens[1]
-            all_possible_INFO_lines[svkeyid]= svinfoline
-    return all_possible_INFO_lines
-
-# for FORMAT
-def read_reserved_format_key(all_possible_FORMAT_lines):
-    """ Reads in the reserved FORMAT keys and returns a list of all_possible_FORMAT_lines which can be used to populate the header
-
-    :param reservedformatkeysfile: file that is a tab delimited table of reserved FORMAT keys in Table 2 of VCF specification
-    :return:
+    Reads in INFO, ALT or FORMAT keys for structural variants and return a dictionary of SV specific lines
     """
-    reserved_format_keys_file = os.path.join(etc_folder, "ReservedFORMATkeys.tsv")
-    with open(reserved_format_keys_file) as format_keys_file:
-        next(format_keys_file)
-        format_keys_content = format_keys_file.readlines()
-        for format_key_line in format_keys_content:
-            format_tokens = format_key_line.rstrip().split("\t")
-            keyid = format_tokens[0]
-            number = format_tokens[1]
-            type_for_key = format_tokens[2]
-            description = format_tokens[3]
-            reserved_format_string = f"##FORMAT=<ID=\"{keyid}\",Number=\"{number}\",Type=\"{type_for_key}\",Description=\"{description}\">"
-            all_possible_FORMAT_lines[keyid] = reserved_format_string
-    return all_possible_FORMAT_lines
+    sv_lines = {}
+    sv_keys_file = os.path.join(etc_folder, f'sv{header_type}keys.tsv')
+    with open(sv_keys_file) as open_file:
+        next(open_file) # Skip the header
+        for line in open_file:
+            sv_tokens = line.rstrip().split("\t")
+            sv_key_id = sv_tokens[0]
+            sv_line = sv_tokens[1]
+            sv_lines[sv_key_id]= sv_line
+    return sv_lines
 
-def read_sv_format_keys(all_possible_FORMAT_lines):
-    """ Reads in FORMAT keys for strucural variants and returns a list of all_possible_FORMAT_lines
 
-    :param svformatkeysfile: File to tab delimited table of FORMAT keys used in Structural Variants and their VCF header
-    :return: all_possible_FORMAT_lines
+def generate_custom_structured_metainfomation_line(vcfkey, vcfkey_id, vcfkey_number, vcfkey_type, vcfkey_description,
+                                                   optional_extrafields=None):
+    """ Generates a custom structured meta-information line for INFO/FILTER/FORMAT/ALT
+    :param vcfkey: required field INFO, FILTER, FORMAT, ALT
+    :param vcfkey_id: required field for structured lines ID
+    :param vcfkey_number: The number of values that can be included or special character: A or R or G or .
+    :param vcfkey_type: Values are Integer, Float, Character, String
+    :param vcfkey_description: Description
+    :param optional_extrafields: an optional field, dictionary of custom fields and their values
+    :return: custom_structured_string
     """
-    sv_format_keys_file = os.path.join(etc_folder, "svFORMATkeys.tsv")
-    with open(sv_format_keys_file) as sv_format_keys:
-        next(sv_format_keys)
-        sv_format_keys_content = sv_format_keys.readlines()
-        for svformat in sv_format_keys_content:
-            svformat_tokens = svformat.rstrip().split()
-            svkeyid = svformat_tokens[0]
-            svformatline = svformat_tokens[1]
-            all_possible_FORMAT_lines[svkeyid] = svformatline
-    return all_possible_FORMAT_lines
+    extra_keys_kv_lines = []
+    if optional_extrafields:
+        for extra_field in optional_extrafields:
+            kv_line = "," + extra_field + "=" + '"' + optional_extrafields[extra_field] + '"'
+            extra_keys_kv_lines.append(kv_line)
+    vcf_key_extra_keys = ''.join(extra_keys_kv_lines)
+    custom_structured_string = f'##{vcfkey}=<ID="{vcfkey_id}",Number="{vcfkey_number}",Type="{vcfkey_type}",Description="{vcfkey_description}"{vcf_key_extra_keys}>'
+    return custom_structured_string
 
-# for ALT
-def read_sv_alt_keys(all_possible_ALT_lines):
-    """ Reads in ALT keys for structural variants and return a list of all_possible_ALT_lines
-
-    :param svaltkeysfile: File to tab delimited table of ALT keys used in Structural Variants and their VCF header
-    :return: all_possible_ALT_lines
-    """
-    sv_alt_keys_file = os.path.join(etc_folder, "svALTkeys.tsv")
-    with open(sv_alt_keys_file) as sv_alt_keys:
-        next(sv_alt_keys)
-        sv_alt_keys_content = sv_alt_keys.readlines()
-        for svalt in sv_alt_keys_content:
-            svalt_tokens = svalt.rstrip().split()
-            svkeyid = svalt_tokens[0]
-            svaltline = svalt_tokens[1]
-            all_possible_ALT_lines[svkeyid] = svaltline
-        return all_possible_ALT_lines
 
 def generate_all_possible_standard_structured_alt_lines():
     """Generates a dictionary of all possible (i.e. structural variant ALT key) standard structured ALT lines.
     :return: all_possible_ALT_lines: dictionary of ALT key tag ID => standard structured ALT line
     """
-    all_possible_ALT_lines = {}
     # note: svALTkey may be an incomplete list at the moment
     # no reserved alt keys
-    read_sv_alt_keys(all_possible_ALT_lines)
+    all_possible_ALT_lines = read_sv_key('ALT')
     return all_possible_ALT_lines
+
 
 def generate_all_possible_standard_structured_info_lines():
     """ Generates a dictionary of all possible (i.e. reserved info key and structural variant info key) standard structured INFO lines.
@@ -146,9 +79,10 @@ def generate_all_possible_standard_structured_info_lines():
     """
     all_possible_INFO_lines = {} # dictionary of INFO key tag => standard structured INFO line
     # generate all possible lines for the reserved info keys and structural variant info keys
-    read_reserved_info_key(all_possible_INFO_lines)
-    read_sv_info_key(all_possible_INFO_lines)
+    all_possible_INFO_lines.update(read_reserved_key('INFO'))
+    all_possible_INFO_lines.update(read_sv_key('INFO'))
     return all_possible_INFO_lines
+
 
 def generate_all_possible_standard_structured_filter_lines():
     """ Generates a dictionary of all possible (i.e. reserved filter key and structural variant info key) standard structured INFO lines.
@@ -158,6 +92,7 @@ def generate_all_possible_standard_structured_filter_lines():
     #TODO: fill in the reading of filtered lines
     return all_possible_FILTER_lines
 
+
 def generate_all_possible_standard_structured_format_lines():
     """ Generates a dictionary of all possible (i.e. reserved format key and structural variant info key) standard structured FORMAT lines.
     :return: all_possible_FORMAT_lines: dictionary of FORMAT key tag ID => standard structured FORMAT line
@@ -165,11 +100,11 @@ def generate_all_possible_standard_structured_format_lines():
     all_possible_FORMAT_lines = {}
     # TABLE 2
     # FORMAT KEYS FOR STRUCTURAL VARIANTS
-    read_reserved_format_key(all_possible_FORMAT_lines)
-    read_sv_format_keys(all_possible_FORMAT_lines)
+    all_possible_FORMAT_lines.update(read_reserved_key('FORMAT'))
+    all_possible_FORMAT_lines.update(read_sv_key('FORMAT'))
     return all_possible_FORMAT_lines
 
-# step 4
+
 def generate_standard_structured_metainformation_line(vcf_key_id, standard_lines_for_vcfkey, all_possible_lines):
     """Generates a list of standard structured metainformation lines.
     :param vcf_key_id: VCF tag key id
@@ -181,7 +116,7 @@ def generate_standard_structured_metainformation_line(vcf_key_id, standard_lines
     standard_lines_for_vcfkey.append(standard_structured_line)
     return standard_lines_for_vcfkey
 
-# step 5
+
 def generate_custom_unstructured_metainfomation_line(vcf_unstructured_key, vcf_unstructured_value, lines_custom_unstructured):
     """ Generates a formatted unstructured metainformation line using a custom key value pair. This is stored in the list called lines_custom_unstructured.
     :param lines_custom_unstructured: list to store custom unstructured metainformation lines
@@ -193,37 +128,20 @@ def generate_custom_unstructured_metainfomation_line(vcf_unstructured_key, vcf_u
     lines_custom_unstructured.append(custom_unstructured_string)
     return custom_unstructured_string
 
-# additional support function for step 6
-def read_dgva_info_attributes(dgva_info_attributes_file):
-    """ Read in the file containing DGVa specific INFO attributes.
-    :param dgva_info_attributes_file: A file containing the DGVa specific attributes
-    :return: dgva_attribute_dict: A dictionary of key id and the list of attribute tokens
+def read_info_attributes(info_attributes_file):
+    """ Read in the file containing specific INFO attributes.
+    :param info_attributes_file: A file containing the specific attributes
+    :return: attribute_dict: A dictionary of key id and the list of attribute tokens
     """
-    dgva_attribute_dict = {}  # dictionary of dgva specific INFO attributes
-    with open(dgva_info_attributes_file) as dgva_info_attributes:
-        next(dgva_info_attributes)
-        dgva_info_attributes_contents = dgva_info_attributes.readlines()
-        for dgva_attribute in dgva_info_attributes_contents:
-            dgva_attribute_tokens = dgva_attribute.rstrip().split("\t")
-            dgva_key_id = dgva_attribute_tokens[0]
-            dgva_attribute_dict[dgva_key_id] = dgva_attribute_tokens
-    return dgva_attribute_dict
+    attribute_dict = {}  # dictionary of dgva specific INFO attributes
+    with open(info_attributes_file) as open_file:
+        next(open_file)
+        for line in open_file:
+            attribute_tokens = line.rstrip().split("\t")
+            key = attribute_tokens[0]
+            attribute_dict[key] = attribute_tokens
+    return attribute_dict
 
-# additional support function for step 6
-def read_gvf_info_attributes(gvf_info_attributes_file):
-    """ Read in the file of GVF INFO attributes
-    :param gvf_info_attributes_file: file of GVF INFO attributes
-    :return: gvf_attribute_dict: a dictionary of gvf attributes
-    """
-    gvf_attribute_dict = {}  # dictionary of GVF attributes
-    with open(gvf_info_attributes_file) as gvf_info_attributes:
-        next(gvf_info_attributes)
-        gvf_info_attributes_contents = gvf_info_attributes.readlines()
-        for gvf_attribute in gvf_info_attributes_contents:
-            gvf_attribute_tokens = gvf_attribute.rstrip().split("\t")
-            gvf_key_id = gvf_attribute_tokens[0]
-            gvf_attribute_dict[gvf_key_id] = gvf_attribute_tokens
-    return gvf_attribute_dict
 
 def extract_reference_allele(fasta_file, chromosome_name, position):
     """ Extracts the reference allele from the assembly.
@@ -280,12 +198,13 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     for attrib_key in gvf_attribute_dictionary:
         # if dgva specific key, create custom string otherwise do standard
         if attrib_key in dgva_attribute_dict:
-            generate_custom_structured_metainfomation_line(lines_custom_structured,
-                                                           vcfkey="INFO", vcfkey_id=attrib_key,
+            lines_custom_structured.append(
+                generate_custom_structured_metainfomation_line(vcfkey="INFO", vcfkey_id=attrib_key,
                                                            vcfkey_number=dgva_attribute_dict[attrib_key][1],
                                                            vcfkey_type=dgva_attribute_dict[attrib_key][2],
                                                            vcfkey_description=dgva_attribute_dict[attrib_key][3],
                                                            optional_extrafields=None)
+            )
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
         elif attrib_key == "allele_count":
             #generate_standard_structured_metainformation_line("INFO", "AC", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
@@ -315,11 +234,14 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
         elif (attrib_key == "Alias" or attrib_key == "Variant_effect" or attrib_key == "Variant_codon" or
               attrib_key == "Reference_codon" or attrib_key == "Variant_aa" or attrib_key == "Reference_aa" or
               attrib_key == "breakpoint_detail" or attrib_key == "Sequence_context"):
-            generate_custom_structured_metainfomation_line(lines_custom_structured,vcfkey="INFO", vcfkey_id=attrib_key,
-                                                           vcfkey_number=gvf_attribute_dict[attrib_key][1],
-                                                           vcfkey_type=gvf_attribute_dict[attrib_key][2],
-                                                           vcfkey_description=gvf_attribute_dict[attrib_key][3],
-                                                           optional_extrafields=None)
+            lines_custom_structured.append(
+                generate_custom_structured_metainfomation_line(
+                    vcfkey="INFO", vcfkey_id=attrib_key,
+                    vcfkey_number=gvf_attribute_dict[attrib_key][1],
+                    vcfkey_type=gvf_attribute_dict[attrib_key][2],
+                    vcfkey_description=gvf_attribute_dict[attrib_key][3],
+                    optional_extrafields=None)
+            )
         elif attrib_key == "Dbxref":
             # custom info tag + pase and add to id?
             pass
@@ -772,13 +694,12 @@ def main():
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
     dgva_info_attributes_file = os.path.join(etc_folder, 'dgvaINFOattributes.tsv')
     gvf_info_attributes_file = os.path.join(etc_folder, 'gvfINFOattributes.tsv')
-    dgva_attribute_dict = read_dgva_info_attributes(dgva_info_attributes_file=dgva_info_attributes_file) # needed to generate custom strings
-    gvf_attribute_dict = read_gvf_info_attributes(gvf_info_attributes_file=gvf_info_attributes_file)
+    dgva_attribute_dict = read_info_attributes(info_attributes_file=dgva_info_attributes_file) # needed to generate custom strings
+    gvf_attribute_dict = read_info_attributes(info_attributes_file=gvf_info_attributes_file)
     if args.assembly:
         assembly_file = os.path.abspath(args.assembly)
     else:
         assembly_file = None
-
     vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                       dgva_attribute_dict,
                                                                       gvf_attribute_dict,
