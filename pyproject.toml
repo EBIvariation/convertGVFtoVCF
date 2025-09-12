@@ -10,7 +10,7 @@ build-backend = 'setuptools.build_meta'
 [project]
 name = 'convertGVFtoVCF'
 description = 'EBI EVA - Tool to convert GVF files from DGVa database into VCF files that can be used by the EVA'
-dynamic = ["version", 'requires-python', 'dependencies']
+dynamic = ["version", 'dependencies']
 readme = 'README.md'
 classifiers = [
     'Development Status :: 2 - Pre-Alpha',
