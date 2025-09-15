@@ -142,7 +142,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                       gvf_non_essential, list_of_vcf_objects)
         assert len(unique_pragmas_to_add) > 1 and len(samples) > 1
 
-    def test_generate_vcf_header_line(self):
     def test_generate_vcf_metainformation(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
@@ -184,8 +183,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_generate_vcf_header_line(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_dgva_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_gvf_info_attributes(self.gvf_input_file)
+        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
+        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
