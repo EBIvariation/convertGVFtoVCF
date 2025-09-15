@@ -1,6 +1,6 @@
 import argparse
 import os
-
+from Bio import SeqIO
 
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
@@ -225,6 +225,20 @@ def read_gvf_info_attributes(gvf_info_attributes_file):
             gvf_attribute_dict[gvf_key_id] = gvf_attribute_tokens
     return gvf_attribute_dict
 
+def extract_reference_allele(fasta_file, chromosome_name, position):
+    """ Extracts the reference allele from the assembly.
+    :param fasta_file: FASTA file of the assembly
+    :param chromosome_name: name of the sequence
+    :param position: position
+    :return: reference_allele: base found at this chromosome_name at this position within this fasta_file
+    """
+    # using .index instead of .todict for memory efficiency:  https://biopython.org/docs/1.76/api/Bio.SeqIO.html#input-multiple-records
+    records_dictionary = SeqIO.index(fasta_file, "fasta")
+    zero_indexed_position = position - 1 # minus one because zero indexed
+    reference_allele =  records_dictionary[chromosome_name].seq[zero_indexed_position]
+    records_dictionary.close()
+    return reference_allele
+
 def get_gvf_attributes(column9_of_gvf):
     """Get a dictionary of GVF attributes
     :param column9_of_gvf: attributes column - the final column of the GVF file
@@ -409,6 +423,7 @@ class VcfLine:
     def __init__(self, gvf_feature_line_object,
                  dgva_attribute_dict,
                  gvf_attribute_dict,
+                 assembly_file,
                  lines_custom_structured,
                  lines_standard_ALT,
                  lines_standard_INFO,
@@ -432,9 +447,10 @@ class VcfLine:
                                                               all_possible_FILTER_lines,
                                                               all_possible_FORMAT_lines)
 
+        self.assembly = assembly_file
         # DATALINE
         self.chrom = gvf_feature_line_object.seqid
-        self.pos = gvf_feature_line_object.start
+        self.pos = int(gvf_feature_line_object.start)
         self.id = self.vcf_value["ID"]  # attributes: ID
         self.ref = self.get_ref()
         self.alt = self.vcf_value["Variant_seq"] # attributes: variant_seq
@@ -443,7 +459,7 @@ class VcfLine:
 
         # INFO
         #TODO: specific SV info keys populated from gvf_feature_line
-        self.key = self.chrom + "_" + self.pos
+        self.key = self.chrom + "_" + str(self.pos)
         self.info = "pending_aggregation" # TODO: add info field for self.info
         self.source = gvf_feature_line_object.source
 
@@ -497,7 +513,12 @@ class VcfLine:
         if "Reference_seq" in self.vcf_value.keys():
             return self.vcf_value["Reference_seq"] # attributes:reference_seq
         else:
-            return "." # TODO: how shall we fill this in with this scenario?
+            if self.assembly:
+                reference_allele = extract_reference_allele(self.assembly, self.chrom, self.pos)
+            else:
+                print("WARNING: No reference provided. Placeholder inserted for Reference allele.")
+                reference_allele = "."
+            return reference_allele
 
     def __str__(self):
         string_to_return = '\t'.join((self.chrom, self.pos, self.key, self.qual, self.filter, self.info, self.source, self.phase, self.end, self.so_type, self.sample_name, self.format))
@@ -616,6 +637,7 @@ def generate_vcf_header_line(samples):
 def gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                 dgva_attribute_dict,
                                 gvf_attribute_dict,
+                                assembly_file,
                                 lines_custom_structured,
                                 lines_standard_ALT,
                                 lines_standard_INFO,
@@ -628,6 +650,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     """ Creates VCF objects from GVF feature lines and stores the VCF objects.
     :param gvf_lines_obj_list: list of GVF feature line objects
     :param gvf_attribute_dict: dictionary of GVF INFO attributes
+    :param assembly_file: FASTA file to assembly
     :param dgva_attribute_dict: dictionary af DGVa specific INFO attributes
     :param lines_custom_structured: list to store custom structured metainformation lines
     :param lines_standard_ALT: ALT lines for this VCF file
@@ -650,6 +673,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
         vcf_object = VcfLine(gvf_featureline,
                              dgva_attribute_dict,
                              gvf_attribute_dict,
+                             assembly_file,
                              lines_custom_structured,
                              lines_standard_ALT,
                              lines_standard_INFO,
@@ -724,9 +748,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("gvf_input", help="GVF input file.")
     parser.add_argument("vcf_output", help="VCF output file.")
+    parser.add_argument("-a", "--assembly", help="FASTA assembly file")
     args = parser.parse_args()
     print("The provided input file is: ", args.gvf_input)
     print("The provided output file is: ", args.vcf_output)
+    if args.assembly:
+        print("The provided assembly file is: ", args.assembly)
 
     all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
     all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
@@ -747,9 +774,15 @@ def main():
     gvf_info_attributes_file = os.path.join(etc_folder, 'gvfINFOattributes.tsv')
     dgva_attribute_dict = read_dgva_info_attributes(dgva_info_attributes_file=dgva_info_attributes_file) # needed to generate custom strings
     gvf_attribute_dict = read_gvf_info_attributes(gvf_info_attributes_file=gvf_info_attributes_file)
+    if args.assembly:
+        assembly_file = os.path.abspath(args.assembly)
+    else:
+        assembly_file = None
+
     vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                       dgva_attribute_dict,
                                                                       gvf_attribute_dict,
+                                                                      assembly_file,
                                                                       lines_custom_structured,
                                                                       lines_standard_ALT,
                                                                       lines_standard_INFO,
