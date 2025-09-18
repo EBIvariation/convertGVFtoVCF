@@ -8,6 +8,7 @@ etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
 
 
+
 def read_reserved_key(header_type):
     """
     Reads in the reserved INFO or FORMAT keys and returns a dictionary of the reserved INFO_lines which can be used to
