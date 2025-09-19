@@ -463,6 +463,26 @@ class VcfLine:
             print("WARNING: Variable placed_before unknown: " + str(placed_before))
         return (padded_base, self.pos, self.ref, self.alt)
 
+    def build_iupac_ambiguity_code(self):
+        # see PMID: 20202974 (Table 1) for the official list
+        iupac_codes = ["R", "Y", "M", "K", "S", "D", "W", "H", "B", "V", "D", "N"]
+        R = ["A", "G"]
+        Y = ["C", "T"]
+        M = ["A", "C"]
+        K = ["G", "T"]
+        S = ["C", "G"]
+        W = ["A", "T"]
+        H = ["A", "C", "T"]
+        B = ["C", "G", "T"]
+        V = ["A", "C", "G"]
+        D = ["A", "G", "T"]
+        N = ["A", "C", "G", "T"]
+        iupac_values = [R, Y, M, K, S, D, W, H, B, V, D, N]
+        iupac_ambiguity_dictionary = dict(zip(iupac_codes, iupac_values))
+        return iupac_ambiguity_dictionary
+
+
+
     def get_ref(self):
         """ Gets the reference allele from attributes column or if not found, returns "."
         :return: reference allele
