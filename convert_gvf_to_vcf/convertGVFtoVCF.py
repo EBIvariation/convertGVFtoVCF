@@ -436,6 +436,33 @@ class VcfLine:
         self.pos += adjustment
         return self.pos
 
+    def add_padded_base(self, placed_before : bool):
+        """ Adds padded base to REF and ALT allele
+        :param placed_before: True or False
+        :return: (padded_base, self.pos, self.ref, self.alt)
+        """
+        if placed_before:
+            padded_base_pos = self.pos - 1
+            self.pos = padded_base_pos
+            padded_base = extract_reference_allele(self.assembly, self.chrom, self.pos)
+            self.ref = padded_base + self.ref
+            if self.alt == ".":
+                self.alt = padded_base
+            else:
+                self.alt = padded_base + self.alt
+        elif not placed_before:
+            padded_base_pos = self.pos + 1
+            self.pos = padded_base_pos
+            padded_base = extract_reference_allele(self.assembly, self.chrom, self.pos)
+            self.ref = self.ref + padded_base
+            if self.alt == ".":
+                self.alt = padded_base
+            else:
+                self.alt = self.alt + padded_base
+        else:
+            print("WARNING: Variable placed_before unknown: " + str(placed_before))
+        return (padded_base, self.pos, self.ref, self.alt)
+
     def get_ref(self):
         """ Gets the reference allele from attributes column or if not found, returns "."
         :return: reference allele
