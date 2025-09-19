@@ -428,6 +428,14 @@ class VcfLine:
         #     else:
         #         pass
 
+    def adjust_pos(self, adjustment):
+        """ Adjusts the position of the variant
+        :param adjustment: a positive or negative number
+        :return: self.pos  adjusted position
+        """
+        self.pos += adjustment
+        return self.pos
+
     def get_ref(self):
         """ Gets the reference allele from attributes column or if not found, returns "."
         :return: reference allele
