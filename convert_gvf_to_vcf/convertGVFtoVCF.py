@@ -481,7 +481,11 @@ class VcfLine:
         iupac_ambiguity_dictionary = dict(zip(iupac_codes, iupac_values))
         return iupac_ambiguity_dictionary
 
-
+    def convert_iupac_ambiguity_code(self, iupac_ambiguity_dictionary):
+        if self.ref in iupac_ambiguity_dictionary:
+            iupac_value = min(iupac_ambiguity_dictionary[self.ref])
+            self.ref = iupac_value
+        return self.ref
 
     def get_ref(self):
         """ Gets the reference allele from attributes column or if not found, returns "."
