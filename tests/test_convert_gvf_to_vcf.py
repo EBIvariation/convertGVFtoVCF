@@ -6,7 +6,7 @@ from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_meta
     generate_vcf_metainformation, generate_all_possible_standard_structured_info_lines, \
     generate_all_possible_standard_structured_alt_lines, generate_all_possible_standard_structured_filter_lines, \
     generate_all_possible_standard_structured_format_lines, generate_vcf_header_line, populate_sample_formats, \
-    format_sample_values, read_info_attributes
+    format_sample_values, read_info_attributes, read_sequence_ontology_symbolic_allele
 from convert_gvf_to_vcf.convertGVFtoVCF import VcfLine, GvfFeatureline
 
 
@@ -18,6 +18,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # the inputs below are INFO attribute files
         self.dgva_input_file = os.path.join(self.input_folder_parent, "etc","dgvaINFOattributes.tsv")
         self.gvf_input_file = os.path.join(self.input_folder_parent, "etc","gvfINFOattributes.tsv")
+        self.symbolic_allele_file = os.path.join(self.input_folder_parent,"etc", 'sequence_ontology_symbolic_alleles.tsv')
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
 
@@ -33,10 +34,15 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         assert len(gvf_attribute_dict) > 1
 
+    def test_read_sequence_ontology_symbolic_allele(self):
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
+        assert len(symbolic_allele_dictionary) > 1
+
     def test_gvf_features_to_vcf_objects(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
@@ -54,6 +60,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, dgva_attribute_dict,
                                                                           gvf_attribute_dict,
+                                                                          symbolic_allele_dictionary,
                                                                           assembly_file,
                                                                           lines_custom_structured,
                                                                           lines_standard_ALT, lines_standard_INFO,
@@ -73,6 +80,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
+
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
@@ -91,6 +100,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         v = VcfLine(line_object,
                     dgva_attribute_dict,
                     gvf_attribute_dict,
+                    symbolic_allele_dictionary,
                     assembly_file,
                     lines_custom_structured,
                     lines_standard_ALT,
@@ -112,6 +122,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
@@ -130,6 +141,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         v = VcfLine(line_object,
                     dgva_attribute_dict,
                     gvf_attribute_dict,
+                    symbolic_allele_dictionary,
                     assembly_file,
                     lines_custom_structured,
                     lines_standard_ALT,
@@ -152,6 +164,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
@@ -170,6 +183,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         v = VcfLine(line_object,
                     dgva_attribute_dict,
                     gvf_attribute_dict,
+                    symbolic_allele_dictionary,
                     assembly_file,
                     lines_custom_structured,
                     lines_standard_ALT,
@@ -191,6 +205,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
@@ -209,6 +224,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         v = VcfLine(line_object,
                     dgva_attribute_dict,
                     gvf_attribute_dict,
+                    symbolic_allele_dictionary,
                     assembly_file,
                     lines_custom_structured,
                     lines_standard_ALT,
@@ -232,6 +248,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
@@ -250,6 +267,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         v = VcfLine(line_object,
                     dgva_attribute_dict,
                     gvf_attribute_dict,
+                    symbolic_allele_dictionary,
                     assembly_file,
                     lines_custom_structured,
                     lines_standard_ALT,
@@ -267,6 +285,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
@@ -284,6 +303,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
+                                                                          symbolic_allele_dictionary,
                                                                           self.assembly,
                                                                           lines_custom_structured,
                                                                           lines_standard_ALT,
@@ -305,6 +325,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
@@ -323,6 +344,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
+                                                                          symbolic_allele_dictionary,
                                                                           assembly_file,
                                                                           lines_custom_structured,
                                                                           lines_standard_ALT,
@@ -344,6 +366,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
@@ -361,6 +384,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
+                                                                          symbolic_allele_dictionary,
                                                                           self.assembly,
                                                                           lines_custom_structured,
                                                                           lines_standard_ALT,
@@ -383,6 +407,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
@@ -400,6 +425,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
+                                                                          symbolic_allele_dictionary,
                                                                           self.assembly,
                                                                           lines_custom_structured,
                                                                           lines_standard_ALT,
@@ -422,6 +448,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
         lines_custom_unstructured = []
@@ -438,6 +465,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
+                                                                          symbolic_allele_dictionary,
                                                                           self.assembly,
                                                                           lines_custom_structured,
                                                                           lines_standard_ALT,
@@ -460,6 +488,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
@@ -478,6 +507,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
+                                                                          symbolic_allele_dictionary,
                                                                           assembly_file,
                                                                           lines_custom_structured,
                                                                           lines_standard_ALT,
