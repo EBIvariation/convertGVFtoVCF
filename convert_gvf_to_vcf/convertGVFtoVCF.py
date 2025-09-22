@@ -409,7 +409,7 @@ class VcfLine:
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
         self.format = "pending" #TODO: set this in convertgvfattributes
-        self.generate_symbolic_allele(1,gvf_feature_line_object.feature_type,3)
+
         # # each item in the list exclude_from_info has its own place in the VCF file, so not part of info
         # exclude_from_info = ["ID", # done above
         #                      "Variant_seq", # done above
