@@ -142,6 +142,21 @@ def read_info_attributes(info_attributes_file):
             attribute_dict[key] = attribute_tokens
     return attribute_dict
 
+def read_sequence_ontology_symbolic_allele(so_symbolic_allele_file):
+    """ Read in the file containing sequence ontology symbolic allele and returns a dictionary.
+    :param: so_symbolic_allele_file - the file of sequence ontology symbolic alleles.
+    :return: symbolic allele dictionary - symbolic alleles as key and list of variant types as the value.
+    """
+    symbolic_allele_dict = {}
+    with open(so_symbolic_allele_file) as so_symbolic_allele:
+        next(so_symbolic_allele)
+        for line in so_symbolic_allele:
+            allele_tokens = line.rstrip().split("\t")
+            key = allele_tokens[1]
+            value = allele_tokens[2]
+            symbolic_allele_dict.setdefault(key, []).append(value)
+    return symbolic_allele_dict
+
 
 def extract_reference_allele(fasta_file, chromosome_name, position):
     """ Extracts the reference allele from the assembly.
@@ -345,6 +360,7 @@ class VcfLine:
     def __init__(self, gvf_feature_line_object,
                  dgva_attribute_dict,
                  gvf_attribute_dict,
+                 symbolic_allele_dictionary,
                  assembly_file,
                  lines_custom_structured,
                  lines_standard_ALT,
@@ -368,8 +384,8 @@ class VcfLine:
                                                               all_possible_INFO_lines,
                                                               all_possible_FILTER_lines,
                                                               all_possible_FORMAT_lines)
-
         self.assembly = assembly_file
+        self.symbolic_allele_dictionary = symbolic_allele_dictionary
         # DATALINE
         self.chrom = gvf_feature_line_object.seqid
         self.pos = int(gvf_feature_line_object.start)
@@ -393,7 +409,7 @@ class VcfLine:
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
         self.format = "pending" #TODO: set this in convertgvfattributes
-
+        self.generate_symbolic_allele(1,gvf_feature_line_object.feature_type,3)
         # # each item in the list exclude_from_info has its own place in the VCF file, so not part of info
         # exclude_from_info = ["ID", # done above
         #                      "Variant_seq", # done above
@@ -508,6 +524,10 @@ class VcfLine:
                 reference_allele = "."
             return reference_allele
 
+
+    def generate_symbolic_allele(self, length, variant_type, pos):
+        print("obtaining symbolic allele from the dictionary for ", variant_type)
+        print(self.symbolic_allele_dictionary[variant_type])
 
 
     def __str__(self):
@@ -627,6 +647,7 @@ def generate_vcf_header_line(samples):
 def gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                 dgva_attribute_dict,
                                 gvf_attribute_dict,
+                                symbolic_allele_dictionary,
                                 assembly_file,
                                 lines_custom_structured,
                                 lines_standard_ALT,
@@ -663,6 +684,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
         vcf_object = VcfLine(gvf_featureline,
                              dgva_attribute_dict,
                              gvf_attribute_dict,
+                             symbolic_allele_dictionary,
                              assembly_file,
                              lines_custom_structured,
                              lines_standard_ALT,
@@ -762,8 +784,12 @@ def main():
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
     dgva_info_attributes_file = os.path.join(etc_folder, 'dgvaINFOattributes.tsv')
     gvf_info_attributes_file = os.path.join(etc_folder, 'gvfINFOattributes.tsv')
+    symbolic_allele_file = os.path.join(etc_folder, 'sequence_ontology_symbolic_alleles.tsv')
+
     dgva_attribute_dict = read_info_attributes(info_attributes_file=dgva_info_attributes_file) # needed to generate custom strings
     gvf_attribute_dict = read_info_attributes(info_attributes_file=gvf_info_attributes_file)
+    symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(symbolic_allele_file)
+
     if args.assembly:
         assembly_file = os.path.abspath(args.assembly)
     else:
@@ -771,6 +797,7 @@ def main():
     vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                       dgva_attribute_dict,
                                                                       gvf_attribute_dict,
+                                                                      symbolic_allele_dictionary,
                                                                       assembly_file,
                                                                       lines_custom_structured,
                                                                       lines_standard_ALT,
