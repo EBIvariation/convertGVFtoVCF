@@ -464,6 +464,9 @@ class VcfLine:
         return (padded_base, self.pos, self.ref, self.alt)
 
     def build_iupac_ambiguity_code(self):
+        """ Builds dictionary for the iupac ambiguity code
+        :return: iupac_ambiguity_dictionary: iupac code as key, list of values as value
+        """
         # see PMID: 20202974 (Table 1) for the official list
         iupac_codes = ["R", "Y", "M", "K", "S", "D", "W", "H", "B", "V", "D", "N"]
         R = ["A", "G"]
@@ -482,6 +485,10 @@ class VcfLine:
         return iupac_ambiguity_dictionary
 
     def convert_iupac_ambiguity_code(self, iupac_ambiguity_dictionary):
+        """ Converts the REF allele if it contains IUPAC ambiguity cod
+        :param iupac_ambiguity_dictionary: dictionary of IUPAC ambiguity code and a list of values
+        :return: self.ref
+        """
         if self.ref in iupac_ambiguity_dictionary:
             iupac_value = min(iupac_ambiguity_dictionary[self.ref])
             self.ref = iupac_value
@@ -500,6 +507,8 @@ class VcfLine:
                 print("WARNING: No reference provided. Placeholder inserted for Reference allele.")
                 reference_allele = "."
             return reference_allele
+
+
 
     def __str__(self):
         string_to_return = '\t'.join((self.chrom, self.pos, self.key, self.qual, self.filter, self.info, self.source, self.phase, self.end, self.so_type, self.sample_name, self.format))
