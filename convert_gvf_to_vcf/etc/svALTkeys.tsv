@@ -6,13 +6,12 @@ INS:ME:ALU	##ALT=<ID=INS:ME:ALU,Description="Alu insertion">
 INS:ME:LINE1	##ALT=<ID=INS:ME:LINE1,Description="Mobile element insertion LINE1">
 INS:ME:SVA	##ALT=<ID=INS:ME:SVA,Description="SVA insertion">
 DUP	##ALT=<ID=DUP,Description="Duplication">
+DUP:TANDEM	##ALT=<ID=DUP:TANDEM,Description="Tandem duplication">
 DEL	##ALT=<ID=DEL,Description="Deletion">
+DEL:ME	##ALT=<ID=DEL:ME,Description="Deletion of mobile element relative to the reference">
 DEL:ME:ALU	##ALT=<ID=DEL:ME:ALU,Description="Alu deletion">
 DEL:ME:LINE1	##ALT=<ID=DEL:ME:LINE1,Description="LINE1 deletion">
 CNV	##ALT=<ID=CNV,Description="Copy number variable region">
 CNV:TR	##ALT=<ID=CNV:TR,Description="Tandem repeat determined based on DNA abundance">
-DUP:TANDEM	##ALT=<ID=DUP:TANDEM,Description="Tandem duplication">
-DEL:ME	##ALT=<ID=DEL:ME,Description="Deletion of mobile element relative to the reference">
-INS:ME	##ALT=<ID=INS:ME,Description="Insertion of mobile element relative to the reference">
 R	##ALT=<ID=R,Description="IUPAC code R = A/G">
 M	##ALT=<ID=M,Description="IUPAC code M = A/C">
