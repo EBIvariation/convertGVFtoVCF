@@ -7,7 +7,6 @@ INS:ME:LINE1	##ALT=<ID=INS:ME:LINE1,Description="Mobile element insertion LINE1"
 INS:ME:SVA	##ALT=<ID=INS:ME:SVA,Description="SVA insertion">
 DUP	##ALT=<ID=DUP,Description="Duplication">
 DEL	##ALT=<ID=DEL,Description="Deletion">
-DEL	##ALT=<ID=DEL,Description="Deletion">
 DEL:ME:ALU	##ALT=<ID=DEL:ME:ALU,Description="Alu deletion">
 DEL:ME:LINE1	##ALT=<ID=DEL:ME:LINE1,Description="LINE1 deletion">
 CNV	##ALT=<ID=CNV,Description="Copy number variable region">
