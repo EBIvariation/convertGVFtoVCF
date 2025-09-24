@@ -152,11 +152,22 @@ def read_sequence_ontology_symbolic_allele(so_symbolic_allele_file):
         next(so_symbolic_allele)
         for line in so_symbolic_allele:
             allele_tokens = line.rstrip().split("\t")
-            key = allele_tokens[1]
-            value = allele_tokens[2]
-            symbolic_allele_dict.setdefault(key, []).append(value)
+            sequence_ontology_id = allele_tokens[0]
+            name = allele_tokens[1]
+            symb_allele = allele_tokens[2]
+            description = allele_tokens[3]
+            symbolic_allele_dict.setdefault(name, []).append(sequence_ontology_id)
+            symbolic_allele_dict.setdefault(name, []).append(symb_allele)
+            symbolic_allele_dict.setdefault(name, []).append(description)
     return symbolic_allele_dict
 
+def generate_angled_bracket(id):
+    """ Formats angled brackets strings for symbolic alleles.
+    :param id: id of the angled bracket
+    :return: angled_bracket_string
+    """
+    angled_bracket_string = f'<{id}>'
+    return angled_bracket_string
 
 def extract_reference_allele(fasta_file, chromosome_name, position):
     """ Extracts the reference allele from the assembly.
@@ -398,18 +409,19 @@ class VcfLine:
         # INFO
         #TODO: specific SV info keys populated from gvf_feature_line
         self.key = self.chrom + "_" + str(self.pos)
-        self.info = "pending_aggregation" # TODO: add info field for self.info
+        self.info = [] # TODO: add info field for self.info
         self.source = gvf_feature_line_object.source
 
         # # non-vcf
         self.phase = gvf_feature_line_object.phase # this is always a placeholder'.'
-        self.end = gvf_feature_line_object.end
+        self.end = int(gvf_feature_line_object.end)
         self.so_type = gvf_feature_line_object.feature_type #currently column 3 of gvf, but could be an attribute so perhapsVCF: INFO or FORMAT?
 
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
         self.format = "pending" #TODO: set this in convertgvfattributes
 
+        self.length = self.end - self.pos
         # # each item in the list exclude_from_info has its own place in the VCF file, so not part of info
         # exclude_from_info = ["ID", # done above
         #                      "Variant_seq", # done above
@@ -525,10 +537,65 @@ class VcfLine:
             return reference_allele
 
 
-    def generate_symbolic_allele(self, length, variant_type, pos):
-        print("obtaining symbolic allele from the dictionary for ", variant_type)
-        print(self.symbolic_allele_dictionary[variant_type])
+    def generate_symbolic_allele(self, lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines):
+        """ Generates the symbolic allele and stores the corresponding metainformation lines.
+        :param lines_standard_ALT: stores ALT metainformation lines
+        :param lines_standard_INFO: stores INFO metainformation lines
+        :param all_possible_ALT_lines: list of all possible ALT lines
+        :param all_possible_INFO_lines: list of all possible INFO lines
+        :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
+        """
+        symbolic_allele_id = self.symbolic_allele_dictionary[self.so_type][1]
+        symbolic_allele = generate_angled_bracket(symbolic_allele_id)
 
+        if symbolic_allele_id in all_possible_ALT_lines:
+            lines_standard_ALT.append(all_possible_ALT_lines[symbolic_allele_id])
+
+        if self.length:
+            info_svlen = "SVLEN=" + str(self.length)
+            self.info.append(info_svlen)
+            lines_standard_INFO.append(all_possible_INFO_lines["SVLEN"])
+
+        start_range_lower_bound = self.vcf_value["Start_range"][0]
+        start_range_upper_bound = self.vcf_value["Start_range"][1]
+        end_range_lower_bound = self.vcf_value["End_range"][0]
+        end_range_upper_bound = self.vcf_value["End_range"][1]
+
+        if start_range_lower_bound == "." or start_range_upper_bound == "." or end_range_lower_bound == "." or end_range_upper_bound == ".":
+            is_imprecise = False
+            info_end = "END=" + str(self.pos + len(self.ref) - 1)
+        else:
+            is_imprecise = True
+            info_imprecise = "IMPRECISE"
+
+            cipos_lower_bound = int(start_range_lower_bound) - self.pos
+            cipos_upper_bound = int(start_range_upper_bound) - self.pos
+            info_cipos = "CIPOS=" + str(cipos_lower_bound) + "," + str(cipos_upper_bound)
+
+            ciend_lower_bound = int(start_range_lower_bound) - self.pos
+            ciend_upper_bound = int(start_range_upper_bound) - self.pos
+            info_ciend = "CIEND=" + str(ciend_lower_bound) + "," + str(ciend_upper_bound)
+
+            if symbolic_allele == "<INS>":
+                info_end ="END=" + str( self.pos + len(self.ref) - 1 )
+            elif symbolic_allele == "<DEL>" or symbolic_allele == "<DUP>" or symbolic_allele == "<INV>" or symbolic_allele == "<CNV>":
+                info_end = "END=" + str(self.pos + self.length)
+            elif symbolic_allele == "<*>":
+                info_end = "END=" + str(self.pos + len(self.ref))
+            else:
+                "Cannot identify symbolic allele"
+        # for all variants (precise and imprecise)
+        self.info.append(info_end)
+        lines_standard_INFO.append(all_possible_INFO_lines["END"])
+        # for imprecise variants only
+        if is_imprecise:
+            self.info.append(info_imprecise)
+            lines_standard_INFO.append(all_possible_INFO_lines["IMPRECISE"])
+            self.info.append(info_cipos)
+            lines_standard_INFO.append(all_possible_INFO_lines["CIPOS"])
+            self.info.append(info_ciend)
+            lines_standard_INFO.append(all_possible_INFO_lines["CIEND"])
+        return symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
 
     def __str__(self):
         string_to_return = '\t'.join((self.chrom, self.pos, self.key, self.qual, self.filter, self.info, self.source, self.phase, self.end, self.so_type, self.sample_name, self.format))
