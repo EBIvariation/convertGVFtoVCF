@@ -152,7 +152,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     all_possible_INFO_lines,
                     all_possible_FILTER_lines,
                     all_possible_FORMAT_lines)
-        (padded_base, pos, ref, alt) = v.add_padded_base(False)
+
+        test_ref = "A"
+        test_alt = "T"
+        padded_base, pos, ref, alt = v.add_padded_base(True, test_ref, test_alt)
         assert padded_base is not None
         assert pos is not None
         assert ref is not None
@@ -405,7 +408,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     all_possible_FILTER_lines,
                     all_possible_FORMAT_lines)
         alt_allele = v.get_alt(lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines)
-        assert alt_allele > 0
+        assert len(alt_allele) > 0
 
 
 
