@@ -240,6 +240,49 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         converted_ref_allele = v.convert_iupac_ambiguity_code(my_ipuac_dictionary)
         assert converted_ref_allele not in ["R", "Y", "M", "K", "S", "D", "W", "H", "B", "V", "D", "N"]
 
+    def test_check_ref(self):
+        gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
+        f_list = gvf_feature_line.split("\t")
+        line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6],
+                                     f_list[7], f_list[8])
+        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
+        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
+        assembly_file = self.assembly
+        # custom meta-information lines for this VCF file
+        lines_custom_structured = []
+        lines_custom_unstructured = []
+        # standard structured meta-information lines for this VCF file
+        lines_standard_ALT = []
+        lines_standard_INFO = []
+        lines_standard_FILTER = []
+        lines_standard_FORMAT = []
+        # Dictionary for all possible VCF meta-information lines
+        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
+        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
+        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
+        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+
+        v = VcfLine(line_object,
+                    dgva_attribute_dict,
+                    gvf_attribute_dict,
+                    symbolic_allele_dictionary,
+                    assembly_file,
+                    lines_custom_structured,
+                    lines_standard_ALT,
+                    lines_standard_INFO,
+                    lines_standard_FILTER,
+                    lines_standard_FORMAT,
+                    all_possible_ALT_lines,
+                    all_possible_INFO_lines,
+                    all_possible_FILTER_lines,
+                    all_possible_FORMAT_lines)
+        reference_allele_to_check = "TGCR"
+        new_ref = v.check_ref(reference_allele_to_check)
+        iupac_code = ["R", "Y", "M", "K", "S", "D", "W", "H", "B", "V", "D", "N"]
+        assert all(code not in new_ref for code in iupac_code)
+
 
     def test_get_ref(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
@@ -320,6 +363,47 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     all_possible_FORMAT_lines)
         output_symbolic_allele, self.info, output_lines_standard_ALT, output_lines_standard_INFO = v.generate_symbolic_allele(lines_standard_ALT,lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines)
         assert len(output_symbolic_allele) > 1
+
+    def test_get_alt(self):
+        gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	81	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=77,78;End_range=80,81;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
+        f_list = gvf_feature_line.split("\t")
+        line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
+        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
+        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
+        assembly_file = self.assembly
+        # custom meta-information lines for this VCF file
+        lines_custom_structured = []
+        lines_custom_unstructured = []
+        # standard structured meta-information lines for this VCF file
+        lines_standard_ALT = []
+        lines_standard_INFO = []
+        lines_standard_FILTER = []
+        lines_standard_FORMAT = []
+        # Dictionary for all possible VCF meta-information lines
+        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
+        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
+        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
+        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+
+        v = VcfLine(line_object,
+                    dgva_attribute_dict,
+                    gvf_attribute_dict,
+                    symbolic_allele_dictionary,
+                    assembly_file,
+                    lines_custom_structured,
+                    lines_standard_ALT,
+                    lines_standard_INFO,
+                    lines_standard_FILTER,
+                    lines_standard_FORMAT,
+                    all_possible_ALT_lines,
+                    all_possible_INFO_lines,
+                    all_possible_FILTER_lines,
+                    all_possible_FORMAT_lines)
+        print("alt", v.get_alt())
+
+
 
     def test_generate_vcf_metainformation(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
