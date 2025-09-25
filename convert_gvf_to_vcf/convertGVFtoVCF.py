@@ -419,7 +419,7 @@ class VcfLine:
         self.info = [] # TODO: add info field for self.info
         # calculated last
         self.ref = self.get_ref()
-        self.alt = self.get_alt(lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines) # attributes: variant_seq
+        self.alt = self.get_alt(lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines)
 
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
@@ -577,10 +577,12 @@ class VcfLine:
         if symbolic_allele_id in all_possible_ALT_lines:
             lines_standard_ALT.append(all_possible_ALT_lines[symbolic_allele_id])
 
+        info_svlen = None
         if self.length:
             info_svlen = "SVLEN=" + str(self.length)
-            self.info.append(info_svlen)
-            lines_standard_INFO.append(all_possible_INFO_lines["SVLEN"])
+            #self.info.append(info_svlen)
+            #svlen_info_metainformation_line = all_possible_INFO_lines['SVLEN']
+            #lines_standard_INFO.append(svlen_info_metainformation_line)
 
         start_range_lower_bound = self.vcf_value["Start_range"][0]
         start_range_upper_bound = self.vcf_value["Start_range"][1]
@@ -619,6 +621,8 @@ class VcfLine:
         # for all variants (precise and imprecise)
         self.info.append(info_end)
         lines_standard_INFO.append(all_possible_INFO_lines["END"])
+        self.info.append(info_svlen)
+        lines_standard_INFO.append(all_possible_INFO_lines["SVLEN"])
         # for imprecise variants only
         if is_imprecise:
             self.info.append(info_imprecise)
