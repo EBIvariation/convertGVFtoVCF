@@ -512,33 +512,55 @@ class VcfLine:
         iupac_ambiguity_dictionary = dict(zip(iupac_codes, iupac_values))
         return iupac_ambiguity_dictionary
 
-    def convert_iupac_ambiguity_code(self, iupac_ambiguity_dictionary):
+    def convert_iupac_ambiguity_code(self, iupac_ambiguity_dictionary, ref_to_convert):
         """ Converts the REF allele if it contains IUPAC ambiguity cod
         :param iupac_ambiguity_dictionary: dictionary of IUPAC ambiguity code and a list of values
         :return: self.ref
         """
-        if self.ref in iupac_ambiguity_dictionary:
-            iupac_value = min(iupac_ambiguity_dictionary[self.ref])
-            self.ref = iupac_value
-        return self.ref
+        converted_ref = ""
+        for base in ref_to_convert:
+            if base in iupac_ambiguity_dictionary:
+                iupac_value = min(iupac_ambiguity_dictionary[base])
+            converted_base = iupac_value
+        else:
+            converted_base = base
+            converted_ref = converted_ref + converted_base
+        return converted_ref
+
+    def check_ref(self, ref_allele_to_be_checked):
+        """ Checks whether a reference allele meets the requirements of the VCF specification
+        :param ref_allele_to_be_checked: reference allele to check
+        :return: checked_reference_allele: reference allele that meets the requirements of the VCF specification"""
+        if isinstance(ref_allele_to_be_checked, str):
+            if not all(bases in ref_allele_to_be_checked for bases in ["A", "C", "G", "T", "N"]):
+                iupac_ambiguity_dictionary = self.build_iupac_ambiguity_code()
+                checked_reference_allele = self.convert_iupac_ambiguity_code(iupac_ambiguity_dictionary, ref_allele_to_be_checked)
+            else:
+                checked_reference_allele = ref_allele_to_be_checked
+        else:
+            print("WARNING: Ref allele must be a string. Setting to missing value.", ref_allele_to_be_checked)
+            checked_reference_allele = "."
+        return checked_reference_allele
 
     def get_ref(self):
         """ Gets the reference allele from attributes column or if not found, returns "."
         :return: reference allele
         """
         if "Reference_seq" in self.vcf_value.keys():
-            return self.vcf_value["Reference_seq"] # attributes:reference_seq
+            reference_allele = self.vcf_value["Reference_seq"]
         else:
             if self.assembly:
                 reference_allele = extract_reference_allele(self.assembly, self.chrom, self.pos)
             else:
                 print("WARNING: No reference provided. Placeholder inserted for Reference allele.")
                 reference_allele = "."
-            return reference_allele
+        if reference_allele != ".":
+            reference_allele = self.check_ref(reference_allele)
+        return reference_allele
 
 
     def generate_symbolic_allele(self, lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines):
-        """ Generates the symbolic allele and stores the corresponding metainformation lines.
+        """ Generates the symbolic allele and stores the corresponding metainformation lines. Also determines if variant is precise or imprecise.
         :param lines_standard_ALT: stores ALT metainformation lines
         :param lines_standard_INFO: stores INFO metainformation lines
         :param all_possible_ALT_lines: list of all possible ALT lines
@@ -560,6 +582,12 @@ class VcfLine:
         start_range_upper_bound = self.vcf_value["Start_range"][1]
         end_range_lower_bound = self.vcf_value["End_range"][0]
         end_range_upper_bound = self.vcf_value["End_range"][1]
+
+        # setting up fields to be inserted into INFO
+        info_end = None
+        info_imprecise = None
+        info_cipos = None
+        info_ciend = None
 
         if start_range_lower_bound == "." or start_range_upper_bound == "." or end_range_lower_bound == "." or end_range_upper_bound == ".":
             is_imprecise = False
@@ -596,6 +624,25 @@ class VcfLine:
             self.info.append(info_ciend)
             lines_standard_INFO.append(all_possible_INFO_lines["CIEND"])
         return symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
+
+    def get_alt(self, lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines):
+        if "A" in self.vcf_value["Variant_seq"] or "C" in self.vcf_value["Variant_seq"] or "T" in self.vcf_value["Variant_seq"] or "G" in self.vcf_value["Variant_seq"] or "N" in self.vcf_value["Variant_seq"]:
+            alterative_allele = self.vcf_value["Variant_seq"]
+        elif self.vcf_value["Variant_seq"] == '.':
+            symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO = self.generate_symbolic_allele(lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines)
+            if symbolic_allele is None:
+                alterative_allele = "."
+            elif self.vcf_value["Variant_seq"] == "." and symbolic_allele is not None:
+                alterative_allele = symbolic_allele
+            else:
+                "Cannot identify symbolic allele. Variant type is not supported."
+        elif self.vcf_value["Variant_seq"] == "-":
+            # checking what these variant types are
+            # add padded base
+            pass
+        else:
+            "Could not determine the alterative allele."
+        return alterative_allele
 
     def __str__(self):
         string_to_return = '\t'.join((self.chrom, self.pos, self.key, self.qual, self.filter, self.info, self.source, self.phase, self.end, self.so_type, self.sample_name, self.format))
