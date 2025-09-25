@@ -522,9 +522,9 @@ class VcfLine:
             if base in iupac_ambiguity_dictionary:
                 iupac_value = min(iupac_ambiguity_dictionary[base])
                 converted_base = iupac_value
-        else:
-            converted_base = base
-            converted_ref = converted_ref + converted_base
+            else:
+                converted_base = base
+                converted_ref = converted_ref + converted_base
         return converted_ref
 
     def check_ref(self, ref_allele_to_be_checked):
