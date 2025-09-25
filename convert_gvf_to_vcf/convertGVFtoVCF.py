@@ -1,5 +1,7 @@
 import argparse
 import os
+from enum import unique
+
 from Bio import SeqIO
 
 # setting up paths to useful directories
@@ -651,7 +653,8 @@ class VcfLine:
         return string_to_return
 
 #step 9 using custom unstructured meta-information line = generate_custom_unstructured_metainfomation_line
-def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential,  list_of_vcf_objects):
+def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential,  list_of_vcf_objects,
+                                 lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT):
     """ Generates a list of metainformation lines for the VCF header
     :param lines_custom_unstructured: a list of formatted unstructured metainformation lines using a custom key value pair
     :param gvf_pragmas: list of gvf pragmas to convert
@@ -662,6 +665,11 @@ def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non
     pragmas_to_add = []
     unique_pragmas_to_add = []
     sample_names = []
+
+    unique_alt_lines_to_add = []
+    unique_info_lines_to_add = []
+    unique_filter_lines_to_add = []
+    unique_format_lines_to_add = []
     # MANDATORY: file format for VCF
     pragma_fileformat = generate_custom_unstructured_metainfomation_line("fileformat", "VCFv4.4",lines_custom_unstructured)
     pragmas_to_add.append(pragma_fileformat)
@@ -746,7 +754,19 @@ def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non
     for pragma in pragmas_to_add:
         if pragma not in unique_pragmas_to_add:
             unique_pragmas_to_add.append(pragma)
-    return unique_pragmas_to_add, sample_names
+    for alt_line in lines_standard_ALT:
+        if alt_line not in unique_alt_lines_to_add:
+            unique_alt_lines_to_add.append(alt_line)
+    for info_line in lines_standard_INFO:
+        if info_line not in unique_info_lines_to_add:
+            unique_info_lines_to_add.append(info_line)
+    for filter_line in lines_standard_FILTER:
+        if filter_line not in unique_filter_lines_to_add:
+            unique_filter_lines_to_add.append(filter_line)
+    for format_line in lines_standard_FORMAT:
+        if format_line not in unique_format_lines_to_add:
+            unique_format_lines_to_add.append(format_line)
+    return unique_pragmas_to_add, sample_names, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add
 
 # step 10
 def generate_vcf_header_line(samples):
@@ -931,9 +951,17 @@ def main():
     print("Generating the VCF header and the meta-information lines")
 
     with open(args.vcf_output, "w") as vcf_output:
-        unique_pragmas_to_add, samples = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects)
+        unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
         for pragma in unique_pragmas_to_add:
             vcf_output.write(f"{pragma}\n")
+        for alt_lines in unique_alt_lines_to_add:
+            vcf_output.write(f"{alt_lines}\n")
+        for info_lines in unique_info_lines_to_add:
+            vcf_output.write(f"{info_lines}\n")
+        for filter_lines in unique_filter_lines_to_add:
+            vcf_output.write(f"{filter_lines}\n")
+        for format_lines in unique_format_lines_to_add:
+            vcf_output.write(f"{format_lines}\n")
         header_fields = generate_vcf_header_line(samples)
         vcf_output.write(f"{header_fields}\n")
         print("Generating the VCF datalines")
