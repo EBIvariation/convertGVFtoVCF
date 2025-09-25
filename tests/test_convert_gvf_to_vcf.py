@@ -152,9 +152,11 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     all_possible_INFO_lines,
                     all_possible_FILTER_lines,
                     all_possible_FORMAT_lines)
-        print("before", v.pos, v.ref, v.alt)
         (padded_base, pos, ref, alt) = v.add_padded_base(False)
-        print(padded_base, pos, ref, alt)
+        assert padded_base is not None
+        assert pos is not None
+        assert ref is not None
+        assert alt is not None
 
     def test_build_iupac_ambiguity_code(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
@@ -195,7 +197,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     all_possible_FILTER_lines,
                     all_possible_FORMAT_lines)
         my_ipuac_dictionary = v.build_iupac_ambiguity_code()
-        print("my_ipuac_dictionary", my_ipuac_dictionary)
+        assert len(my_ipuac_dictionary) > 0
 
     def test_convert_iupac_ambiguity_code(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
@@ -237,7 +239,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     all_possible_FORMAT_lines)
 
         my_ipuac_dictionary = v.build_iupac_ambiguity_code()
-        converted_ref_allele = v.convert_iupac_ambiguity_code(my_ipuac_dictionary)
+        ref_to_convert = "TAGD"
+        converted_ref_allele = v.convert_iupac_ambiguity_code(my_ipuac_dictionary, ref_to_convert)
         assert converted_ref_allele not in ["R", "Y", "M", "K", "S", "D", "W", "H", "B", "V", "D", "N"]
 
     def test_check_ref(self):
@@ -401,7 +404,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     all_possible_INFO_lines,
                     all_possible_FILTER_lines,
                     all_possible_FORMAT_lines)
-        print("alt", v.get_alt())
+        alt_allele = v.get_alt(lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines)
+        assert alt_allele > 0
 
 
 
@@ -482,8 +486,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                           )
 
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
-        unique_pragmas_to_add, samples = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas,
-                                                                      gvf_non_essential, list_of_vcf_objects)
+        unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
         assert len(unique_pragmas_to_add) > 1 and len(samples) > 1
 
     def test_generate_vcf_header_line(self):
@@ -522,8 +525,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                           )
 
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
-        unique_pragmas_to_add, samples = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas,
-                                                                      gvf_non_essential, list_of_vcf_objects)
+        unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
         header_fields = generate_vcf_header_line(samples)
         assert len(header_fields) > 1
 
@@ -562,8 +564,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                           all_possible_FORMAT_lines
                                                                           )
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
-        unique_pragmas_to_add, samples = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas,
-                                                                      gvf_non_essential, list_of_vcf_objects)
+        unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(
+            lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, lines_standard_ALT,
+            lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
         sample_name_format_value = populate_sample_formats(samples)
         assert len(sample_name_format_value) > 1
 
@@ -602,8 +605,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                           all_possible_FORMAT_lines
                                                                           )
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
-        unique_pragmas_to_add, samples = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas,
-                                                                      gvf_non_essential, list_of_vcf_objects)
+        unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(
+            lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, lines_standard_ALT,
+            lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
         sample_name_format_value = populate_sample_formats(samples)
         sample_format_values_string = format_sample_values(sample_name_format_value)
         assert isinstance(sample_format_values_string, str)
@@ -644,8 +648,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                           all_possible_FORMAT_lines
                                                                           )
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
-        unique_pragmas_to_add, samples = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas,
-                                                                      gvf_non_essential, list_of_vcf_objects)
+        unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
         assert len(formatted_vcf_datalines) > 1
 
