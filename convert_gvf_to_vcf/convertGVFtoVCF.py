@@ -521,7 +521,7 @@ class VcfLine:
         for base in ref_to_convert:
             if base in iupac_ambiguity_dictionary:
                 iupac_value = min(iupac_ambiguity_dictionary[base])
-            converted_base = iupac_value
+                converted_base = iupac_value
         else:
             converted_base = base
             converted_ref = converted_ref + converted_base
