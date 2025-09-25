@@ -171,17 +171,21 @@ def generate_angled_bracket(id):
     angled_bracket_string = f'<{id}>'
     return angled_bracket_string
 
-def extract_reference_allele(fasta_file, chromosome_name, position):
+def extract_reference_allele(fasta_file, chromosome_name, position, end):
     """ Extracts the reference allele from the assembly.
     :param fasta_file: FASTA file of the assembly
     :param chromosome_name: name of the sequence
     :param position: position
+    :param end: end position
     :return: reference_allele: base found at this chromosome_name at this position within this fasta_file
     """
     # using .index instead of .todict for memory efficiency:  https://biopython.org/docs/1.76/api/Bio.SeqIO.html#input-multiple-records
     records_dictionary = SeqIO.index(fasta_file, "fasta")
     zero_indexed_position = position - 1 # minus one because zero indexed
-    reference_allele =  records_dictionary[chromosome_name].seq[zero_indexed_position]
+    zero_indexed_end = end - 1
+    reference_allele = ""
+    for position in range(zero_indexed_position, zero_indexed_end):
+        reference_allele = reference_allele + records_dictionary[chromosome_name].seq[position]
     records_dictionary.close()
     return reference_allele
 
@@ -401,10 +405,11 @@ class VcfLine:
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
 
         # GVF
-        self.phase = gvf_feature_line_object.phase # this is always a placeholder'.'
-        self.end = int(gvf_feature_line_object.end)
-        self.so_type = gvf_feature_line_object.feature_type #currently column 3 of gvf, but could be an attribute so perhapsVCF: INFO or FORMAT?
         self.source = gvf_feature_line_object.source
+        self.so_type = gvf_feature_line_object.feature_type #currently column 3 of gvf, but could be an attribute so perhapsVCF: INFO or FORMAT?
+        self.end = int(gvf_feature_line_object.end)
+        self.phase = gvf_feature_line_object.phase # this is always a placeholder'.'
+
         # VCF DATALINE
         self.chrom = gvf_feature_line_object.seqid
         self.pos = int(gvf_feature_line_object.start)
@@ -468,7 +473,7 @@ class VcfLine:
         self.pos += adjustment
         return self.pos
 
-    def add_padded_base(self, placed_before : bool):
+    def add_padded_base(self, placed_before : bool, ref, alt):
         """ Adds padded base to REF and ALT allele
         :param placed_before: True or False
         :return: (padded_base, self.pos, self.ref, self.alt)
@@ -476,24 +481,25 @@ class VcfLine:
         if placed_before:
             padded_base_pos = self.pos - 1
             self.pos = padded_base_pos
-            padded_base = extract_reference_allele(self.assembly, self.chrom, self.pos)
-            self.ref = padded_base + self.ref
-            if self.alt == ".":
-                self.alt = padded_base
+            padded_base = extract_reference_allele(self.assembly, self.chrom, self.pos, self.end)
+            ref = padded_base + ref
+            if alt == ".":
+                alt = padded_base
             else:
-                self.alt = padded_base + self.alt
+                alt = padded_base + alt
         elif not placed_before:
             padded_base_pos = self.pos + 1
-            self.pos = padded_base_pos
-            padded_base = extract_reference_allele(self.assembly, self.chrom, self.pos)
-            self.ref = self.ref + padded_base
-            if self.alt == ".":
-                self.alt = padded_base
+            new_end = self.end + 1
+            padded_base = extract_reference_allele(self.assembly, self.chrom, padded_base_pos, new_end)
+            ref = ref + padded_base
+            if alt == ".":
+                alt = padded_base
             else:
-                self.alt = self.alt + padded_base
+                alt = alt + padded_base
         else:
             print("WARNING: Variable placed_before unknown: " + str(placed_before))
-        return (padded_base, self.pos, self.ref, self.alt)
+            padded_base = None
+        return padded_base, self.pos, ref, alt
 
     def build_iupac_ambiguity_code(self):
         """ Builds dictionary for the iupac ambiguity code
@@ -554,7 +560,7 @@ class VcfLine:
             reference_allele = self.vcf_value["Reference_seq"]
         else:
             if self.assembly:
-                reference_allele = extract_reference_allele(self.assembly, self.chrom, self.pos)
+                reference_allele = extract_reference_allele(self.assembly, self.chrom, self.pos, self.end)
             else:
                 print("WARNING: No reference provided. Placeholder inserted for Reference allele.")
                 reference_allele = "."
@@ -580,9 +586,6 @@ class VcfLine:
         info_svlen = None
         if self.length:
             info_svlen = "SVLEN=" + str(self.length)
-            #self.info.append(info_svlen)
-            #svlen_info_metainformation_line = all_possible_INFO_lines['SVLEN']
-            #lines_standard_INFO.append(svlen_info_metainformation_line)
 
         start_range_lower_bound = self.vcf_value["Start_range"][0]
         start_range_upper_bound = self.vcf_value["Start_range"][1]
@@ -642,6 +645,15 @@ class VcfLine:
                 alterative_allele = "."
             elif self.vcf_value["Variant_seq"] == "." and symbolic_allele is not None:
                 alterative_allele = symbolic_allele
+                # add padded bases
+                if self.pos == 1:
+                    #print("pos, ref, alt",self.pos,self.ref, alterative_allele)
+                    padded_base, self.pos, self.ref, self.alt = self.add_padded_base(False, self.ref, alterative_allele)
+                    self.ref = self.check_ref(self.ref)
+                else:
+                    #print("pos, ref, alt", self.pos,self.ref, alterative_allele)
+                    padded_base, self.pos, self.ref, self.alt = self.add_padded_base(True, self.ref, alterative_allele)
+                    self.ref = self.check_ref(self.ref)
             else:
                 "Cannot identify symbolic allele. Variant type is not supported."
         elif self.vcf_value["Variant_seq"] == "-":
