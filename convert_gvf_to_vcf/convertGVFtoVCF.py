@@ -397,12 +397,17 @@ class VcfLine:
                                                               all_possible_FORMAT_lines)
         self.assembly = assembly_file
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
-        # DATALINE
+
+        # GVF
+        self.phase = gvf_feature_line_object.phase # this is always a placeholder'.'
+        self.end = int(gvf_feature_line_object.end)
+        self.so_type = gvf_feature_line_object.feature_type #currently column 3 of gvf, but could be an attribute so perhapsVCF: INFO or FORMAT?
+        self.source = gvf_feature_line_object.source
+        # VCF DATALINE
         self.chrom = gvf_feature_line_object.seqid
         self.pos = int(gvf_feature_line_object.start)
         self.id = self.vcf_value["ID"]  # attributes: ID
-        self.ref = self.get_ref()
-        self.alt = self.vcf_value["Variant_seq"] # attributes: variant_seq
+        self.length = self.end - self.pos
         self.qual = gvf_feature_line_object.score # see EVA-3879: this is always '.'
         self.filter = "." # this is always a placeholder '.'; perhaps could add s50.
 
@@ -410,18 +415,15 @@ class VcfLine:
         #TODO: specific SV info keys populated from gvf_feature_line
         self.key = self.chrom + "_" + str(self.pos)
         self.info = [] # TODO: add info field for self.info
-        self.source = gvf_feature_line_object.source
-
-        # # non-vcf
-        self.phase = gvf_feature_line_object.phase # this is always a placeholder'.'
-        self.end = int(gvf_feature_line_object.end)
-        self.so_type = gvf_feature_line_object.feature_type #currently column 3 of gvf, but could be an attribute so perhapsVCF: INFO or FORMAT?
+        # calculated last
+        self.ref = self.get_ref()
+        self.alt = self.get_alt(lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines) # attributes: variant_seq
 
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
         self.format = "pending" #TODO: set this in convertgvfattributes
 
-        self.length = self.end - self.pos
+
         # # each item in the list exclude_from_info has its own place in the VCF file, so not part of info
         # exclude_from_info = ["ID", # done above
         #                      "Variant_seq", # done above
@@ -854,6 +856,7 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
 
     formatted_vcf_datalines = []
     for vcf_obj in list_of_vcf_objects:
+        vcf_info_string = ";".join(vcf_obj.info)
         vcf_line = (f"{vcf_obj.chrom}\t"
                         f"{vcf_obj.pos}\t"
                         f"{vcf_obj.id}\t"
@@ -861,7 +864,8 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
                         f"{vcf_obj.alt}\t" #TODO: should this always be empty
                         f"{vcf_obj.qual}\t" #TODO: should this always be empty
                         f"{vcf_obj.filter}\t" #TODO: should this always be empty
-                        f"{vcf_obj.info}\t"
+                        #f"{vcf_obj.info}\t"
+                        f"{vcf_info_string}\t"
                         f"{vcf_obj.format}\t"
                         f"{sample_format_values_string}"
                         )
