@@ -643,7 +643,7 @@ class VcfLine:
             symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO = self.generate_symbolic_allele(lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines)
             if symbolic_allele is None:
                 alterative_allele = "."
-            elif (self.vcf_value["Variant_seq"] == "."  or self.vcf_value["Variant_seq"] == "-") and symbolic_allele is not None:
+            elif (self.vcf_value["Variant_seq"] == "." or self.vcf_value["Variant_seq"] == "-") and symbolic_allele is not None:
                 alterative_allele = symbolic_allele
                 # add padded bases
                 if self.pos == 1:
