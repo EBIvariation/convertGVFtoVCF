@@ -637,6 +637,13 @@ class VcfLine:
         return symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
 
     def get_alt(self, lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines):
+        """ Gets the ALT allele for the VCF file
+        :param lines_standard_ALT: store ALT lines
+        :param lines_standard_INFO: store NFO lines
+        :param all_possible_ALT_lines: dictionary of all possible ALT lines
+        :param all_possible_INFO_lines: dictionary of all possible INFO lines
+        :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
+        """
         if "A" in self.vcf_value["Variant_seq"] or "C" in self.vcf_value["Variant_seq"] or "T" in self.vcf_value["Variant_seq"] or "G" in self.vcf_value["Variant_seq"] or "N" in self.vcf_value["Variant_seq"]:
             alterative_allele = self.vcf_value["Variant_seq"]
         elif self.vcf_value["Variant_seq"] == '.':
