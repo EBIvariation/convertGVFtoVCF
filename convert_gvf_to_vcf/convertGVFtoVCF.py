@@ -643,7 +643,7 @@ class VcfLine:
             symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO = self.generate_symbolic_allele(lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines)
             if symbolic_allele is None:
                 alterative_allele = "."
-            elif self.vcf_value["Variant_seq"] == "." and symbolic_allele is not None:
+            elif (self.vcf_value["Variant_seq"] == "."  or self.vcf_value["Variant_seq"] == "-") and symbolic_allele is not None:
                 alterative_allele = symbolic_allele
                 # add padded bases
                 if self.pos == 1:
@@ -655,13 +655,11 @@ class VcfLine:
                     padded_base, self.pos, self.ref, self.alt = self.add_padded_base(True, self.ref, alterative_allele)
                     self.ref = self.check_ref(self.ref)
             else:
-                "Cannot identify symbolic allele. Variant type is not supported."
-        elif self.vcf_value["Variant_seq"] == "-":
-            # checking what these variant types are
-            # add padded base
-            pass
+                alterative_allele = "."
+                print("Cannot identify symbolic allele. Variant type is not supported.")
         else:
-            "Could not determine the alterative allele."
+            alterative_allele = "."
+            print("Could not determine the alterative allele.")
         return alterative_allele
 
     def __str__(self):
