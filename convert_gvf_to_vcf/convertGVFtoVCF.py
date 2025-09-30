@@ -633,7 +633,7 @@ class VcfLine:
         :param all_possible_INFO_lines: dictionary of all possible INFO lines
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
-        if "A" in self.vcf_value["Variant_seq"] or "C" in self.vcf_value["Variant_seq"] or "T" in self.vcf_value["Variant_seq"] or "G" in self.vcf_value["Variant_seq"] or "N" in self.vcf_value["Variant_seq"]:
+        if any(base in self.vcf_value["Variant_seq"] for base in ["A", "C", "G", "T", "N"]):
             alterative_allele = self.vcf_value["Variant_seq"]
         elif self.vcf_value["Variant_seq"] == '.':
             symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO = self.generate_symbolic_allele(lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines)
