@@ -513,6 +513,7 @@ class VcfLine:
     def convert_iupac_ambiguity_code(self, iupac_ambiguity_dictionary, ref_to_convert):
         """ Converts the REF allele if it contains IUPAC ambiguity cod
         :param iupac_ambiguity_dictionary: dictionary of IUPAC ambiguity code and a list of values
+        :param ref_to_convert: reference allele to be converted
         :return: self.ref
         """
         converted_ref = ""
