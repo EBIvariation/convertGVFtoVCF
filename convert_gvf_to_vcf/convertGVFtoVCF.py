@@ -604,7 +604,7 @@ class VcfLine:
 
             if symbolic_allele == "<INS>":
                 info_end ="END=" + str( self.pos + len(self.ref) - 1 )
-            elif symbolic_allele == "<DEL>" or symbolic_allele == "<DUP>" or symbolic_allele == "<INV>" or symbolic_allele == "<CNV>":
+            elif symbolic_allele in {"<DEL>", "<DUP>", "<INV>", "<CNV>"}:
                 info_end = "END=" + str(self.pos + self.length)
             elif symbolic_allele == "<*>":
                 info_end = "END=" + str(self.pos + len(self.ref))
