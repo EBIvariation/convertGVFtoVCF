@@ -462,9 +462,9 @@ class VcfLine:
         #     else:
         #         pass
 
-    def add_padded_base(self, placed_before : bool, ref, alt):
+    def add_padded_base(self, ref, alt, placed_before : bool):
         """ Adds padded base to REF and ALT allele
-        :param placed_before: True or False
+        :param placed_before: padded base is placed before ref or alt True or False
         :return: (padded_base, self.pos, self.ref, self.alt)
         """
         if placed_before:
@@ -644,11 +644,11 @@ class VcfLine:
                 # add padded bases
                 if self.pos == 1:
                     #print("pos, ref, alt",self.pos,self.ref, alterative_allele)
-                    padded_base, self.pos, self.ref, self.alt = self.add_padded_base(False, self.ref, alterative_allele)
+                    padded_base, self.pos, self.ref, self.alt = self.add_padded_base(self.ref, alterative_allele, False)
                     self.ref = self.check_ref(self.ref)
                 else:
                     #print("pos, ref, alt", self.pos,self.ref, alterative_allele)
-                    padded_base, self.pos, self.ref, self.alt = self.add_padded_base(True, self.ref, alterative_allele)
+                    padded_base, self.pos, self.ref, self.alt = self.add_padded_base(self.ref, alterative_allele, True)
                     self.ref = self.check_ref(self.ref)
             else:
                 alterative_allele = "."

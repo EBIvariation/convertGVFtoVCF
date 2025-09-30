@@ -113,7 +113,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
         test_ref = "A"
         test_alt = "T"
-        padded_base, pos, ref, alt = v.add_padded_base(True, test_ref, test_alt)
+        padded_base, pos, ref, alt = v.add_padded_base(test_ref, test_alt, True)
         assert padded_base is not None
         assert pos is not None
         assert ref is not None
