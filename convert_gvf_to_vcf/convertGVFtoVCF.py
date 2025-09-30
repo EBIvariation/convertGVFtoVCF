@@ -670,6 +670,10 @@ def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non
     :param gvf_pragmas: list of gvf pragmas to convert
     :param gvf_non_essential: list of non-essential gvf pragmas to convert
     :param list_of_vcf_objects: list of vcf objects
+    :param lines_standard_ALT: list of ALT lines
+    :param lines_standard_INFO: list of INFO lines
+    :param lines_standard_FILTER: list of FILTER lines
+    :param lines_standard_FORMAT: list of FORMAT lines
     :return: unique_pragmas_to_add, sample_names: a list of pragmas (this list contains no duplicates), list of sample names
     """
     pragmas_to_add = []
