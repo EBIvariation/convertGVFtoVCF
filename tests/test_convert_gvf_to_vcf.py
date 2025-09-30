@@ -18,7 +18,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # the inputs below are INFO attribute files
         self.dgva_input_file = os.path.join(self.input_folder_parent, "etc","dgvaINFOattributes.tsv")
         self.gvf_input_file = os.path.join(self.input_folder_parent, "etc","gvfINFOattributes.tsv")
-        self.symbolic_allele_file = os.path.join(self.input_folder_parent,"etc", 'sequence_ontology_symbolic_alleles.tsv')
+        self.symbolic_allele_file = os.path.join(self.input_folder_parent,"etc", 'svALTkeys.tsv')
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
 

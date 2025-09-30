@@ -38,9 +38,14 @@ def read_sv_key(header_type):
         next(open_file) # Skip the header
         for line in open_file:
             sv_tokens = line.rstrip().split("\t")
-            sv_key_id = sv_tokens[0]
-            sv_line = sv_tokens[1]
-            sv_lines[sv_key_id]= sv_line
+            if header_type == 'ALT':
+                sv_key_id = sv_tokens[2]
+                sv_line = sv_tokens[4]
+                sv_lines[sv_key_id] = sv_line
+            else:
+                sv_key_id = sv_tokens[0]
+                sv_line = sv_tokens[1]
+                sv_lines[sv_key_id]= sv_line
     return sv_lines
 
 
@@ -943,7 +948,7 @@ def main():
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
     dgva_info_attributes_file = os.path.join(etc_folder, 'dgvaINFOattributes.tsv')
     gvf_info_attributes_file = os.path.join(etc_folder, 'gvfINFOattributes.tsv')
-    symbolic_allele_file = os.path.join(etc_folder, 'sequence_ontology_symbolic_alleles.tsv')
+    symbolic_allele_file = os.path.join(etc_folder, 'svALTkeys.tsv')
 
     dgva_attribute_dict = read_info_attributes(info_attributes_file=dgva_info_attributes_file) # needed to generate custom strings
     gvf_attribute_dict = read_info_attributes(info_attributes_file=gvf_info_attributes_file)
