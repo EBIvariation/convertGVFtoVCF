@@ -1,7 +1,7 @@
 import os.path
 import unittest
 
-from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_metainfomation_line, read_in_gvf_file, \
+from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_metainformation_line, read_in_gvf_file, \
     gvf_features_to_vcf_objects, format_vcf_datalines, \
     generate_vcf_metainformation, generate_all_possible_standard_structured_info_lines, \
     generate_all_possible_standard_structured_alt_lines, generate_all_possible_standard_structured_filter_lines, \
@@ -616,7 +616,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
     def test_generate_custom_unstructured_metainfomation_line(self):
         lines_custom_unstructured = ['##fileformat=VCFv4.4', '##fileDate=20150715', '##source=DGVa', '##source=DGVa',
                                      '##genome-build=NCBI GRCz10']
-        formatted_string = generate_custom_unstructured_metainfomation_line("test_string_key", "test_string_value", lines_custom_unstructured)
+        formatted_string = generate_custom_unstructured_metainformation_line("test_string_key", "test_string_value", lines_custom_unstructured)
         assert formatted_string == "##test_string_key=test_string_value"
 
     def test_generate_all_possible_standard_structured_info_lines(self):
