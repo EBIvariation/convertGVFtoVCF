@@ -168,14 +168,6 @@ def read_sequence_ontology_symbolic_allele(so_symbolic_allele_file):
             symbolic_allele_dict.setdefault(name, []).append(description)
     return symbolic_allele_dict
 
-def generate_angled_bracket(id):
-    """ Formats angled brackets strings for symbolic alleles.
-    :param id: id of the angled bracket
-    :return: angled_bracket_string
-    """
-    angled_bracket_string = f'<{id}>'
-    return angled_bracket_string
-
 def extract_reference_allele(fasta_file, chromosome_name, position, end):
     """ Extracts the reference allele from the assembly.
     :param fasta_file: FASTA file of the assembly
@@ -583,7 +575,7 @@ class VcfLine:
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
         symbolic_allele_id = self.symbolic_allele_dictionary[self.so_type][1]
-        symbolic_allele = generate_angled_bracket(symbolic_allele_id)
+        symbolic_allele = f'<{symbolic_allele_id}>'
 
         if symbolic_allele_id in all_possible_ALT_lines:
             lines_standard_ALT.append(all_possible_ALT_lines[symbolic_allele_id])
