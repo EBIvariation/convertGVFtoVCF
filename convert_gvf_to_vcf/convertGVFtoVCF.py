@@ -462,14 +462,6 @@ class VcfLine:
         #     else:
         #         pass
 
-    def adjust_pos(self, adjustment):
-        """ Adjusts the position of the variant
-        :param adjustment: a positive or negative number
-        :return: self.pos  adjusted position
-        """
-        self.pos += adjustment
-        return self.pos
-
     def add_padded_base(self, placed_before : bool, ref, alt):
         """ Adds padded base to REF and ALT allele
         :param placed_before: True or False
