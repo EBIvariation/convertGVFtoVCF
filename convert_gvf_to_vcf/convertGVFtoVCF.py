@@ -23,7 +23,7 @@ def read_reserved_key(header_type):
             number=info_tokens[1]
             type_for_key=info_tokens[2]
             description=info_tokens[3]
-            reserved_info_string = f'##{header_type}=<ID="{keyid}",Number="{number}",Type="{type_for_key}",Description="{description}">'
+            reserved_info_string = f'##{header_type}=<ID={keyid},Number={number},Type={type_for_key},Description="{description}">'
             reserved_lines[keyid] = reserved_info_string
     return reserved_lines
 
