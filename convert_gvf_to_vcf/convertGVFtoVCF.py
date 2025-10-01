@@ -16,16 +16,19 @@ def read_file(prefix, header_type):
     """
     file_lines = {}
     keys_tsv_file = os.path.join(etc_folder, f'{prefix}{header_type}keys.tsv')
-    with open(keys_tsv_file) as keys_file:
-        next(keys_file) # Skip the header
-        for line in keys_file:
-            file_tokens = line.rstrip().split("\t")
-            key_id = file_tokens[0]
-            number_of_tokens = len(file_tokens)
-            if number_of_tokens >= 2:
-                for token in range(number_of_tokens):
-                    value_to_add = file_tokens[token]
-                    file_lines.setdefault(key_id, []).append(value_to_add)
+    try:
+        with open(keys_tsv_file) as keys_file:
+            next(keys_file) # Skip the header
+            for line in keys_file:
+                file_tokens = line.rstrip().split("\t")
+                key_id = file_tokens[0]
+                number_of_tokens = len(file_tokens)
+                if number_of_tokens >= 2:
+                    for token in range(number_of_tokens):
+                        value_to_add = file_tokens[token]
+                        file_lines.setdefault(key_id, []).append(value_to_add)
+    except FileNotFoundError:
+        print(f'File not found: {keys_tsv_file}')
     return file_lines
 
 def generate_custom_structured_metainformation_line(vcf_key, vcf_key_id, vcf_key_number, vcf_key_type, vcf_key_description,
@@ -48,73 +51,33 @@ def generate_custom_structured_metainformation_line(vcf_key, vcf_key_id, vcf_key
     custom_structured_string = f'##{vcf_key}=<ID="{vcf_key_id}",Number="{vcf_key_number}",Type="{vcf_key_type}",Description="{vcf_key_description}"{vcf_key_extra_keys}>'
     return custom_structured_string
 
-
-def generate_all_possible_standard_structured_alt_lines():
-    """Generates a dictionary of all possible (i.e. structural variant ALT key) standard structured ALT lines.
-    :return: all_possible_lines_alt: dictionary of ALT key tag ID => standard structured ALT line
+def generate_all_possible_standard_structured_lines(header_type):
+    """ Generates a fictionary of all possible standard structured lines for INFO/FILTER/FORMAT/ALT
+    :param header_type: type of header file to read i.e. ALT, FILTER, INFO or FORMAT
+    :return: dictionary of all possible standard structured lines keys for the header type
     """
-    header_type = "ALT"
-    alt_file = read_file("sv", header_type)
-    all_possible_lines_alt = {}
-    for key in alt_file:
-        all_possible_lines_alt[key] = alt_file[key][1]
-    return all_possible_lines_alt
-
-
-def generate_all_possible_standard_structured_info_lines():
-    """ Generates a dictionary of all possible (i.e. reserved info key and structural variant info key) standard structured INFO lines.
-    :return: all_possible_lines_info: dictionary of INFO key tag ID => standard structured INFO line
-    """
-    all_possible_lines_info = {} # dictionary of INFO key tag => standard structured INFO line
-    # generate all possible lines for the reserved info keys and structural variant info keys
-    header_type = "INFO"
-    reserved_info_key = read_file("reserved", header_type)
-    sv_info_key = read_file("sv", header_type)
-    for info_key in reserved_info_key:
-        key_id = reserved_info_key[info_key][0]
-        number = reserved_info_key[info_key][1]
-        type_for_key = reserved_info_key[info_key][2]
-        description = reserved_info_key[info_key][3]
-        reserved_info_string = f'##{header_type}=<ID={key_id},Number={number},Type={type_for_key},Description="{description}">'
-        all_possible_lines_info[key_id] = reserved_info_string
-    for sv_info in sv_info_key:
-        sv_key_id = sv_info_key[sv_info][0]
-        sv_line = sv_info_key[sv_info][1]
-        all_possible_lines_info[sv_key_id] = sv_line
-    return all_possible_lines_info
-
-
-def generate_all_possible_standard_structured_filter_lines():
-    """ Generates a dictionary of all possible (i.e. reserved filter key and structural variant info key) standard structured INFO lines.
-    :return: all_possible_lines_filter: dictionary of FILTER key tag ID => standard structured FILTER line
-    """
-    all_possible_lines_filter = {} # dictionary of FILTER key tag => standard structured FILTER line
-    #TODO: fill in the reading of filtered lines
-    return all_possible_lines_filter
-
-
-def generate_all_possible_standard_structured_format_lines():
-    """ Generates a dictionary of all possible (i.e. reserved format key and structural variant info key) standard structured FORMAT lines.
-    :return: all_possible_lines_format: dictionary of FORMAT key tag ID => standard structured FORMAT line
-    """
-    all_possible_lines_format = {}
-    header_type = "FORMAT"
-    reserved_format_key = read_file("reserved", header_type)
-    sv_format_key = read_file("sv", header_type)
-    for format_key in reserved_format_key:
-        key_id = reserved_format_key[format_key][0]
-        number = reserved_format_key[format_key][1]
-        type_for_key = reserved_format_key[format_key][2]
-        description = reserved_format_key[format_key][3]
-        reserved_info_string = f'##{header_type}=<ID={key_id},Number={number},Type={type_for_key},Description="{description}">'
-        all_possible_lines_format[key_id] = reserved_info_string
-    for sv_format in sv_format_key:
-        sv_key_id = sv_format_key[sv_format][0]
-        sv_line = sv_format_key[sv_format][1]
-        all_possible_lines_format[sv_key_id] = sv_line
-    # TABLE 2
-    # FORMAT KEYS FOR STRUCTURAL VARIANTS
-    return all_possible_lines_format
+    all_possible_lines = {}
+    prefix = {}
+    prefix["reserved"] = True
+    prefix["sv"] = True
+    if header_type == 'ALT':
+        prefix["reserved"] = False
+    if prefix["reserved"]:
+        reserved_key = read_file("reserved", header_type)
+        for r_key in reserved_key:
+            key_id = reserved_key[r_key][0]
+            number = reserved_key[r_key][1]
+            type_for_key = reserved_key[r_key][2]
+            description = reserved_key[r_key][3]
+            reserved_string = f'##{header_type}=<ID={key_id},Number={number},Type={type_for_key},Description="{description}">'
+            all_possible_lines[key_id] = reserved_string
+    if prefix['sv']:
+        sv_key = read_file("sv", header_type)
+        for s_key in sv_key:
+            sv_key_id = sv_key[s_key][0]
+            sv_line = sv_key[s_key][1]
+            all_possible_lines[sv_key_id] = sv_line
+    return all_possible_lines
 
 
 def generate_standard_structured_metainformation_line(vcf_key_id, standard_lines_for_vcf_key, all_possible_lines):
@@ -928,10 +891,10 @@ def main():
     if args.assembly:
         print("The provided assembly file is: ", args.assembly)
 
-    all_possible_info_lines = generate_all_possible_standard_structured_info_lines()
-    all_possible_alt_lines = generate_all_possible_standard_structured_alt_lines()
-    all_possible_filter_lines = generate_all_possible_standard_structured_filter_lines()
-    all_possible_format_lines = generate_all_possible_standard_structured_format_lines()
+    all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+    all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+    all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+    all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
     # custom meta-information lines for this VCF file
     lines_custom_structured = []

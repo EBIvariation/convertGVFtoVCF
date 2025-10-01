@@ -3,9 +3,8 @@ import unittest
 
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_metainformation_line, read_in_gvf_file, \
     gvf_features_to_vcf_objects, format_vcf_datalines, \
-    generate_vcf_metainformation, generate_all_possible_standard_structured_info_lines, \
-    generate_all_possible_standard_structured_alt_lines, generate_all_possible_standard_structured_filter_lines, \
-    generate_all_possible_standard_structured_format_lines, generate_vcf_header_line, populate_sample_formats, \
+    generate_vcf_metainformation, generate_all_possible_standard_structured_lines,  \
+    generate_vcf_header_line, populate_sample_formats, \
     format_sample_values, read_info_attributes, read_sequence_ontology_symbolic_allele
 from convert_gvf_to_vcf.convertGVFtoVCF import VcfLine, GvfFeatureline
 
@@ -53,10 +52,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, dgva_attribute_dict,
                                                                           gvf_attribute_dict,
@@ -65,10 +64,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                           lines_custom_structured,
                                                                           lines_standard_ALT, lines_standard_INFO,
                                                                           lines_standard_FILTER, lines_standard_FORMAT,
-                                                                          all_possible_ALT_lines,
-                                                                          all_possible_INFO_lines,
-                                                                          all_possible_FILTER_lines,
-                                                                          all_possible_FORMAT_lines
+                                                                          all_possible_alt_lines,
+                                                                          all_possible_info_lines,
+                                                                          all_possible_filter_lines,
+                                                                          all_possible_format_lines
                                                                           )
         assert len(vcf_data_lines) > 1
         assert len(list_of_vcf_objects) > 1
@@ -91,10 +90,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         v = VcfLine(line_object,
                     dgva_attribute_dict,
@@ -106,10 +105,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     lines_standard_INFO,
                     lines_standard_FILTER,
                     lines_standard_FORMAT,
-                    all_possible_ALT_lines,
-                    all_possible_INFO_lines,
-                    all_possible_FILTER_lines,
-                    all_possible_FORMAT_lines)
+                    all_possible_alt_lines,
+                    all_possible_info_lines,
+                    all_possible_filter_lines,
+                    all_possible_format_lines)
 
         test_ref = "A"
         test_alt = "T"
@@ -138,10 +137,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         v = VcfLine(line_object,
                     dgva_attribute_dict,
@@ -153,10 +152,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     lines_standard_INFO,
                     lines_standard_FILTER,
                     lines_standard_FORMAT,
-                    all_possible_ALT_lines,
-                    all_possible_INFO_lines,
-                    all_possible_FILTER_lines,
-                    all_possible_FORMAT_lines)
+                    all_possible_alt_lines,
+                    all_possible_info_lines,
+                    all_possible_filter_lines,
+                    all_possible_format_lines)
         my_ipuac_dictionary = v.build_iupac_ambiguity_code()
         assert len(my_ipuac_dictionary) > 0
 
@@ -179,10 +178,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         v = VcfLine(line_object,
                     dgva_attribute_dict,
@@ -194,10 +193,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     lines_standard_INFO,
                     lines_standard_FILTER,
                     lines_standard_FORMAT,
-                    all_possible_ALT_lines,
-                    all_possible_INFO_lines,
-                    all_possible_FILTER_lines,
-                    all_possible_FORMAT_lines)
+                    all_possible_alt_lines,
+                    all_possible_info_lines,
+                    all_possible_filter_lines,
+                    all_possible_format_lines)
 
         my_ipuac_dictionary = v.build_iupac_ambiguity_code()
         ref_to_convert = "TAGD"
@@ -223,10 +222,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         v = VcfLine(line_object,
                     dgva_attribute_dict,
@@ -238,10 +237,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     lines_standard_INFO,
                     lines_standard_FILTER,
                     lines_standard_FORMAT,
-                    all_possible_ALT_lines,
-                    all_possible_INFO_lines,
-                    all_possible_FILTER_lines,
-                    all_possible_FORMAT_lines)
+                    all_possible_alt_lines,
+                    all_possible_info_lines,
+                    all_possible_filter_lines,
+                    all_possible_format_lines)
         reference_allele_to_check = "TGCR"
         new_ref = v.check_ref(reference_allele_to_check)
         iupac_code = ["R", "Y", "M", "K", "S", "D", "W", "H", "B", "V", "D", "N"]
@@ -266,10 +265,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         v = VcfLine(line_object,
                     dgva_attribute_dict,
@@ -281,10 +280,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     lines_standard_INFO,
                     lines_standard_FILTER,
                     lines_standard_FORMAT,
-                    all_possible_ALT_lines,
-                    all_possible_INFO_lines,
-                    all_possible_FILTER_lines,
-                    all_possible_FORMAT_lines)
+                    all_possible_alt_lines,
+                    all_possible_info_lines,
+                    all_possible_filter_lines,
+                    all_possible_format_lines)
         reference_allele = v.get_ref()
         assert len(reference_allele) != 0
 
@@ -306,10 +305,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         v = VcfLine(line_object,
                     dgva_attribute_dict,
@@ -321,11 +320,11 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     lines_standard_INFO,
                     lines_standard_FILTER,
                     lines_standard_FORMAT,
-                    all_possible_ALT_lines,
-                    all_possible_INFO_lines,
-                    all_possible_FILTER_lines,
-                    all_possible_FORMAT_lines)
-        output_symbolic_allele, self.info, output_lines_standard_ALT, output_lines_standard_INFO = v.generate_symbolic_allele(lines_standard_ALT,lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines)
+                    all_possible_alt_lines,
+                    all_possible_info_lines,
+                    all_possible_filter_lines,
+                    all_possible_format_lines)
+        output_symbolic_allele, self.info, output_lines_standard_ALT, output_lines_standard_INFO = v.generate_symbolic_allele(lines_standard_ALT,lines_standard_INFO, all_possible_alt_lines, all_possible_info_lines)
         assert len(output_symbolic_allele) > 1
 
     def test_get_alt(self):
@@ -346,10 +345,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         v = VcfLine(line_object,
                     dgva_attribute_dict,
@@ -361,11 +360,11 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     lines_standard_INFO,
                     lines_standard_FILTER,
                     lines_standard_FORMAT,
-                    all_possible_ALT_lines,
-                    all_possible_INFO_lines,
-                    all_possible_FILTER_lines,
-                    all_possible_FORMAT_lines)
-        alt_allele = v.get_alt(lines_standard_ALT, lines_standard_INFO, all_possible_ALT_lines, all_possible_INFO_lines)
+                    all_possible_alt_lines,
+                    all_possible_info_lines,
+                    all_possible_filter_lines,
+                    all_possible_format_lines)
+        alt_allele = v.get_alt(lines_standard_ALT, lines_standard_INFO, all_possible_alt_lines, all_possible_info_lines)
         assert len(alt_allele) > 0
 
 
@@ -425,10 +424,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
@@ -440,10 +439,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                           lines_standard_INFO,
                                                                           lines_standard_FILTER,
                                                                           lines_standard_FORMAT,
-                                                                          all_possible_ALT_lines,
-                                                                          all_possible_INFO_lines,
-                                                                          all_possible_FILTER_lines,
-                                                                          all_possible_FORMAT_lines
+                                                                          all_possible_alt_lines,
+                                                                          all_possible_info_lines,
+                                                                          all_possible_filter_lines,
+                                                                          all_possible_format_lines
                                                                           )
 
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
@@ -464,10 +463,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
@@ -479,10 +478,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                           lines_standard_INFO,
                                                                           lines_standard_FILTER,
                                                                           lines_standard_FORMAT,
-                                                                          all_possible_ALT_lines,
-                                                                          all_possible_INFO_lines,
-                                                                          all_possible_FILTER_lines,
-                                                                          all_possible_FORMAT_lines
+                                                                          all_possible_alt_lines,
+                                                                          all_possible_info_lines,
+                                                                          all_possible_filter_lines,
+                                                                          all_possible_format_lines
                                                                           )
 
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
@@ -504,10 +503,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_INFO_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_ALT_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_FILTER_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_FORMAT_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
@@ -546,10 +545,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
                                                                           gvf_attribute_dict,
@@ -560,10 +559,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                           lines_standard_INFO,
                                                                           lines_standard_FILTER,
                                                                           lines_standard_FORMAT,
-                                                                          all_possible_ALT_lines,
-                                                                          all_possible_INFO_lines,
-                                                                          all_possible_FILTER_lines,
-                                                                          all_possible_FORMAT_lines
+                                                                          all_possible_alt_lines,
+                                                                          all_possible_info_lines,
+                                                                          all_possible_filter_lines,
+                                                                          all_possible_format_lines
                                                                           )
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
         unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(
@@ -579,7 +578,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
-        # custom meta-information lines for this VCF file
+        # custom meta-information lines for this VCF fileT
         lines_custom_structured = []
         lines_custom_unstructured = []
         # standard structured meta-information lines for this VCF file
@@ -588,10 +587,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         lines_standard_FILTER = []
         lines_standard_FORMAT = []
         # Dictionary for all possible VCF meta-information lines
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
+        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
+        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
+        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
+        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
         vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           dgva_attribute_dict,
@@ -603,10 +602,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                           lines_standard_INFO,
                                                                           lines_standard_FILTER,
                                                                           lines_standard_FORMAT,
-                                                                          all_possible_ALT_lines,
-                                                                          all_possible_INFO_lines,
-                                                                          all_possible_FILTER_lines,
-                                                                          all_possible_FORMAT_lines
+                                                                          all_possible_alt_lines,
+                                                                          all_possible_info_lines,
+                                                                          all_possible_filter_lines,
+                                                                          all_possible_format_lines
                                                                           )
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
         unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT)
@@ -618,24 +617,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                      '##genome-build=NCBI GRCz10']
         formatted_string = generate_custom_unstructured_metainformation_line("test_string_key", "test_string_value", lines_custom_unstructured)
         assert formatted_string == "##test_string_key=test_string_value"
-
-    def test_generate_all_possible_standard_structured_info_lines(self):
-        all_possible_INFO_lines = generate_all_possible_standard_structured_info_lines()
-        assert len(all_possible_INFO_lines) > 0
-
-    def test_generate_all_possible_standard_structured_alt_lines(self):
-        all_possible_ALT_lines = generate_all_possible_standard_structured_alt_lines()
-        assert len(all_possible_ALT_lines) > 0
-
-    #TODO: uncomment this test once the function generate_all_possible_standard_structured_filter_lines has been filled in
-
-    # def test_generate_all_possible_standard_structured_filter_lines(self):
-    #     all_possible_FILTER_lines = generate_all_possible_standard_structured_filter_lines()
-    #     assert len(all_possible_FILTER_lines) > 0
-
-    def test_generate_all_possible_standard_structured_format_lines(self):
-        all_possible_FORMAT_lines = generate_all_possible_standard_structured_format_lines()
-        assert len(all_possible_FORMAT_lines) > 0
 
 if __name__ == '__main__':
     unittest.main()
