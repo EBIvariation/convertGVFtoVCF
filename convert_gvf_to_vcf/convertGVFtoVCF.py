@@ -7,41 +7,20 @@ from Bio import SeqIO
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
-def read_reserved_key(header_type):
-    """
-    Reads in the reserved INFO or FORMAT keys and returns a dictionary of the reserved INFO_lines which can be used to
-    populate the header
-    """
-    reserved_lines = {}
-    reserved_info_keys_file = os.path.join(etc_folder, f'Reserved{header_type}keys.tsv')
-    with open(reserved_info_keys_file) as info_keys_file:
-        next(info_keys_file) # Skip the header
-        info_keys_content = info_keys_file.readlines()
-        for info in info_keys_content:
-            info_tokens = info.rstrip().split("\t")
-            keyid = info_tokens[0]
-            number=info_tokens[1]
-            type_for_key=info_tokens[2]
-            description=info_tokens[3]
-            reserved_info_string = f'##{header_type}=<ID={keyid},Number={number},Type={type_for_key},Description="{description}">'
-            reserved_lines[keyid] = reserved_info_string
-    return reserved_lines
-
-def read_sv_key(header_type):
-    """
-    Reads in INFO, ALT or FORMAT keys for structural variants and return a dictionary of SV specific lines
-    """
-    sv_lines = {}
-    sv_keys_file = os.path.join(etc_folder, f'sv{header_type}keys.tsv')
-    with open(sv_keys_file) as open_file:
-        next(open_file) # Skip the header
-        for line in open_file:
-            sv_tokens = line.rstrip().split("\t")
-            sv_key_id = sv_tokens[0]
-            sv_line = sv_tokens[1]
-            sv_lines[sv_key_id]= sv_line
-    return sv_lines
-
+def read_file(prefix, header_type):
+    file_lines = {}
+    keys_tsv_file = os.path.join(etc_folder, f'{prefix}{header_type}keys.tsv')
+    with open(keys_tsv_file) as keys_file:
+        next(keys_file) # Skip the header
+        for line in keys_file:
+            file_tokens = line.rstrip().split("\t")
+            key_id = file_tokens[0]
+            number_of_tokens = len(file_tokens)
+            if number_of_tokens >= 2:
+                for token in range(number_of_tokens):
+                    value_to_add = file_tokens[token]
+                    file_lines.setdefault(key_id, []).append(value_to_add)
+    return file_lines
 
 def generate_custom_structured_metainformation_line(vcf_key, vcf_key_id, vcf_key_number, vcf_key_type, vcf_key_description,
                                                     optional_extra_fields=None):
@@ -68,9 +47,11 @@ def generate_all_possible_standard_structured_alt_lines():
     """Generates a dictionary of all possible (i.e. structural variant ALT key) standard structured ALT lines.
     :return: all_possible_lines_alt: dictionary of ALT key tag ID => standard structured ALT line
     """
-    # note: sv_alt_key may be an incomplete list at the moment
-    # no reserved alt keys
-    all_possible_lines_alt = read_sv_key('ALT')
+    header_type = "ALT"
+    alt_file = read_file("sv", header_type)
+    all_possible_lines_alt = {}
+    for key in alt_file:
+        all_possible_lines_alt[key] = alt_file[key][1]
     return all_possible_lines_alt
 
 
@@ -80,8 +61,20 @@ def generate_all_possible_standard_structured_info_lines():
     """
     all_possible_lines_info = {} # dictionary of INFO key tag => standard structured INFO line
     # generate all possible lines for the reserved info keys and structural variant info keys
-    all_possible_lines_info.update(read_reserved_key('INFO'))
-    all_possible_lines_info.update(read_sv_key('INFO'))
+    header_type = "INFO"
+    reserved_info_key = read_file("reserved", header_type)
+    sv_info_key = read_file("sv", header_type)
+    for info_key in reserved_info_key:
+        key_id = reserved_info_key[info_key][0]
+        number = reserved_info_key[info_key][1]
+        type_for_key = reserved_info_key[info_key][2]
+        description = reserved_info_key[info_key][3]
+        reserved_info_string = f'##{header_type}=<ID={key_id},Number={number},Type={type_for_key},Description="{description}">'
+        all_possible_lines_info[key_id] = reserved_info_string
+    for sv_info in sv_info_key:
+        sv_key_id = sv_info_key[sv_info][0]
+        sv_line = sv_info_key[sv_info][1]
+        all_possible_lines_info[sv_key_id] = sv_line
     return all_possible_lines_info
 
 
@@ -89,7 +82,7 @@ def generate_all_possible_standard_structured_filter_lines():
     """ Generates a dictionary of all possible (i.e. reserved filter key and structural variant info key) standard structured INFO lines.
     :return: all_possible_lines_filter: dictionary of FILTER key tag ID => standard structured FILTER line
     """
-    all_possible_lines_filter = {} # dictionary of INFO key tag => standard structured INFO line
+    all_possible_lines_filter = {} # dictionary of FILTER key tag => standard structured FILTER line
     #TODO: fill in the reading of filtered lines
     return all_possible_lines_filter
 
@@ -99,10 +92,22 @@ def generate_all_possible_standard_structured_format_lines():
     :return: all_possible_lines_format: dictionary of FORMAT key tag ID => standard structured FORMAT line
     """
     all_possible_lines_format = {}
+    header_type = "FORMAT"
+    reserved_format_key = read_file("reserved", header_type)
+    sv_format_key = read_file("sv", header_type)
+    for format_key in reserved_format_key:
+        key_id = reserved_format_key[format_key][0]
+        number = reserved_format_key[format_key][1]
+        type_for_key = reserved_format_key[format_key][2]
+        description = reserved_format_key[format_key][3]
+        reserved_info_string = f'##{header_type}=<ID={key_id},Number={number},Type={type_for_key},Description="{description}">'
+        all_possible_lines_format[key_id] = reserved_info_string
+    for sv_format in sv_format_key:
+        sv_key_id = sv_format_key[sv_format][0]
+        sv_line = sv_format_key[sv_format][1]
+        all_possible_lines_format[sv_key_id] = sv_line
     # TABLE 2
     # FORMAT KEYS FOR STRUCTURAL VARIANTS
-    all_possible_lines_format.update(read_reserved_key('FORMAT'))
-    all_possible_lines_format.update(read_sv_key('FORMAT'))
     return all_possible_lines_format
 
 
