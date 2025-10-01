@@ -37,14 +37,9 @@ def read_sv_key(header_type):
         next(open_file) # Skip the header
         for line in open_file:
             sv_tokens = line.rstrip().split("\t")
-            if header_type == 'ALT':
-                sv_key_id = sv_tokens[2]
-                sv_line = sv_tokens[4]
-                sv_lines[sv_key_id] = sv_line
-            else:
-                sv_key_id = sv_tokens[0]
-                sv_line = sv_tokens[1]
-                sv_lines[sv_key_id]= sv_line
+            sv_key_id = sv_tokens[0]
+            sv_line = sv_tokens[1]
+            sv_lines[sv_key_id]= sv_line
     return sv_lines
 
 
@@ -158,10 +153,10 @@ def read_sequence_ontology_symbolic_allele(so_symbolic_allele_file):
         next(so_symbolic_allele)
         for line in so_symbolic_allele:
             allele_tokens = line.rstrip().split("\t")
-            sequence_ontology_id = allele_tokens[0]
-            name = allele_tokens[1]
-            symb_allele = allele_tokens[2]
-            description = allele_tokens[3]
+            symb_allele = allele_tokens[0]
+            sequence_ontology_id = allele_tokens[2]
+            name = allele_tokens[3]
+            description = allele_tokens[4]
             symbolic_allele_dict.setdefault(name, []).append(sequence_ontology_id)
             symbolic_allele_dict.setdefault(name, []).append(symb_allele)
             symbolic_allele_dict.setdefault(name, []).append(description)
