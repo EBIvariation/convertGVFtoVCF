@@ -8,6 +8,12 @@ convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
 def read_file(prefix, header_type):
+    """Reads in {reserved/sv}{INFO/FORMAT}keys.tsv files and returns the dictionary where the key is the KEYID
+    (usually column 1) and the value is a list of file tokens
+    :param prefix: prefix of files to read i.e. sv or reserved
+    :param header_type: type of header file to read i.e. INFO or FORMAT
+    :return: file lines: a dictionary where the key is the KEYID and the value is a list of file tokens
+    """
     file_lines = {}
     keys_tsv_file = os.path.join(etc_folder, f'{prefix}{header_type}keys.tsv')
     with open(keys_tsv_file) as keys_file:
