@@ -7,6 +7,7 @@ from Bio import SeqIO
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
+
 def read_file(prefix, header_type):
     """Reads in {reserved/sv}{INFO/FORMAT}keys.tsv files and returns the dictionary where the key is the KEYID
     (usually column 1) and the value is a list of file tokens
@@ -18,7 +19,7 @@ def read_file(prefix, header_type):
     keys_tsv_file = os.path.join(etc_folder, f'{prefix}{header_type}keys.tsv')
     try:
         with open(keys_tsv_file) as keys_file:
-            next(keys_file) # Skip the header
+            next(keys_file)  # Skip the header
             for line in keys_file:
                 file_tokens = line.rstrip().split("\t")
                 key_id = file_tokens[0]
@@ -30,6 +31,7 @@ def read_file(prefix, header_type):
     except FileNotFoundError:
         print(f'File not found: {keys_tsv_file}')
     return file_lines
+
 
 def generate_custom_structured_metainformation_line(vcf_key, vcf_key_id, vcf_key_number, vcf_key_type, vcf_key_description,
                                                     optional_extra_fields=None):
@@ -48,7 +50,12 @@ def generate_custom_structured_metainformation_line(vcf_key, vcf_key_id, vcf_key
             kv_line = "," + extra_field + "=" + '"' + optional_extra_fields[extra_field] + '"'
             extra_keys_kv_lines.append(kv_line)
     vcf_key_extra_keys = ''.join(extra_keys_kv_lines)
-    custom_structured_string = f'##{vcf_key}=<ID="{vcf_key_id}",Number="{vcf_key_number}",Type="{vcf_key_type}",Description="{vcf_key_description}"{vcf_key_extra_keys}>'
+    custom_structured_string = (f'##{vcf_key}=<'
+                                f'ID="{vcf_key_id}",'
+                                f'Number="{vcf_key_number}",'
+                                f'Type="{vcf_key_type}",'
+                                f'Description="{vcf_key_description}"'
+                                f'{vcf_key_extra_keys}>')
     return custom_structured_string
 
 def generate_all_possible_standard_structured_lines(header_type):
