@@ -58,6 +58,7 @@ def generate_custom_structured_metainformation_line(vcf_key, vcf_key_id, vcf_key
                                 f'{vcf_key_extra_keys}>')
     return custom_structured_string
 
+
 def generate_all_possible_standard_structured_lines(header_type):
     """ Generates a fictionary of all possible standard structured lines for INFO/FILTER/FORMAT/ALT
     :param header_type: type of header file to read i.e. ALT, FILTER, INFO or FORMAT
@@ -90,7 +91,7 @@ def generate_all_possible_standard_structured_lines(header_type):
 def generate_standard_structured_metainformation_line(vcf_key_id, standard_lines_for_vcf_key, all_possible_lines):
     """Generates a list of standard structured metainformation lines.
     :param vcf_key_id: VCF tag key id
-    :param standard_lines_for_vcf_key: lines_standard_NAME i.e a list of standard lines for this VCF file regarding INFO or ALT or FILTER or FORMAT
+    :param standard_lines_for_vcf_key: lines_standard_NAME i.e. list of standard lines for VCF INFO/ALT/FILTER/FORMAT
     :param all_possible_lines: all_possible_NAME_lines i.e. list of all possible lines for INFO or ALT or FILTER or FORMAT
     :return: standard_lines_for_vcf_key: a dictionary
     """
@@ -99,8 +100,11 @@ def generate_standard_structured_metainformation_line(vcf_key_id, standard_lines
     return standard_lines_for_vcf_key
 
 
-def generate_custom_unstructured_metainformation_line(vcf_unstructured_key, vcf_unstructured_value, lines_custom_unstructured):
-    """ Generates a formatted unstructured metainformation line using a custom key value pair. This is stored in the list called lines_custom_unstructured.
+def generate_custom_unstructured_metainformation_line(vcf_unstructured_key,
+                                                      vcf_unstructured_value,
+                                                      lines_custom_unstructured):
+    """ Generates a formatted unstructured metainformation line using a custom key value pair.
+    This is stored in the list called lines_custom_unstructured.
     :param lines_custom_unstructured: list to store custom unstructured metainformation lines
     :param vcf_unstructured_key: key for custom unstructured metainformation line
     :param vcf_unstructured_value: value for custom unstructured metainformation line
@@ -109,6 +113,7 @@ def generate_custom_unstructured_metainformation_line(vcf_unstructured_key, vcf_
     custom_unstructured_string = f"##{vcf_unstructured_key}={vcf_unstructured_value}"
     lines_custom_unstructured.append(custom_unstructured_string)
     return custom_unstructured_string
+
 
 def read_info_attributes(info_attributes_file):
     """ Read in the file containing specific INFO attributes.
@@ -123,6 +128,7 @@ def read_info_attributes(info_attributes_file):
             key = attribute_tokens[0]
             attribute_dict[key] = attribute_tokens
     return attribute_dict
+
 
 def read_sequence_ontology_symbolic_allele(so_symbolic_allele_file):
     """ Read in the file containing sequence ontology symbolic allele and returns a dictionary.
@@ -143,6 +149,7 @@ def read_sequence_ontology_symbolic_allele(so_symbolic_allele_file):
             symbolic_allele_dict.setdefault(name, []).append(description)
     return symbolic_allele_dict
 
+
 def extract_reference_allele(fasta_file, chromosome_name, position, end):
     """ Extracts the reference allele from the assembly.
     :param fasta_file: FASTA file of the assembly
@@ -151,7 +158,7 @@ def extract_reference_allele(fasta_file, chromosome_name, position, end):
     :param end: end position
     :return: reference_allele: base found at this chromosome_name at this position within this fasta_file
     """
-    # using .index instead of .todict for memory efficiency:  https://biopython.org/docs/1.76/api/Bio.SeqIO.html#input-multiple-records
+    # using .index for memory efficiency:  https://biopython.org/docs/1.76/api/Bio.SeqIO.html#input-multiple-records
     records_dictionary = SeqIO.index(fasta_file, "fasta")
     zero_indexed_position = position - 1 # minus one because zero indexed
     zero_indexed_end = end - 1
@@ -160,6 +167,7 @@ def extract_reference_allele(fasta_file, chromosome_name, position, end):
         reference_allele = reference_allele + records_dictionary[chromosome_name].seq[position]
     records_dictionary.close()
     return reference_allele
+
 
 def get_gvf_attributes(column9_of_gvf):
     """Get a dictionary of GVF attributes
