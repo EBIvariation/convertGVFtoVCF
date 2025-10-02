@@ -182,11 +182,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                                          lines_standard_info,
                                          lines_standard_filter,
                                          lines_standard_format,
-                                         all_possible_alt_lines,
-                                         all_possible_info_lines,
-                                         all_possible_filter_lines,
-                                         all_possible_format_lines):
-
+                                         all_possible_lines_dictionary):
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_vals = {}
     catching_for_review = []
@@ -205,19 +201,19 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
         elif attrib_key == "allele_count":
             #generate_standard_structured_metainformation_line("INFO", "AC", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
-            lines_standard_info = generate_standard_structured_metainformation_line("AC", lines_standard_info, all_possible_info_lines)
+            lines_standard_info = generate_standard_structured_metainformation_line("AC", lines_standard_info, all_possible_lines_dictionary["INFO"])
         elif attrib_key == "allele_frequency":
-            lines_standard_info = generate_standard_structured_metainformation_line("AF", lines_standard_info, all_possible_info_lines)
+            lines_standard_info = generate_standard_structured_metainformation_line("AF", lines_standard_info, all_possible_lines_dictionary["INFO"])
         elif attrib_key == "ciend":
-            lines_standard_info = generate_standard_structured_metainformation_line("CIEND", lines_standard_info, all_possible_info_lines)
+            lines_standard_info = generate_standard_structured_metainformation_line("CIEND", lines_standard_info, all_possible_lines_dictionary["INFO"])
         elif attrib_key == "copy_number":
-            lines_standard_info = generate_standard_structured_metainformation_line("CN", lines_standard_info, all_possible_info_lines)
+            lines_standard_info = generate_standard_structured_metainformation_line("CN", lines_standard_info, all_possible_lines_dictionary["INFO"])
         elif attrib_key == "insertion_length":
             lines_standard_info = generate_standard_structured_metainformation_line("SVLEN", lines_standard_info,
-                                                                                    all_possible_info_lines)
+                                                                                    all_possible_lines_dictionary["INFO"])
         elif attrib_key == "mate_id":
             lines_standard_info = generate_standard_structured_metainformation_line("MATEID", lines_standard_info,
-                                                                                    all_possible_info_lines)
+                                                                                    all_possible_lines_dictionary["INFO"])
         elif attrib_key == "sample_name":
             #sample_names.append(sample_names)
             pass
@@ -349,10 +345,8 @@ class VcfLine:
                  lines_standard_info,
                  lines_standard_filter,
                  lines_standard_format,
-                 all_possible_alt_lines,
-                 all_possible_info_lines,
-                 all_possible_filter_lines,
-                 all_possible_format_lines):
+                 all_possible_lines_dictionary):
+
         # ATTRIBUTES
         self.vcf_value = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes,
                                                               dgva_attribute_dict,
@@ -362,10 +356,8 @@ class VcfLine:
                                                               lines_standard_info,
                                                               lines_standard_filter,
                                                               lines_standard_format,
-                                                              all_possible_alt_lines,
-                                                              all_possible_info_lines,
-                                                              all_possible_filter_lines,
-                                                              all_possible_format_lines)
+                                                              all_possible_lines_dictionary)
+
         self.assembly = assembly_file
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
 
@@ -389,7 +381,7 @@ class VcfLine:
         self.info = [] # TODO: add info field for self.info
         # calculated last
         self.ref = self.get_ref()
-        self.alt = self.get_alt(lines_standard_alt, lines_standard_info, all_possible_alt_lines, all_possible_info_lines)
+        self.alt = self.get_alt(lines_standard_alt, lines_standard_info, all_possible_lines_dictionary)
 
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
@@ -529,7 +521,7 @@ class VcfLine:
         return reference_allele
 
 
-    def generate_symbolic_allele(self, lines_standard_alt, lines_standard_info, all_possible_alt_lines, all_possible_info_lines):
+    def generate_symbolic_allele(self, lines_standard_alt, lines_standard_info, all_possible_lines_dictionary):
         """ Generates the symbolic allele and stores the corresponding metainformation lines. Also determines if variant is precise or imprecise.
         :param lines_standard_alt: stores ALT metainformation lines
         :param lines_standard_info: stores INFO metainformation lines
@@ -539,6 +531,9 @@ class VcfLine:
         """
         symbolic_allele_id = self.symbolic_allele_dictionary[self.so_type][1]
         symbolic_allele = f'<{symbolic_allele_id}>'
+
+        all_possible_alt_lines = all_possible_lines_dictionary["ALT"]
+        all_possible_info_lines = all_possible_lines_dictionary["INFO"]
 
         if symbolic_allele_id in all_possible_alt_lines:
             lines_standard_alt.append(all_possible_alt_lines[symbolic_allele_id])
@@ -596,7 +591,7 @@ class VcfLine:
             lines_standard_info.append(all_possible_info_lines["CIEND"])
         return symbolic_allele, self.info, lines_standard_alt, lines_standard_info
 
-    def get_alt(self, lines_standard_alt, lines_standard_info, all_possible_alt_lines, all_possible_info_lines):
+    def get_alt(self, lines_standard_alt, lines_standard_info, all_possible_lines_dictionary):
         """ Gets the ALT allele for the VCF file
         :param lines_standard_alt: store ALT lines
         :param lines_standard_info: store NFO lines
@@ -604,10 +599,13 @@ class VcfLine:
         :param all_possible_info_lines: dictionary of all possible INFO lines
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
+        all_possible_alt_lines = all_possible_lines_dictionary["ALT"]
+        all_possible_info_lines = all_possible_lines_dictionary["INFO"]
+
         if any(base in self.vcf_value["Variant_seq"] for base in ["A", "C", "G", "T", "N"]):
             alterative_allele = self.vcf_value["Variant_seq"]
         elif self.vcf_value["Variant_seq"] == '.':
-            symbolic_allele, self.info, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(lines_standard_alt, lines_standard_info, all_possible_alt_lines, all_possible_info_lines)
+            symbolic_allele, self.info, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(lines_standard_alt, lines_standard_info, all_possible_lines_dictionary)
             if symbolic_allele is None:
                 alterative_allele = "."
             elif (self.vcf_value["Variant_seq"] == "." or self.vcf_value["Variant_seq"] == "-") and symbolic_allele is not None:
@@ -775,10 +773,8 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                 lines_standard_info,
                                 lines_standard_filter,
                                 lines_standard_format,
-                                all_possible_alt_lines,
-                                all_possible_info_lines,
-                                all_possible_filter_lines,
-                                all_possible_format_lines):
+                                all_possible_lines_dictionary):
+
     """ Creates VCF objects from GVF feature lines and stores the VCF objects.
     :param gvf_lines_obj_list: list of GVF feature line objects
     :param gvf_attribute_dict: dictionary of GVF INFO attributes
@@ -790,10 +786,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     :param lines_standard_info: INFO lines for this VCF file
     :param lines_standard_filter: FILTER lines for this VCF file
     :param lines_standard_format: FORMAT lines for this VCF file
-    :param all_possible_alt_lines: dict of all possible ALT lines
-    :param all_possible_info_lines: dict of all possible INFO lines
-    :param all_possible_filter_lines: dict of all possible FILTER lines
-    :param all_possible_format_lines: dict of all possible FORMAT lines
+    :param all_possible_lines_dictionary: dict of dictionaries. all possible ALT/INFO/FILTER/FORMAT lines
     :return: vcf_data_lines, list_of_vcf_objects: dictionary of lists and a list of VCF objects
     """
     vcf_data_lines = {}  # DICTIONARY OF LISTS
@@ -813,10 +806,11 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
                              lines_standard_info,
                              lines_standard_filter,
                              lines_standard_format,
-                             all_possible_alt_lines,
-                             all_possible_info_lines,
-                             all_possible_filter_lines,
-                             all_possible_format_lines)
+                             all_possible_lines_dictionary)
+                             #all_possible_alt_lines,
+                             #all_possible_info_lines,
+                             #all_possible_filter_lines,
+                             #all_possible_format_lines)
         list_of_vcf_objects.append(vcf_object)
         if vcf_object.key in vcf_data_lines:
             vcf_data_lines[vcf_object.key].append(vcf_object)
@@ -896,6 +890,13 @@ def main():
     all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
     all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
 
+    all_possible_lines_dictionary = {
+        "ALT": all_possible_alt_lines,
+        "INFO": all_possible_info_lines,
+        "FILTER": all_possible_filter_lines,
+        "FORMAT": all_possible_format_lines,
+    }
+
     # custom meta-information lines for this VCF file
     lines_custom_structured = []
     lines_custom_unstructured = []
@@ -928,10 +929,8 @@ def main():
                                                                       lines_standard_info,
                                                                       lines_standard_filter,
                                                                       lines_standard_format,
-                                                                      all_possible_alt_lines,
-                                                                      all_possible_info_lines,
-                                                                      all_possible_filter_lines,
-                                                                      all_possible_format_lines)
+                                                                      all_possible_lines_dictionary)
+
 
     print("Writing to the following VCF output: ", args.vcf_output)
     print("Generating the VCF header and the meta-information lines")
