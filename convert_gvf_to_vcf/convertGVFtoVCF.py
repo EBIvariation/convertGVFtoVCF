@@ -351,7 +351,7 @@ class VcfLine:
 
         self.assembly = assembly_file
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
-
+        self.iupac_ambiguity_dictionary = self.build_iupac_ambiguity_code()
         # GVF
         self.source = gvf_feature_line_object.source
         self.so_type = gvf_feature_line_object.feature_type #currently column 3 of gvf, but could be an attribute so perhapsVCF: INFO or FORMAT?
@@ -377,8 +377,6 @@ class VcfLine:
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
         self.format = "pending" #TODO: set this in convertgvfattributes
-
-
         # # each item in the list exclude_from_info has its own place in the VCF file, so not part of info
         # exclude_from_info = ["ID", # done above
         #                      "Variant_seq", # done above
@@ -486,8 +484,7 @@ class VcfLine:
         :return: checked_reference_allele: reference allele that meets the requirements of the VCF specification"""
         if isinstance(ref_allele_to_be_checked, str):
             if not all(bases in ref_allele_to_be_checked for bases in ["A", "C", "G", "T", "N"]):
-                iupac_ambiguity_dictionary = self.build_iupac_ambiguity_code()
-                checked_reference_allele = self.convert_iupac_ambiguity_code(iupac_ambiguity_dictionary, ref_allele_to_be_checked)
+                checked_reference_allele = self.convert_iupac_ambiguity_code(self.iupac_ambiguity_dictionary, ref_allele_to_be_checked)
             else:
                 checked_reference_allele = ref_allele_to_be_checked
         else:
