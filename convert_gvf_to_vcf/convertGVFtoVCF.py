@@ -160,7 +160,7 @@ def extract_reference_allele(fasta_file, chromosome_name, position, end):
     """
     # using .index for memory efficiency:  https://biopython.org/docs/1.76/api/Bio.SeqIO.html#input-multiple-records
     records_dictionary = SeqIO.index(fasta_file, "fasta")
-    zero_indexed_position = position - 1 # minus one because zero indexed
+    zero_indexed_position = position - 1  # minus one because zero indexed
     zero_indexed_end = end - 1
     reference_allele = ""
     for position in range(zero_indexed_position, zero_indexed_end):
@@ -174,7 +174,7 @@ def get_gvf_attributes(column9_of_gvf):
     :param column9_of_gvf:  column - the final column of the GVF file
     :return: gvf_attribute_dictionary: a dictionary of attribute keys and their values
     """
-    gvf_attribute_dictionary = {} # attribute key => value
+    gvf_attribute_dictionary = {}  # attribute key => value
     # parse by semicolon this creates attribute
     # parse by equals sign this creates tag-values, if the value is a comma, create a list
     attributes_in_gvf_line = column9_of_gvf.split(";")
