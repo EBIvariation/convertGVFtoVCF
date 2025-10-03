@@ -93,11 +93,12 @@ def generate_standard_structured_metainformation_line(vcf_key_id, standard_lines
     :param vcf_key_id: VCF tag key id
     :param standard_lines_for_vcf_key: lines_standard_NAME i.e. list of standard lines for VCF INFO/ALT/FILTER/FORMAT
     :param all_possible_lines: all_possible_NAME_lines i.e. list of all possible lines for INFO or ALT or FILTER or FORMAT
-    :return: standard_lines_for_vcf_key: a list
+    :return: standard_structured_line: a string
     """
+
     standard_structured_line = all_possible_lines[vcf_key_id]
     standard_lines_for_vcf_key.append(standard_structured_line)
-    return standard_lines_for_vcf_key
+    return standard_structured_line
 
 
 def generate_custom_unstructured_metainformation_line(vcf_unstructured_key,
@@ -199,7 +200,6 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     vcf_vals = {}
     catching_for_review = []
 
-    print("standard_lines_dictionary info", standard_lines_dictionary["INFO"])
     # created a rough guide to attributes_for_custom_structured_metainformation in dgvaINFOattributes.tsv = this probably should be refined at a later date
     # TODO: edit dgvaINFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
     for attrib_key in gvf_attribute_dictionary:
@@ -215,7 +215,8 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
         elif attrib_key == "allele_count":
             #generate_standard_structured_metainformation_line("INFO", "AC", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
-            lines_standard_info = generate_standard_structured_metainformation_line("AC", standard_lines_dictionary["INFO"], all_possible_lines_dictionary["INFO"])
+            lines_standard_info_to_add = generate_standard_structured_metainformation_line("AC", standard_lines_dictionary["INFO"], all_possible_lines_dictionary["INFO"])
+            standard_lines_dictionary["INFO"].append(lines_standard_info_to_add)
         elif attrib_key == "allele_frequency":
             lines_standard_info = generate_standard_structured_metainformation_line("AF", standard_lines_dictionary["INFO"], all_possible_lines_dictionary["INFO"])
         elif attrib_key == "ciend":
@@ -365,7 +366,6 @@ class VcfLine:
                                                               lines_custom_structured,
                                                               standard_lines_dictionary,
                                                               all_possible_lines_dictionary)
-
         self.assembly = assembly_file
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
         self.iupac_ambiguity_dictionary = self.build_iupac_ambiguity_code()
