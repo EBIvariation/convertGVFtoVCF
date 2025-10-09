@@ -89,13 +89,12 @@ def generate_all_possible_standard_structured_lines(header_type):
 
 
 def generate_standard_structured_metainformation_line(vcf_key_id, standard_lines_for_vcf_key, all_possible_lines):
-    """Generates a list of standard structured metainformation lines.
+    """Generates a standard structured metainformation lines.
     :param vcf_key_id: VCF tag key id
     :param standard_lines_for_vcf_key: lines_standard_NAME i.e. list of standard lines for VCF INFO/ALT/FILTER/FORMAT
     :param all_possible_lines: all_possible_NAME_lines i.e. list of all possible lines for INFO or ALT or FILTER or FORMAT
     :return: standard_structured_line: a string
     """
-
     standard_structured_line = all_possible_lines[vcf_key_id]
     standard_lines_for_vcf_key.append(standard_structured_line)
     return standard_structured_line
@@ -202,6 +201,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
 
     # created a rough guide to attributes_for_custom_structured_metainformation in dgvaINFOattributes.tsv = this probably should be refined at a later date
     # TODO: edit dgvaINFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
+    print(gvf_attribute_dictionary)
     for attrib_key in gvf_attribute_dictionary:
         # if dgva specific key, create custom string otherwise do standard
         if attrib_key in dgva_attribute_dict:
