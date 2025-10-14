@@ -3,7 +3,7 @@ import unittest
 
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_metainformation_line, read_in_gvf_file, \
     gvf_features_to_vcf_objects, format_vcf_datalines, \
-    generate_vcf_metainformation, generate_all_possible_standard_structured_lines,  \
+    generate_vcf_metainformation, generate_vcf_header_structured_lines,  \
     generate_vcf_header_line, populate_sample_formats, \
     format_sample_values, read_info_attributes, read_sequence_ontology_symbolic_allele
 from convert_gvf_to_vcf.convertGVFtoVCF import VcfLine, GvfFeatureline
@@ -39,44 +39,11 @@ class TestConvertGVFtoVCF(unittest.TestCase):
     #4
     def test_gvf_features_to_vcf_objects(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
-        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
-        # custom meta-information lines for this VCF file
-        lines_custom_structured = []
-        lines_custom_unstructured = []
+
         # standard structured meta-information lines for this VCF file
-        lines_standard_alt = []
-        lines_standard_info = []
-        lines_standard_filter = []
-        lines_standard_format = []
-        # merging
-        standard_lines_dictionary = {
-            "ALT": lines_standard_alt,
-            "INFO": lines_standard_info,
-            "FILTER": lines_standard_filter,
-            "FORMAT": lines_standard_format,
-        }
-        # Dictionary for all possible VCF meta-information lines
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
-        all_possible_lines_dictionary = {
-            "ALT": all_possible_alt_lines,
-            "INFO": all_possible_info_lines,
-            "FILTER": all_possible_filter_lines,
-            "FORMAT": all_possible_format_lines,
-        }
-        vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, dgva_attribute_dict,
-                                                                          gvf_attribute_dict,
-                                                                          symbolic_allele_dictionary,
-                                                                          assembly_file,
-                                                                          lines_custom_structured,
-                                                                          standard_lines_dictionary,
-                                                                          all_possible_lines_dictionary
-                                                                          )
+        header_lines_for_this_vcf, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
+                                                                          assembly_file)
         assert len(vcf_data_lines) > 1
         assert len(list_of_vcf_objects) > 1
     #5
@@ -106,10 +73,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         }
 
         # Dictionary for all possible VCF meta-information lines
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
+        all_possible_info_lines = generate_vcf_header_structured_lines("INFO")
+        all_possible_alt_lines = generate_vcf_header_structured_lines("ALT")
+        all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER")
+        all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT")
 
         all_possible_lines_dictionary = {
             "ALT": all_possible_alt_lines,
@@ -162,10 +129,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         }
 
         # Dictionary for all possible VCF meta-information lines
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
+        all_possible_alt_lines = generate_vcf_header_structured_lines("ALT")
+        all_possible_info_lines = generate_vcf_header_structured_lines("INFO")
+        all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER")
+        all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT")
 
         all_possible_lines_dictionary = {
             "ALT": all_possible_alt_lines,
@@ -211,10 +178,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": lines_standard_format,
         }
         # Dictionary for all possible VCF meta-information lines
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
+        all_possible_alt_lines = generate_vcf_header_structured_lines("ALT")
+        all_possible_info_lines = generate_vcf_header_structured_lines("INFO")
+        all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER")
+        all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT")
 
         all_possible_lines_dictionary = {
             "ALT": all_possible_alt_lines,
@@ -263,10 +230,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": lines_standard_format,
         }
         # Dictionary for all possible VCF meta-information lines
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
+        all_possible_alt_lines = generate_vcf_header_structured_lines("ALT")
+        all_possible_info_lines = generate_vcf_header_structured_lines("INFO")
+        all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER")
+        all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT")
 
         all_possible_lines_dictionary = {
             "ALT": all_possible_alt_lines,
@@ -313,10 +280,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": lines_standard_format,
         }
         # Dictionary for all possible VCF meta-information lines
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
+        all_possible_info_lines = generate_vcf_header_structured_lines("INFO")
+        all_possible_alt_lines = generate_vcf_header_structured_lines("ALT")
+        all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER")
+        all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT")
 
         all_possible_lines_dictionary = {
             "ALT": all_possible_alt_lines,
@@ -360,10 +327,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": lines_standard_format,
         }
         # Dictionary for all possible VCF meta-information lines
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
+        all_possible_alt_lines = generate_vcf_header_structured_lines("ALT")
+        all_possible_info_lines = generate_vcf_header_structured_lines("INFO")
+        all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER")
+        all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT")
 
         all_possible_lines_dictionary = {
             "ALT": all_possible_alt_lines,
@@ -407,10 +374,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": lines_standard_format,
         }
         # Dictionary for all possible VCF meta-information lines
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
+        all_possible_alt_lines = generate_vcf_header_structured_lines("ALT")
+        all_possible_info_lines = generate_vcf_header_structured_lines("INFO")
+        all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER")
+        all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT")
 
         all_possible_lines_dictionary = {
             "ALT": all_possible_alt_lines,
@@ -431,185 +398,59 @@ class TestConvertGVFtoVCF(unittest.TestCase):
     #12
     def test_generate_vcf_metainformation(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
-        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
-        # custom meta-information lines for this VCF file
-        lines_custom_structured = []
-        lines_custom_unstructured = []
-        # standard structured meta-information lines for this VCF file
-        lines_standard_alt = []
-        lines_standard_info = []
-        lines_standard_filter = []
-        lines_standard_format = []
-        # merging
-        standard_lines_dictionary = {
-            "ALT": lines_standard_alt,
-            "INFO": lines_standard_info,
-            "FILTER": lines_standard_filter,
-            "FORMAT": lines_standard_format,
-        }
-        # Dictionary for all possible VCF meta-information lines
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
-        # merging
-        all_possible_lines_dictionary = {
-            "ALT": all_possible_alt_lines,
-            "INFO": all_possible_info_lines,
-            "FILTER": all_possible_filter_lines,
-            "FORMAT": all_possible_format_lines,
-        }
-        vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                                                          dgva_attribute_dict,
-                                                                          gvf_attribute_dict,
-                                                                          symbolic_allele_dictionary,
-                                                                          self.assembly,
-                                                                          lines_custom_structured,
-                                                                          standard_lines_dictionary,
-                                                                          all_possible_lines_dictionary
-                                                                          )
+
+        header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
+                                                                          self.assembly)
 
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
         unique_pragmas_to_add, sample_names, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas,
-                                                                      gvf_non_essential, list_of_vcf_objects, standard_lines_dictionary)
+                                                                      gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         assert len(unique_pragmas_to_add) > 1 and len(sample_names) > 1
     #13
     def test_generate_vcf_header_line(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
-        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
-        # custom meta-information lines for this VCF file
-        lines_custom_structured = []
-        lines_custom_unstructured = []
-        # standard structured meta-information lines for this VCF file
-        lines_standard_alt = []
-        lines_standard_info = []
-        lines_standard_filter = []
-        lines_standard_format = []
-        # merging
-        standard_lines_dictionary = {
-            "ALT": lines_standard_alt,
-            "INFO": lines_standard_info,
-            "FILTER": lines_standard_filter,
-            "FORMAT": lines_standard_format,
-        }
-        # Dictionary for all possible VCF meta-information lines
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
-        all_possible_lines_dictionary = {
-            "ALT": all_possible_alt_lines,
-            "INFO": all_possible_info_lines,
-            "FILTER": all_possible_filter_lines,
-            "FORMAT": all_possible_format_lines,
-        }
-        vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                                                          dgva_attribute_dict,
-                                                                          gvf_attribute_dict,
-                                                                          symbolic_allele_dictionary,
-                                                                          self.assembly,
-                                                                          lines_custom_structured,
-                                                                          standard_lines_dictionary,
-                                                                          all_possible_lines_dictionary
-                                                                          )
-
+        header_lines_for_this_vcf, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
+                                                                                                     self.assembly)
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
-        unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, standard_lines_dictionary)
+        (unique_pragmas_to_add, samples, unique_alt_lines_to_add,
+         unique_info_lines_to_add, unique_filter_lines_to_add,
+         unique_format_lines_to_add) = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_lines_for_this_vcf)
         header_fields = generate_vcf_header_line(samples)
         assert len(header_fields) > 1
     #14
     def test_populate_sample_formats(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
-        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
-        # custom meta-information lines for this VCF file
-        lines_custom_structured = []
-        lines_custom_unstructured = []
-        # standard structured meta-information lines for this VCF file
-        lines_standard_alt = []
-        lines_standard_info = []
-        lines_standard_filter = []
-        lines_standard_format = []
-        # merging
-        standard_lines_dictionary = {
-            "ALT": lines_standard_alt,
-            "INFO": lines_standard_info,
-            "FILTER": lines_standard_filter,
-            "FORMAT": lines_standard_format,
-        }
-        # Dictionary for all possible VCF meta-information lines
-
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
-
-        all_possible_lines_dictionary = {
-            "ALT": all_possible_alt_lines,
-            "INFO": all_possible_info_lines,
-            "FILTER": all_possible_filter_lines,
-            "FORMAT": all_possible_format_lines,
-        }
-        vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                                                          dgva_attribute_dict,
-                                                                          gvf_attribute_dict,
-                                                                          symbolic_allele_dictionary,
-                                                                          self.assembly,
-                                                                          lines_custom_structured,
-                                                                          standard_lines_dictionary,
-                                                                          all_possible_lines_dictionary
-                                                                          )
+        header_lines_for_this_vcf, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
+                                                                          self.assembly)
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
         unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(
-            lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, standard_lines_dictionary)
+            lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_lines_for_this_vcf)
         sample_name_format_value = populate_sample_formats(samples)
         assert len(sample_name_format_value) > 1
     #15
     def test_format_sample_values(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
-        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
-        # custom meta-information lines for this VCF file
-        lines_custom_structured = []
-        lines_custom_unstructured = []
         # standard structured meta-information lines for this VCF file
-        lines_standard_alt = []
-        lines_standard_info = []
-        lines_standard_filter = []
-        lines_standard_format = []
-        # merging
         standard_lines_dictionary = {
-            "ALT": lines_standard_alt,
-            "INFO": lines_standard_info,
-            "FILTER": lines_standard_filter,
-            "FORMAT": lines_standard_format,
+            "ALT": [],
+            "INFO": [],
+            "FILTER": [],
+            "FORMAT": [],
         }
 
         # Dictionary for all possible VCF meta-information lines
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
+        all_possible_alt_lines = generate_vcf_header_structured_lines("ALT")
+        all_possible_info_lines = generate_vcf_header_structured_lines("INFO")
+        all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER")
+        all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT")
         all_possible_lines_dictionary = {
             "ALT": all_possible_alt_lines,
             "INFO": all_possible_info_lines,
             "FILTER": all_possible_filter_lines,
             "FORMAT": all_possible_format_lines,
         }
-        vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                                                          dgva_attribute_dict,
-                                                                          gvf_attribute_dict,
-                                                                          symbolic_allele_dictionary,
-                                                                          self.assembly,
-                                                                          lines_custom_structured,
-                                                                          standard_lines_dictionary,
-                                                                          all_possible_lines_dictionary)
+        header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
+                                                                          self.assembly)
 
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
         unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(
@@ -620,44 +461,17 @@ class TestConvertGVFtoVCF(unittest.TestCase):
     #16
     def test_format_vcf_datalines(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
-        symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
+
         assembly_file = self.assembly
-        # custom meta-information lines for this VCF fileT
-        lines_custom_structured = []
-        lines_custom_unstructured = []
         # standard structured meta-information lines for this VCF file
-        lines_standard_alt = []
-        lines_standard_info = []
-        lines_standard_filter = []
-        lines_standard_format = []
-        # merging
         standard_lines_dictionary = {
-            "ALT": lines_standard_alt,
-            "INFO": lines_standard_info,
-            "FILTER": lines_standard_filter,
-            "FORMAT": lines_standard_format,
+            "ALT": [],
+            "INFO": [],
+            "FILTER": [],
+            "FORMAT": [],
         }
-        # Dictionary for all possible VCF meta-information lines
-        all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-        all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-        all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-        all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
-        all_possible_lines_dictionary = {
-            "ALT": all_possible_alt_lines,
-            "INFO": all_possible_info_lines,
-            "FILTER": all_possible_filter_lines,
-            "FORMAT": all_possible_format_lines,
-        }
-        vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                                                          dgva_attribute_dict,
-                                                                          gvf_attribute_dict,
-                                                                          symbolic_allele_dictionary,
-                                                                          assembly_file,
-                                                                          lines_custom_structured,
-                                                                          standard_lines_dictionary,
-                                                                          all_possible_lines_dictionary)
+        header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
+                                                                          assembly_file)
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
         unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, standard_lines_dictionary)
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
