@@ -301,19 +301,19 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     all_possible_lines_dictionary)
         reference_allele = v.get_ref()
         assert len(reference_allele) != 0
+        assert reference_allele == 'TA'
+
     #10
     def test_generate_symbolic_allele(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	81	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=77,78;End_range=80,81;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
-        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
         lines_custom_structured = []
-        lines_custom_unstructured = []
         # standard structured meta-information lines for this VCF file
         lines_standard_alt = []
         lines_standard_info = []
@@ -346,8 +346,25 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     lines_custom_structured,
                     standard_lines_dictionary,
                     all_possible_lines_dictionary)
-        output_symbolic_allele, self.info, output_lines_standard_ALT, output_lines_standard_INFO = v.generate_symbolic_allele(standard_lines_dictionary, all_possible_lines_dictionary)
-        assert len(output_symbolic_allele) > 1
+        output_symbolic_allele, info_field, output_lines_standard_ALT, output_lines_standard_INFO = v.generate_symbolic_allele(standard_lines_dictionary, all_possible_lines_dictionary)
+        assert output_symbolic_allele == '<DEL>'
+        assert info_field == ['END=81', 'SVLEN=4', 'IMPRECISE', 'CIPOS=0,1', 'CIEND=0,1', 'END=80', 'SVLEN=4', 'IMPRECISE', 'CIPOS=1,2', 'CIEND=1,2']
+        assert output_lines_standard_ALT == ['"##ALT=<ID=DEL,Description=""Deletion"">"', '"##ALT=<ID=DEL,Description=""Deletion"">"']
+        assert output_lines_standard_INFO == [
+            '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
+            '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
+            '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
+            '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">',
+            '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">',
+            '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
+            '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
+            '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
+            '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">',
+            '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">'
+        ]
+
+
+
     #11
     def test_get_alt(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	81	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=77,78;End_range=80,81;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
@@ -394,94 +411,104 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     standard_lines_dictionary,
                     all_possible_lines_dictionary)
         alt_allele = v.get_alt(standard_lines_dictionary, all_possible_lines_dictionary)
-        assert len(alt_allele) > 0
+        assert alt_allele == '<DEL>'
+
     #12
     def test_generate_vcf_metainformation(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
 
         header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           self.assembly)
-
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
-        unique_pragmas_to_add, sample_names, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas,
-                                                                      gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
-        assert len(unique_pragmas_to_add) > 1 and len(sample_names) > 1
+        (unique_pragmas_to_add, sample_names,
+         unique_alt_lines_to_add, unique_info_lines_to_add,
+         unique_filter_lines_to_add, unique_format_lines_to_add) = generate_vcf_metainformation(
+            lines_custom_unstructured, gvf_pragmas,
+             gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary
+        )
+
+        assert unique_pragmas_to_add == [
+            '##fileformat=VCFv4.4',
+            '##source=DGVa',
+            '##gff-version=3',
+            '##gvf-version=1.06',
+            '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=20150715',
+            '##genome-build=NCBI GRCz10', '##Study_accession=nstd62', '##Study_type=Control Set',
+            '##Display_name=Brown_et_al_2012',
+            '##Publication=PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year=2012',
+            '##Study=First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants',
+            '##Assembly_name=GRCz10', '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9',
+            '##subject=subject_name=JenMale7;subject_sex=Male', '##subject=subject_name=JenMale6;subject_sex=Male',
+            '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3',
+            '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7'
+        ]
+        assert unique_alt_lines_to_add == [
+            '"##ALT=<ID=DEL,Description=""Deletion"">"',
+            '"##ALT=<ID=DUP,Description=""Duplication"">"'
+        ]
+        assert unique_info_lines_to_add == [
+            '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
+            '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
+            '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
+            '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">',
+            '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">',
+            '##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">'
+        ]
+
+
     #13
     def test_generate_vcf_header_line(self):
-        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        header_lines_for_this_vcf, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                                                                                     self.assembly)
-        lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
-        (unique_pragmas_to_add, samples, unique_alt_lines_to_add,
-         unique_info_lines_to_add, unique_filter_lines_to_add,
-         unique_format_lines_to_add) = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_lines_for_this_vcf)
-        header_fields = generate_vcf_header_line(samples)
-        assert len(header_fields) > 1
+        header_fields = generate_vcf_header_line(['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'])
+        assert header_fields == '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tJenMale6\tWilds2-3\tZon9\tJenMale7'
+
     #14
     def test_populate_sample_formats(self):
-        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        header_lines_for_this_vcf, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                                                          self.assembly)
-        lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
-        unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(
-            lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_lines_for_this_vcf)
-        sample_name_format_value = populate_sample_formats(samples)
-        assert len(sample_name_format_value) > 1
+        sample_name_format_value = populate_sample_formats(['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'])
+        assert sample_name_format_value == {
+            'JenMale6': 'sampleFORMAThere',
+            'Wilds2-3': 'sampleFORMAThere',
+            'Zon9': 'sampleFORMAThere',
+            'JenMale7': 'sampleFORMAThere'
+        }
+
     #15
     def test_format_sample_values(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         # standard structured meta-information lines for this VCF file
-        standard_lines_dictionary = {
-            "ALT": [],
-            "INFO": [],
-            "FILTER": [],
-            "FORMAT": [],
-        }
-
-        # Dictionary for all possible VCF meta-information lines
-        all_possible_alt_lines = generate_vcf_header_structured_lines("ALT")
-        all_possible_info_lines = generate_vcf_header_structured_lines("INFO")
-        all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER")
-        all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT")
-        all_possible_lines_dictionary = {
-            "ALT": all_possible_alt_lines,
-            "INFO": all_possible_info_lines,
-            "FILTER": all_possible_filter_lines,
-            "FORMAT": all_possible_format_lines,
-        }
         header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           self.assembly)
 
         lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
         unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(
-            lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, standard_lines_dictionary)
+            lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         sample_name_format_value = populate_sample_formats(samples)
         sample_format_values_string = format_sample_values(sample_name_format_value)
         assert isinstance(sample_format_values_string, str)
     #16
     def test_format_vcf_datalines(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-
-        assembly_file = self.assembly
-        # standard structured meta-information lines for this VCF file
-        standard_lines_dictionary = {
-            "ALT": [],
-            "INFO": [],
-            "FILTER": [],
-            "FORMAT": [],
-        }
-        header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                                                          assembly_file)
-        lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
-        unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, standard_lines_dictionary)
+        header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, self.assembly)
+        lines_custom_unstructured = []
+        (
+            unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add,
+            unique_filter_lines_to_add, unique_format_lines_to_add
+         ) = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
-        assert len(formatted_vcf_datalines) > 1
+        assert formatted_vcf_datalines == [
+            'chromosome1\t1\t1\tAC\t<DEL>\t.\t.\tEND=1;SVLEN=1\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t',
+            'chromosome1\t76\t1\tTAA\t<DEL>\t.\t.\tEND=78;SVLEN=1;IMPRECISE;CIPOS=776537,776837;CIEND=776537,776837\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t',
+            'chromosome1\t126\t12\tCGTACGGTACG\t<DEL>\t.\t.\tEND=131;SVLEN=5\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t',
+            'chromosome1\t127\t13\tGTACGTACG\t<DUP>\t.\t.\tEND=131;SVLEN=4\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t',
+            'chromosome1\t127\t14\tGTACGTACG\t<DUP>\t.\t.\tEND=131;SVLEN=4\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t',
+            'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tEND=128;SVLEN=1\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t'
+        ]
+
     #17
     def test_generate_custom_unstructured_metainfomation_line(self):
-        lines_custom_unstructured = ['##fileformat=VCFv4.4', '##fileDate=20150715', '##source=DGVa', '##source=DGVa',
-                                     '##genome-build=NCBI GRCz10']
+        lines_custom_unstructured = []
         formatted_string = generate_custom_unstructured_metainformation_line("test_string_key", "test_string_value", lines_custom_unstructured)
         assert formatted_string == "##test_string_key=test_string_value"
+        assert formatted_string in lines_custom_unstructured
 
 if __name__ == '__main__':
     unittest.main()

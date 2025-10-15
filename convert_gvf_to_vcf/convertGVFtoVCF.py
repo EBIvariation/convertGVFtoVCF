@@ -610,11 +610,6 @@ class VcfLine:
         :param all_possible_info_lines: dictionary of all possible INFO lines
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
-        lines_standard_alt = standard_lines_dictionary["ALT"]
-        lines_standard_info = standard_lines_dictionary["INFO"]
-        all_possible_alt_lines = all_possible_lines_dictionary["ALT"]
-        all_possible_info_lines = all_possible_lines_dictionary["INFO"]
-
         if any(base in self.vcf_value["Variant_seq"] for base in ["A", "C", "G", "T", "N"]):
             alterative_allele = self.vcf_value["Variant_seq"]
         elif self.vcf_value["Variant_seq"] == '.':
@@ -637,7 +632,7 @@ class VcfLine:
                 print("Cannot identify symbolic allele. Variant type is not supported.")
         else:
             alterative_allele = "."
-            print("Could not determine the alterative allele.")
+            print("Could not determine the alternative allele.")
         return alterative_allele
 
     def __str__(self):
