@@ -17,6 +17,7 @@ def read_file(prefix, header_type):
     """
     file_lines = {}
     keys_tsv_file = os.path.join(etc_folder, f'{prefix}{header_type}keys.tsv')
+    print(keys_tsv_file)
     try:
         with open(keys_tsv_file) as keys_file:
             next(keys_file)  # Skip the header
@@ -28,8 +29,9 @@ def read_file(prefix, header_type):
                     for token in range(number_of_tokens):
                         value_to_add = file_tokens[token]
                         file_lines.setdefault(key_id, []).append(value_to_add)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         print(f'File not found: {keys_tsv_file}')
+        raise e
     return file_lines
 
 
@@ -206,11 +208,12 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
         # if dgva specific key, create custom string otherwise do standard
         if attrib_key in dgva_attribute_dict:
             lines_custom_structured.append(
-                generate_custom_structured_metainformation_line(vcf_key="INFO", vcf_key_id=attrib_key,
-                                                                vcf_key_number=dgva_attribute_dict[attrib_key][1],
-                                                                vcf_key_type=dgva_attribute_dict[attrib_key][2],
-                                                                vcf_key_description=dgva_attribute_dict[attrib_key][3],
-                                                                optional_extra_fields=None)
+                generate_custom_structured_metainformation_line(
+                    vcf_key="INFO", vcf_key_id=attrib_key,
+                    vcf_key_number=dgva_attribute_dict[attrib_key][1],
+                    vcf_key_type=dgva_attribute_dict[attrib_key][2],
+                    vcf_key_description=dgva_attribute_dict[attrib_key][3],
+                    optional_extra_fields=None)
             )
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
         elif attrib_key == "allele_count":
