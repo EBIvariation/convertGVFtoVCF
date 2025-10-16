@@ -61,8 +61,8 @@ def generate_custom_structured_metainformation_line(vcf_key, vcf_key_id, vcf_key
     return custom_structured_string
 
 
-def generate_all_possible_standard_structured_lines(header_type):
-    """ Generates a fictionary of all possible standard structured lines for INFO/FILTER/FORMAT/ALT
+def generate_vcf_header_structured_lines(header_type):
+    """ Generates a dictionary of standard structured lines for INFO/FILTER/FORMAT/ALT
     :param header_type: type of header file to read i.e. ALT, FILTER, INFO or FORMAT
     :return: dictionary of all possible standard structured lines keys for the header type
     """
@@ -610,11 +610,6 @@ class VcfLine:
         :param all_possible_info_lines: dictionary of all possible INFO lines
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
-        lines_standard_alt = standard_lines_dictionary["ALT"]
-        lines_standard_info = standard_lines_dictionary["INFO"]
-        all_possible_alt_lines = all_possible_lines_dictionary["ALT"]
-        all_possible_info_lines = all_possible_lines_dictionary["INFO"]
-
         if any(base in self.vcf_value["Variant_seq"] for base in ["A", "C", "G", "T", "N"]):
             alterative_allele = self.vcf_value["Variant_seq"]
         elif self.vcf_value["Variant_seq"] == '.':
@@ -637,7 +632,7 @@ class VcfLine:
                 print("Cannot identify symbolic allele. Variant type is not supported.")
         else:
             alterative_allele = "."
-            print("Could not determine the alterative allele.")
+            print("Could not determine the alternative allele.")
         return alterative_allele
 
     def __str__(self):
@@ -777,30 +772,30 @@ def generate_vcf_header_line(samples):
     return vcf_header
 
 def gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                dgva_attribute_dict,
-                                gvf_attribute_dict,
-                                symbolic_allele_dictionary,
-                                assembly_file,
-                                lines_custom_structured,
-                                standard_lines_dictionary,
-                                all_possible_lines_dictionary):
+                                assembly_file):
 
     """ Creates VCF objects from GVF feature lines and stores the VCF objects.
     :param gvf_lines_obj_list: list of GVF feature line objects
-    :param gvf_attribute_dict: dictionary of GVF INFO attributes
-    :param symbolic_allele_dictionary: dictionary of symbolic alleles
     :param assembly_file: FASTA file to assembly
-    :param dgva_attribute_dict: dictionary af DGVa specific INFO attributes
-    :param lines_custom_structured: list to store custom structured metainformation lines
-    :param lines_standard_alt: ALT lines for this VCF file
-    :param lines_standard_info: INFO lines for this VCF file
-    :param lines_standard_filter: FILTER lines for this VCF file
-    :param lines_standard_format: FORMAT lines for this VCF file
     :param all_possible_lines_dictionary: dict of dictionaries. all possible ALT/INFO/FILTER/FORMAT lines
-    :return: vcf_data_lines, list_of_vcf_objects: dictionary of lists and a list of VCF objects
+    :return: header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects: dictionary of lists and a list of VCF objects
     """
     vcf_data_lines = {}  # DICTIONARY OF LISTS
     list_of_vcf_objects = []
+    # standard meta-information lines for this VCF file
+    header_standard_lines_dictionary ={
+        "ALT": [],
+        "INFO": [],
+        "FILTER": [],
+        "FORMAT": [],
+    }
+    all_header_lines_per_type_dict = {
+        htype: generate_vcf_header_structured_lines(htype) for htype in ["ALT", "INFO", "FILTER", "FORMAT"]
+    }
+    dgva_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'dgvaINFOattributes.tsv'))  # needed to generate custom strings
+    gvf_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'gvfINFOattributes.tsv'))
+    symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(os.path.join(etc_folder, 'svALTkeys.tsv'))
+    header_lines_for_this_vcf = []
 
     # create a vcf object for every feature line in the GVF (1:1)
     # add the newly created vcf object to the vcf data line it belongs to
@@ -811,9 +806,9 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
                              gvf_attribute_dict,
                              symbolic_allele_dictionary,
                              assembly_file,
-                             lines_custom_structured,
-                             standard_lines_dictionary,
-                             all_possible_lines_dictionary)
+                             header_lines_for_this_vcf,
+                             header_standard_lines_dictionary,
+                             all_header_lines_per_type_dict)
 
         list_of_vcf_objects.append(vcf_object)
         if vcf_object.key in vcf_data_lines:
@@ -826,7 +821,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
         # for key in vcf_data_lines.keys():
         #     vcf_obj_list = vcf_data_lines[key]
             # print("for ", key, " the number of vcf objects is: ", len(vcf_obj_list))
-    return vcf_data_lines, list_of_vcf_objects
+    return header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects
 
 
 def populate_sample_formats(list_of_sample_names):
@@ -888,63 +883,32 @@ def main():
     print("The provided output file is: ", args.vcf_output)
     if args.assembly:
         print("The provided assembly file is: ", args.assembly)
-
-    all_possible_alt_lines = generate_all_possible_standard_structured_lines("ALT")
-    all_possible_info_lines = generate_all_possible_standard_structured_lines("INFO")
-    all_possible_filter_lines = generate_all_possible_standard_structured_lines("FILTER")
-    all_possible_format_lines = generate_all_possible_standard_structured_lines("FORMAT")
-    # merging
-    all_possible_lines_dictionary = {
-        "ALT": all_possible_alt_lines,
-        "INFO": all_possible_info_lines,
-        "FILTER": all_possible_filter_lines,
-        "FORMAT": all_possible_format_lines,
-    }
+    assembly_file = os.path.abspath(args.assembly)
+    assert os.path.isfile(assembly_file), "Assembly file does not exist"
 
     # custom meta-information lines for this VCF file
-    lines_custom_structured = []
     lines_custom_unstructured = []
-    # standard structured meta-information lines for this VCF file
-    lines_standard_alt = []
-    lines_standard_info = []
-    lines_standard_filter = []
-    lines_standard_format = []
-    # merging
-    standard_lines_dictionary ={
-        "ALT": lines_standard_alt,
-        "INFO": lines_standard_info,
-        "FILTER": lines_standard_filter,
-        "FORMAT": lines_standard_format,
-    }
-
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
-    dgva_info_attributes_file = os.path.join(etc_folder, 'dgvaINFOattributes.tsv')
-    gvf_info_attributes_file = os.path.join(etc_folder, 'gvfINFOattributes.tsv')
-    symbolic_allele_file = os.path.join(etc_folder, 'svALTkeys.tsv')
 
-    dgva_attribute_dict = read_info_attributes(info_attributes_file=dgva_info_attributes_file) # needed to generate custom strings
-    gvf_attribute_dict = read_info_attributes(info_attributes_file=gvf_info_attributes_file)
-    symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(symbolic_allele_file)
-
-    if args.assembly:
-        assembly_file = os.path.abspath(args.assembly)
-    else:
-        assembly_file = None
-    vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                                                      dgva_attribute_dict,
-                                                                      gvf_attribute_dict,
-                                                                      symbolic_allele_dictionary,
-                                                                      assembly_file,
-                                                                      lines_custom_structured,
-                                                                      standard_lines_dictionary,
-                                                                      all_possible_lines_dictionary)
+    (
+        header_standard_lines_dictionary,
+        vcf_data_lines,
+        list_of_vcf_objects
+    ) = gvf_features_to_vcf_objects(gvf_lines_obj_list, assembly_file)
 
 
     print("Writing to the following VCF output: ", args.vcf_output)
     print("Generating the VCF header and the meta-information lines")
 
     with open(args.vcf_output, "w") as vcf_output:
-        unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, standard_lines_dictionary)
+        (
+            unique_pragmas_to_add,
+            samples,
+            unique_alt_lines_to_add,
+            unique_info_lines_to_add,
+            unique_filter_lines_to_add,
+            unique_format_lines_to_add
+        ) = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         for pragma in unique_pragmas_to_add:
             vcf_output.write(f"{pragma}\n")
         for alt_lines in unique_alt_lines_to_add:
