@@ -1,7 +1,7 @@
 import os.path
 import unittest
 
-from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_metainformation_line, read_in_gvf_file, \
+from convert_gvf_to_vcf.convertGVFtoVCF import read_file, generate_custom_unstructured_metainformation_line, read_in_gvf_file, \
     gvf_features_to_vcf_objects, format_vcf_datalines, \
     generate_vcf_metainformation, generate_vcf_header_structured_lines,  \
     generate_vcf_header_line, populate_sample_formats, \
@@ -20,23 +20,30 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.symbolic_allele_file = os.path.join(self.input_folder_parent,"etc", 'svALTkeys.tsv')
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
+
     #1
+    def test_read_file(self):
+        prefix = "reserved"
+        header_type = "FORMAT"
+        file_lines = read_file(prefix,header_type)
+        assert len(file_lines) > 1
+    #2
     def test_read_in_gvf_file(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         assert len(gvf_pragmas) > 1
         assert len(gvf_non_essential) > 1
         assert len(gvf_lines_obj_list) > 1
-    #2
+    #3
     def test_read_info_attributes(self):
         dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
         assert len(dgva_attribute_dict) > 1
         gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
         assert len(gvf_attribute_dict) > 1
-    #3
+    #4
     def test_read_sequence_ontology_symbolic_allele(self):
         symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assert len(symbolic_allele_dictionary) > 1
-    #4
+    #5
     def test_gvf_features_to_vcf_objects(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         assembly_file = self.assembly
@@ -46,7 +53,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                                                           assembly_file)
         assert len(vcf_data_lines) > 1
         assert len(list_of_vcf_objects) > 1
-    #5
+    #6
     def test_add_padded_base(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
@@ -101,7 +108,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert pos is not None
         assert ref is not None
         assert alt is not None
-    #6
+    #7
     def test_build_iupac_ambiguity_code(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
@@ -151,7 +158,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
         my_ipuac_dictionary = v.build_iupac_ambiguity_code()
         assert len(my_ipuac_dictionary) > 0
-    #7
+    #8
     def test_convert_iupac_ambiguity_code(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
@@ -203,7 +210,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         ref_to_convert = "TAGD"
         converted_ref_allele = v.convert_iupac_ambiguity_code(my_ipuac_dictionary, ref_to_convert)
         assert converted_ref_allele not in ["R", "Y", "M", "K", "S", "D", "W", "H", "B", "V", "D", "N"]
-    #8
+    #9
     def test_check_ref(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
@@ -254,7 +261,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         new_ref = v.check_ref(reference_allele_to_check)
         iupac_code = ["R", "Y", "M", "K", "S", "D", "W", "H", "B", "V", "D", "N"]
         assert all(code not in new_ref for code in iupac_code)
-    #9
+    #10
     def test_get_ref(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
@@ -303,7 +310,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert len(reference_allele) != 0
         assert reference_allele == 'TA'
 
-    #10
+    #11
     def test_generate_symbolic_allele(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	81	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=77,78;End_range=80,81;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
@@ -365,7 +372,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
 
 
-    #11
+    #12
     def test_get_alt(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	81	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=77,78;End_range=80,81;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
@@ -413,7 +420,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         alt_allele = v.get_alt(standard_lines_dictionary, all_possible_lines_dictionary)
         assert alt_allele == '<DEL>'
 
-    #12
+    #13
     def test_generate_vcf_metainformation(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
 
@@ -456,12 +463,12 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         ]
 
 
-    #13
+    #14
     def test_generate_vcf_header_line(self):
         header_fields = generate_vcf_header_line(['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'])
         assert header_fields == '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tJenMale6\tWilds2-3\tZon9\tJenMale7'
 
-    #14
+    #15
     def test_populate_sample_formats(self):
         sample_name_format_value = populate_sample_formats(['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'])
         assert sample_name_format_value == {
@@ -471,7 +478,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             'JenMale7': 'sampleFORMAThere'
         }
 
-    #15
+    #16
     def test_format_sample_values(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         # standard structured meta-information lines for this VCF file
@@ -484,7 +491,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         sample_name_format_value = populate_sample_formats(samples)
         sample_format_values_string = format_sample_values(sample_name_format_value)
         assert isinstance(sample_format_values_string, str)
-    #16
+    #17
     def test_format_vcf_datalines(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, self.assembly)
@@ -503,7 +510,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tEND=128;SVLEN=1\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t'
         ]
 
-    #17
+    #18
     def test_generate_custom_unstructured_metainfomation_line(self):
         lines_custom_unstructured = []
         formatted_string = generate_custom_unstructured_metainformation_line("test_string_key", "test_string_value", lines_custom_unstructured)

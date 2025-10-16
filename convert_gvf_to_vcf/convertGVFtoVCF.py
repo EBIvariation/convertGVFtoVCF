@@ -19,7 +19,7 @@ def read_file(prefix, header_type):
     keys_tsv_file = os.path.join(etc_folder, f'{prefix}{header_type}keys.tsv')
     print(keys_tsv_file)
     try:
-        with open(keys_tsv_file) as keys_file:
+        with open(keys_tsv_file, encoding='utf-8', errors='replace') as keys_file:
             next(keys_file)  # Skip the header
             for line in keys_file:
                 file_tokens = line.rstrip().split("\t")
