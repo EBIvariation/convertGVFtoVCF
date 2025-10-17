@@ -62,7 +62,7 @@ def generate_custom_structured_metainformation_line(vcf_key, vcf_key_id, vcf_key
 
 
 def generate_vcf_header_structured_lines(header_type):
-    """ Generates a dictionary of standard structured lines for INFO/FILTER/FORMAT/ALT
+    """ Generates a dictionary of all possible standard structured lines for INFO/FILTER/FORMAT/ALT
     :param header_type: type of header file to read i.e. ALT, FILTER, INFO or FORMAT
     :return: dictionary of all possible standard structured lines keys for the header type
     """
