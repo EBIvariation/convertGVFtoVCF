@@ -182,7 +182,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_vals = {}
     catching_for_review = []
-    print("dgva_attribute_dict", dgva_attribute_dict)
+    #print("dgva_attribute_dict", dgva_attribute_dict)
     mapping_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'attribute_mapper.tsv'))
     # created a rough guide to attributes_for_custom_structured_metainformation in dgvaINFOattributes.tsv = this probably should be refined at a later date
     # TODO: edit dgvaINFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
