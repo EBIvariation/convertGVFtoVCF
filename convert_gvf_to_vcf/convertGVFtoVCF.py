@@ -89,19 +89,6 @@ def generate_vcf_header_structured_lines(header_type):
             all_possible_lines[sv_key_id] = sv_line
     return all_possible_lines
 
-
-def generate_standard_structured_metainformation_line(vcf_key_id, standard_lines_for_vcf_key, all_possible_lines):
-    """Generates a standard structured metainformation lines.
-    :param vcf_key_id: VCF tag key id
-    :param standard_lines_for_vcf_key: lines_standard_NAME i.e. list of standard lines for VCF INFO/ALT/FILTER/FORMAT
-    :param all_possible_lines: all_possible_NAME_lines i.e. list of all possible lines for INFO or ALT or FILTER or FORMAT
-    :return: standard_structured_line: a string
-    """
-    standard_structured_line = all_possible_lines[vcf_key_id]
-    standard_lines_for_vcf_key.append(standard_structured_line)
-    return standard_structured_line
-
-
 def generate_custom_unstructured_metainformation_line(vcf_unstructured_key,
                                                       vcf_unstructured_value,
                                                       lines_custom_unstructured):
@@ -217,21 +204,18 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             )
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
         elif attrib_key == "allele_count":
-            #generate_standard_structured_metainformation_line("INFO", "AC", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
-            lines_standard_info_to_add = generate_standard_structured_metainformation_line("AC", standard_lines_dictionary["INFO"], all_possible_lines_dictionary["INFO"])
-            standard_lines_dictionary["INFO"].append(lines_standard_info_to_add)
+            #TODO: change all generate_standard_structured_metainformation_line to standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["AC"])
+            standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["AC"])
         elif attrib_key == "allele_frequency":
-            lines_standard_info = generate_standard_structured_metainformation_line("AF", standard_lines_dictionary["INFO"], all_possible_lines_dictionary["INFO"])
+            standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["AF"])
         elif attrib_key == "ciend":
-            lines_standard_info = generate_standard_structured_metainformation_line("CIEND", standard_lines_dictionary["INFO"], all_possible_lines_dictionary["INFO"])
+            standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CIEND"])
         elif attrib_key == "copy_number":
-            lines_standard_info = generate_standard_structured_metainformation_line("CN", standard_lines_dictionary["INFO"], all_possible_lines_dictionary["INFO"])
+             standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CN"])
         elif attrib_key == "insertion_length":
-            lines_standard_info = generate_standard_structured_metainformation_line("SVLEN", standard_lines_dictionary["INFO"],
-                                                                                    all_possible_lines_dictionary["INFO"])
+            standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CN"])
         elif attrib_key == "mate_id":
-            lines_standard_info = generate_standard_structured_metainformation_line("MATEID", standard_lines_dictionary["INFO"],
-                                                                                    all_possible_lines_dictionary["INFO"])
+            standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["MATEID"])
         elif attrib_key == "sample_name":
             #sample_names.append(sample_names)
             pass
