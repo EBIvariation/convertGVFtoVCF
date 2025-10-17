@@ -97,7 +97,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     gvf_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
-                    lines_custom_structured,
                     standard_lines_dictionary,
                     all_possible_lines_dictionary)
 
@@ -152,7 +151,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     gvf_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
-                    lines_custom_structured,
                     standard_lines_dictionary,
                     all_possible_lines_dictionary)
 
@@ -201,7 +199,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     gvf_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
-                    lines_custom_structured,
                     standard_lines_dictionary,
                     all_possible_lines_dictionary)
 
@@ -253,7 +250,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     gvf_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
-                    lines_custom_structured,
                     standard_lines_dictionary,
                     all_possible_lines_dictionary)
 
@@ -303,7 +299,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     gvf_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
-                    lines_custom_structured,
                     standard_lines_dictionary,
                     all_possible_lines_dictionary)
         reference_allele = v.get_ref()
@@ -350,14 +345,20 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     gvf_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
-                    lines_custom_structured,
                     standard_lines_dictionary,
                     all_possible_lines_dictionary)
         output_symbolic_allele, info_field, output_lines_standard_ALT, output_lines_standard_INFO = v.generate_symbolic_allele(standard_lines_dictionary, all_possible_lines_dictionary)
         assert output_symbolic_allele == '<DEL>'
         assert info_field == ['END=81', 'SVLEN=4', 'IMPRECISE', 'CIPOS=0,1', 'CIEND=0,1', 'END=80', 'SVLEN=4', 'IMPRECISE', 'CIPOS=1,2', 'CIEND=1,2']
         assert output_lines_standard_ALT == ['"##ALT=<ID=DEL,Description=""Deletion"">"', '"##ALT=<ID=DEL,Description=""Deletion"">"']
+        print("here is ", output_lines_standard_INFO)
         assert output_lines_standard_INFO == [
+            '##INFO=<ID="Name",Number=".",Type="String",Description="name">',
+            '##INFO=<ID="Alias",Number=".",Type="String",Description="A secondary name.">',
+            '##INFO=<ID="variant_call_so_id",Number=".",Type="String",Description="variant call SO id">',
+            '##INFO=<ID="parent",Number=".",Type="String",Description="parent">',
+            '##INFO=<ID="submitter_variant_call_id",Number=".",Type="Integer",Description="submitter variant call id">',
+            '##INFO=<ID="remap_score",Number=".",Type="Float",Description="remap score">',
             '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
             '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
             '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
@@ -414,7 +415,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     gvf_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
-                    lines_custom_structured,
                     standard_lines_dictionary,
                     all_possible_lines_dictionary)
         alt_allele = v.get_alt(standard_lines_dictionary, all_possible_lines_dictionary)
@@ -426,12 +426,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
         header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           self.assembly)
-        lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
         (unique_pragmas_to_add, sample_names,
          unique_alt_lines_to_add, unique_info_lines_to_add,
          unique_filter_lines_to_add, unique_format_lines_to_add) = generate_vcf_metainformation(
-            lines_custom_unstructured, gvf_pragmas,
-             gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary
+            gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary
         )
 
         assert unique_pragmas_to_add == [
@@ -453,7 +451,14 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             '"##ALT=<ID=DEL,Description=""Deletion"">"',
             '"##ALT=<ID=DUP,Description=""Duplication"">"'
         ]
-        assert unique_info_lines_to_add == [
+        print("unique_info_lines_to_add", unique_info_lines_to_add)
+        assert unique_info_lines_to_add ==  [
+            '##INFO=<ID="Name",Number=".",Type="String",Description="name">',
+            '##INFO=<ID="Alias",Number=".",Type="String",Description="A secondary name.">',
+            '##INFO=<ID="variant_call_so_id",Number=".",Type="String",Description="variant call SO id">',
+            '##INFO=<ID="parent",Number=".",Type="String",Description="parent">',
+            '##INFO=<ID="submitter_variant_call_id",Number=".",Type="Integer",Description="submitter variant call id">',
+            '##INFO=<ID="remap_score",Number=".",Type="Float",Description="remap score">',
             '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
             '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
             '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
@@ -484,10 +489,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # standard structured meta-information lines for this VCF file
         header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           self.assembly)
-
-        lines_custom_unstructured = ['##fileformat=VCFv4.4','##fileDate=20150715', '##source=DGVa','##source=DGVa', '##genome-build=NCBI GRCz10']
         unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = generate_vcf_metainformation(
-            lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
+            gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         sample_name_format_value = populate_sample_formats(samples)
         sample_format_values_string = format_sample_values(sample_name_format_value)
         assert isinstance(sample_format_values_string, str)
@@ -495,11 +498,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
     def test_format_vcf_datalines(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list, self.assembly)
-        lines_custom_unstructured = []
         (
             unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add,
             unique_filter_lines_to_add, unique_format_lines_to_add
-         ) = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
+         ) = generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
         assert formatted_vcf_datalines == [
             'chromosome1\t1\t1\tAC\t<DEL>\t.\t.\tEND=1;SVLEN=1\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t',

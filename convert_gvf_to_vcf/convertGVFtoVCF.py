@@ -619,7 +619,7 @@ class VcfLine:
         return string_to_return
 
 #step 9 using custom unstructured meta-information line = generate_custom_unstructured_metainfomation_line
-def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
+def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
                                  standard_lines_dictionary):
     """ Generates a list of metainformation lines for the VCF header
     :param lines_custom_unstructured: a list of formatted unstructured metainformation lines using a custom key value pair
@@ -885,7 +885,7 @@ def main():
             unique_info_lines_to_add,
             unique_filter_lines_to_add,
             unique_format_lines_to_add
-        ) = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
+        ) = generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         for pragma in unique_pragmas_to_add:
             vcf_output.write(f"{pragma}\n")
         for alt_lines in unique_alt_lines_to_add:
