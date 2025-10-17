@@ -223,7 +223,6 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
         elif (attrib_key == "Alias" or attrib_key == "Variant_effect" or attrib_key == "Variant_codon" or
               attrib_key == "Reference_codon" or attrib_key == "Variant_aa" or attrib_key == "Reference_aa" or
               attrib_key == "breakpoint_detail" or attrib_key == "Sequence_context"):
-            #lines_custom_structured.append(
             field_lines_dictionary["INFO"].append(
                 generate_custom_structured_metainformation_line(
                     vcf_key="INFO", vcf_key_id=attrib_key,
