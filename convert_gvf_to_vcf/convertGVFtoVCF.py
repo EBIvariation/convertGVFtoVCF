@@ -506,19 +506,17 @@ class VcfLine:
         return reference_allele
 
 
-    def generate_symbolic_allele(self, standard_lines_dictionary, all_possible_lines_dictionary):
+    def generate_symbolic_allele(self, field_lines_dictionary, all_possible_lines_dictionary):
         """ Generates the symbolic allele and stores the corresponding metainformation lines. Also determines if variant is precise or imprecise.
-        :param lines_standard_alt: stores ALT metainformation lines
-        :param lines_standard_info: stores INFO metainformation lines
-        :param all_possible_alt_lines: list of all possible ALT lines
-        :param all_possible_info_lines: list of all possible INFO lines
+        :param field_lines_dictionary: lines for ALT, INFO, etc
+        :param all_possible_lines_dictionary: all possible lines
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
         symbolic_allele_id = self.symbolic_allele_dictionary[self.so_type][1]
         symbolic_allele = f'<{symbolic_allele_id}>'
 
-        lines_standard_alt = standard_lines_dictionary["ALT"]
-        lines_standard_info = standard_lines_dictionary["INFO"]
+        lines_standard_alt = field_lines_dictionary["ALT"]
+        lines_standard_info = field_lines_dictionary["INFO"]
         all_possible_alt_lines = all_possible_lines_dictionary["ALT"]
         all_possible_info_lines = all_possible_lines_dictionary["INFO"]
 
@@ -579,18 +577,16 @@ class VcfLine:
             lines_standard_info.append(all_possible_info_lines["CIEND"])
         return symbolic_allele, self.info, lines_standard_alt, lines_standard_info
 
-    def get_alt(self, standard_lines_dictionary, all_possible_lines_dictionary):
+    def get_alt(self, field_lines_dictionary, all_possible_lines_dictionary):
         """ Gets the ALT allele for the VCF file
-        :param lines_standard_alt: store ALT lines
-        :param lines_standard_info: store NFO lines
-        :param all_possible_alt_lines: dictionary of all possible ALT lines
-        :param all_possible_info_lines: dictionary of all possible INFO lines
+        :param field_lines_dictionary: store INFO,ALT, FILTER, FORMAT lines
+        :param all_possible_lines_dictionary: dictionary of all possible ALT, INFO, FORMAT, FILTER lines
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
         if any(base in self.vcf_value["Variant_seq"] for base in ["A", "C", "G", "T", "N"]):
             alterative_allele = self.vcf_value["Variant_seq"]
         elif self.vcf_value["Variant_seq"] == '.':
-            symbolic_allele, self.info, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(standard_lines_dictionary, all_possible_lines_dictionary)
+            symbolic_allele, self.info, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(field_lines_dictionary, all_possible_lines_dictionary)
             if symbolic_allele is None:
                 alterative_allele = "."
             elif (self.vcf_value["Variant_seq"] == "." or self.vcf_value["Variant_seq"] == "-") and symbolic_allele is not None:
@@ -620,14 +616,10 @@ class VcfLine:
 def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
                                  standard_lines_dictionary):
     """ Generates a list of metainformation lines for the VCF header
-    :param lines_custom_unstructured: a list of formatted unstructured metainformation lines using a custom key value pair
     :param gvf_pragmas: list of gvf pragmas to convert
     :param gvf_non_essential: list of non-essential gvf pragmas to convert
     :param list_of_vcf_objects: list of vcf objects
-    :param lines_standard_alt: list of ALT lines
-    :param lines_standard_info: list of INFO lines
-    :param lines_standard_filter: list of FILTER lines
-    :param lines_standard_format: list of FORMAT lines
+    :param standard_lines_dictionary: dictionary of standard lines
     :return: unique_pragmas_to_add, sample_names: a list of pragmas (this list contains no duplicates), list of sample names
     """
     pragmas_to_add = []
@@ -753,7 +745,6 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     """ Creates VCF objects from GVF feature lines and stores the VCF objects.
     :param gvf_lines_obj_list: list of GVF feature line objects
     :param assembly_file: FASTA file to assembly
-    :param all_possible_lines_dictionary: dict of dictionaries. all possible ALT/INFO/FILTER/FORMAT lines
     :return: header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects: dictionary of lists and a list of VCF objects
     """
     vcf_data_lines = {}  # DICTIONARY OF LISTS
@@ -771,7 +762,6 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     dgva_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'dgvaINFOattributes.tsv'))  # needed to generate custom strings
     gvf_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'gvfINFOattributes.tsv'))
     symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(os.path.join(etc_folder, 'svALTkeys.tsv'))
-    header_lines_for_this_vcf = []
 
     # create a vcf object for every feature line in the GVF (1:1)
     # add the newly created vcf object to the vcf data line it belongs to
@@ -862,7 +852,6 @@ def main():
     assert os.path.isfile(assembly_file), "Assembly file does not exist"
 
     # custom meta-information lines for this VCF file
-    lines_custom_unstructured = []
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
 
     (
