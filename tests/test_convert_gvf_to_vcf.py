@@ -353,12 +353,12 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert output_lines_standard_ALT == ['"##ALT=<ID=DEL,Description=""Deletion"">"', '"##ALT=<ID=DEL,Description=""Deletion"">"']
         print("here is ", output_lines_standard_INFO)
         assert output_lines_standard_INFO == [
-            '##INFO=<ID="Name",Number=".",Type="String",Description="name">',
-            '##INFO=<ID="Alias",Number=".",Type="String",Description="A secondary name.">',
-            '##INFO=<ID="variant_call_so_id",Number=".",Type="String",Description="variant call SO id">',
-            '##INFO=<ID="parent",Number=".",Type="String",Description="parent">',
-            '##INFO=<ID="submitter_variant_call_id",Number=".",Type="Integer",Description="submitter variant call id">',
-            '##INFO=<ID="remap_score",Number=".",Type="Float",Description="remap score">',
+            '##INFO=<ID=Name,Number=.,Type=String,Description="name">',
+            '##INFO=<ID=Alias,Number=.,Type=String,Description="A secondary name.">',
+            '##INFO=<ID=variant_call_so_id,Number=.,Type=String,Description="variant call SO id">',
+            '##INFO=<ID=parent,Number=.,Type=String,Description="parent">',
+            '##INFO=<ID=submitter_variant_call_id,Number=.,Type=Integer,Description="submitter variant call id">',
+            '##INFO=<ID=remap_score,Number=.,Type=Float,Description="remap score">',
             '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
             '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
             '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
@@ -453,12 +453,12 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         ]
         print("unique_info_lines_to_add", unique_info_lines_to_add)
         assert unique_info_lines_to_add ==  [
-            '##INFO=<ID="Name",Number=".",Type="String",Description="name">',
-            '##INFO=<ID="Alias",Number=".",Type="String",Description="A secondary name.">',
-            '##INFO=<ID="variant_call_so_id",Number=".",Type="String",Description="variant call SO id">',
-            '##INFO=<ID="parent",Number=".",Type="String",Description="parent">',
-            '##INFO=<ID="submitter_variant_call_id",Number=".",Type="Integer",Description="submitter variant call id">',
-            '##INFO=<ID="remap_score",Number=".",Type="Float",Description="remap score">',
+            '##INFO=<ID=Name,Number=.,Type=String,Description="name">',
+            '##INFO=<ID=Alias,Number=.,Type=String,Description="A secondary name.">',
+            '##INFO=<ID=variant_call_so_id,Number=.,Type=String,Description="variant call SO id">',
+            '##INFO=<ID=parent,Number=.,Type=String,Description="parent">',
+            '##INFO=<ID=submitter_variant_call_id,Number=.,Type=Integer,Description="submitter variant call id">',
+            '##INFO=<ID=remap_score,Number=.,Type=Float,Description="remap score">',
             '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
             '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
             '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',

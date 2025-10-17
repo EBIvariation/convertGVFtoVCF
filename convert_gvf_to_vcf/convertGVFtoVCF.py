@@ -53,9 +53,9 @@ def generate_custom_structured_metainformation_line(vcf_key, vcf_key_id, vcf_key
             extra_keys_kv_lines.append(kv_line)
     vcf_key_extra_keys = ''.join(extra_keys_kv_lines)
     custom_structured_string = (f'##{vcf_key}=<'
-                                f'ID="{vcf_key_id}",'
-                                f'Number="{vcf_key_number}",'
-                                f'Type="{vcf_key_type}",'
+                                f'ID={vcf_key_id},'
+                                f'Number={vcf_key_number},'
+                                f'Type={vcf_key_type},'
                                 f'Description="{vcf_key_description}"'
                                 f'{vcf_key_extra_keys}>')
     return custom_structured_string
@@ -177,7 +177,7 @@ def get_gvf_attributes(column9_of_gvf):
 def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                                          dgva_attribute_dict,
                                          gvf_attribute_dict,
-                                         standard_lines_dictionary,
+                                         field_lines_dictionary,  # note this also contains custom lines and standard lines
                                          all_possible_lines_dictionary):
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_vals = {}
@@ -185,12 +185,10 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
 
     # created a rough guide to attributes_for_custom_structured_metainformation in dgvaINFOattributes.tsv = this probably should be refined at a later date
     # TODO: edit dgvaINFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
-    print(gvf_attribute_dictionary)
-    print("dgva", dgva_attribute_dict)
     for attrib_key in gvf_attribute_dictionary:
-        # if dgva specific key, create custom string otherwise do standard
+        # if dgva specific key, create custom INFO tag's meta information line
         if attrib_key in dgva_attribute_dict:
-            standard_lines_dictionary["INFO"].append(
+            field_lines_dictionary["INFO"].append(
                 generate_custom_structured_metainformation_line(
                     vcf_key="INFO", vcf_key_id=attrib_key,
                     vcf_key_number=dgva_attribute_dict[attrib_key][1],
@@ -201,17 +199,17 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
         elif attrib_key == "allele_count":
             #TODO: change all generate_standard_structured_metainformation_line to standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["AC"])
-            standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["AC"])
+            field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["AC"])
         elif attrib_key == "allele_frequency":
-            standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["AF"])
+            field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["AF"])
         elif attrib_key == "ciend":
-            standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CIEND"])
+            field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CIEND"])
         elif attrib_key == "copy_number":
-             standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CN"])
+             field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CN"])
         elif attrib_key == "insertion_length":
-            standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CN"])
+            field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CN"])
         elif attrib_key == "mate_id":
-            standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["MATEID"])
+            field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["MATEID"])
         elif attrib_key == "sample_name":
             #sample_names.append(sample_names)
             pass
@@ -226,7 +224,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
               attrib_key == "Reference_codon" or attrib_key == "Variant_aa" or attrib_key == "Reference_aa" or
               attrib_key == "breakpoint_detail" or attrib_key == "Sequence_context"):
             #lines_custom_structured.append(
-            standard_lines_dictionary["INFO"].append(
+            field_lines_dictionary["INFO"].append(
                 generate_custom_structured_metainformation_line(
                     vcf_key="INFO", vcf_key_id=attrib_key,
                     vcf_key_number=gvf_attribute_dict[attrib_key][1],
