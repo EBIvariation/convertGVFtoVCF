@@ -175,14 +175,15 @@ def get_gvf_attributes(column9_of_gvf):
 
 # CAVEATS: 1) assume sample_name is present in the GVF file. If absent consider adding UnknownSample1, UnknownSample2 etc.
 def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
-                                         dgva_attribute_dict,
+                                         dgva_attribute_dict,  #dgva specific attributes and values to populate the header
                                          gvf_attribute_dict,
                                          field_lines_dictionary,  # note this also contains custom lines and standard lines
                                          all_possible_lines_dictionary):
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_vals = {}
     catching_for_review = []
-
+    print("dgva_attribute_dict", dgva_attribute_dict)
+    mapping_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'attribute_mapper.tsv'))
     # created a rough guide to attributes_for_custom_structured_metainformation in dgvaINFOattributes.tsv = this probably should be refined at a later date
     # TODO: edit dgvaINFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
     for attrib_key in gvf_attribute_dictionary:
@@ -197,29 +198,6 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                     optional_extra_fields=None)
             )
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
-        elif attrib_key == "allele_count":
-            #TODO: change all generate_standard_structured_metainformation_line to standard_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["AC"])
-            field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["AC"])
-        elif attrib_key == "allele_frequency":
-            field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["AF"])
-        elif attrib_key == "ciend":
-            field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CIEND"])
-        elif attrib_key == "copy_number":
-             field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CN"])
-        elif attrib_key == "insertion_length":
-            field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["CN"])
-        elif attrib_key == "mate_id":
-            field_lines_dictionary["INFO"].append(all_possible_lines_dictionary["INFO"]["MATEID"])
-        elif attrib_key == "sample_name":
-            #sample_names.append(sample_names)
-            pass
-        # GVF keys (not dgva specific)
-        elif attrib_key == "ID":
-            pass
-        elif attrib_key == "Variant_seq":
-            pass
-        elif attrib_key == "Reference_seq":
-            pass
         elif (attrib_key == "Alias" or attrib_key == "Variant_effect" or attrib_key == "Variant_codon" or
               attrib_key == "Reference_codon" or attrib_key == "Variant_aa" or attrib_key == "Reference_aa" or
               attrib_key == "breakpoint_detail" or attrib_key == "Sequence_context"):
@@ -231,23 +209,30 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                     vcf_key_description=gvf_attribute_dict[attrib_key][3],
                     optional_extra_fields=None)
             )
+        elif attrib_key in mapping_attribute_dict:
+            field = mapping_attribute_dict[attrib_key][1]
+            key_for_field = mapping_attribute_dict[attrib_key][2]
+            field_lines_dictionary[field].append(all_possible_lines_dictionary[field][key_for_field])
+
+        elif attrib_key == "sample_name":
+            #sample_names.append(sample_names)
+            pass
+        # GVF keys (not dgva specific)
+        elif attrib_key == "ID":
+            pass
+        elif attrib_key == "Variant_seq":
+            pass
+        elif attrib_key == "Reference_seq":
+            pass
+
         elif attrib_key == "Dbxref":
             # custom info tag + pase and add to id?
             pass
         elif attrib_key == "Variant_reads":
             # reserved info/format key, AD/AC
             pass
-        elif attrib_key == "Total_reads":
-            # reserved info key, DP
-            pass
-        elif attrib_key == "Variant_freq":
-            # reserve info tag, AF
-            pass
         elif attrib_key == "Zygosity":
             # format and GT tag
-            pass
-        elif attrib_key == "Genotype":
-            # GT
             pass
         elif attrib_key == "Phased":
             # GT or FORMAT PS
@@ -264,6 +249,15 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
         elif attrib_key == "Individual":
             # sampl name for each column
             pass
+        # elif attrib_key == "Total_reads":
+        #     # reserved info key, DP
+        #     pass
+        # elif attrib_key == "Variant_freq":
+        #     # reserve info tag, AF
+        #     pass
+        # elif attrib_key == "Genotype":
+        #     # GT
+        #     pass
         else:
             print("catching these attribute keys for review at a later date", attrib_key)
             catching_for_review.append(attrib_key)
@@ -760,6 +754,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     }
     dgva_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'dgvaINFOattributes.tsv'))  # needed to generate custom strings
     gvf_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'gvfINFOattributes.tsv'))
+
     symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(os.path.join(etc_folder, 'svALTkeys.tsv'))
 
     # create a vcf object for every feature line in the GVF (1:1)
