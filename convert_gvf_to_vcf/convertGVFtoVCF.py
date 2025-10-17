@@ -197,17 +197,6 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                     optional_extra_fields=None)
             )
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
-        elif (attrib_key == "Alias" or attrib_key == "Variant_effect" or attrib_key == "Variant_codon" or
-              attrib_key == "Reference_codon" or attrib_key == "Variant_aa" or attrib_key == "Reference_aa" or
-              attrib_key == "breakpoint_detail" or attrib_key == "Sequence_context"):
-            field_lines_dictionary["INFO"].append(
-                generate_custom_structured_metainformation_line(
-                    vcf_key="INFO", vcf_key_id=attrib_key,
-                    vcf_key_number=info_attribute_dict[attrib_key][1],
-                    vcf_key_type=info_attribute_dict[attrib_key][2],
-                    vcf_key_description=info_attribute_dict[attrib_key][3],
-                    optional_extra_fields=None)
-            )
         elif attrib_key in mapping_attribute_dict:
             field = mapping_attribute_dict[attrib_key][1]
             key_for_field = mapping_attribute_dict[attrib_key][2]
