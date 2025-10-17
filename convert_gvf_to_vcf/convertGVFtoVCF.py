@@ -337,14 +337,14 @@ class VcfLine:
                  gvf_attribute_dict,
                  symbolic_allele_dictionary,
                  assembly_file,
-                 standard_lines_dictionary,
+                 field_lines_dictionary,
                  all_possible_lines_dictionary):
 
         # ATTRIBUTES
         self.vcf_value = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes,
                                                               dgva_attribute_dict,
                                                               gvf_attribute_dict,
-                                                              standard_lines_dictionary,
+                                                              field_lines_dictionary,
                                                               all_possible_lines_dictionary)
         self.assembly = assembly_file
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
@@ -369,7 +369,7 @@ class VcfLine:
         self.info = [] # TODO: add info field for self.info
         # calculated last
         self.ref = self.get_ref()
-        self.alt = self.get_alt(standard_lines_dictionary, all_possible_lines_dictionary)
+        self.alt = self.get_alt(field_lines_dictionary, all_possible_lines_dictionary)
 
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
