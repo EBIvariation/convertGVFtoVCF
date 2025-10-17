@@ -15,8 +15,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.input_file = os.path.join(input_folder, "input", "zebrafish.gvf")
         self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'convert_gvf_to_vcf'))
         # the inputs below are INFO attribute files
-        self.dgva_input_file = os.path.join(self.input_folder_parent, "etc","dgvaINFOattributes.tsv")
-        self.gvf_input_file = os.path.join(self.input_folder_parent, "etc","gvfINFOattributes.tsv")
+        self.info_attribute_input_file = os.path.join(self.input_folder_parent, "etc", "INFOattributes.tsv")
+
         self.symbolic_allele_file = os.path.join(self.input_folder_parent,"etc", 'svALTkeys.tsv')
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
@@ -35,10 +35,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert len(gvf_lines_obj_list) > 1
     #3
     def test_read_info_attributes(self):
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        assert len(dgva_attribute_dict) > 1
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
-        assert len(gvf_attribute_dict) > 1
+        info_attribute_dict = read_info_attributes(self.info_attribute_input_file)
+        assert len(info_attribute_dict) > 1
+
     #4
     def test_read_sequence_ontology_symbolic_allele(self):
         symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
@@ -59,13 +58,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         f_list = gvf_feature_line.split("\t")
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        info_attribute_dict = read_info_attributes(self.info_attribute_input_file)
         symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
-        # custom meta-information lines for this VCF file
-        lines_custom_structured = []
-        lines_custom_unstructured = []
+
         # standard structured meta-information lines for this VCF file
         lines_standard_alt = []
         lines_standard_info = []
@@ -93,8 +89,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         }
 
         v = VcfLine(line_object,
-                    dgva_attribute_dict,
-                    gvf_attribute_dict,
+                    info_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -114,8 +109,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6],
                                      f_list[7], f_list[8])
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        info_attribute_dict = read_info_attributes(self.info_attribute_input_file)
+
         symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
@@ -147,8 +142,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
-                    dgva_attribute_dict,
-                    gvf_attribute_dict,
+                    info_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -163,8 +157,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6],
                                      f_list[7], f_list[8])
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        info_attribute_dict = read_info_attributes(self.info_attribute_input_file)
         symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
@@ -195,8 +188,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
-                    dgva_attribute_dict,
-                    gvf_attribute_dict,
+                    info_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -214,8 +206,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6],
                                      f_list[7], f_list[8])
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        info_attribute_dict = read_info_attributes(self.info_attribute_input_file)
         symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
@@ -246,8 +237,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
-                    dgva_attribute_dict,
-                    gvf_attribute_dict,
+                    info_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -263,8 +253,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         f_list = gvf_feature_line.split("\t")
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        info_attribute_dict = read_info_attributes(self.info_attribute_input_file)
         symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
@@ -295,8 +284,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
-                    dgva_attribute_dict,
-                    gvf_attribute_dict,
+                    info_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -310,8 +298,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	81	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=77,78;End_range=80,81;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        info_attribute_dict = read_info_attributes(self.info_attribute_input_file)
         symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
         # custom meta-information lines for this VCF file
@@ -341,8 +328,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
-                    dgva_attribute_dict,
-                    gvf_attribute_dict,
+                    info_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -352,13 +338,15 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert info_field == ['END=81', 'SVLEN=4', 'IMPRECISE', 'CIPOS=0,1', 'CIEND=0,1', 'END=80', 'SVLEN=4', 'IMPRECISE', 'CIPOS=1,2', 'CIEND=1,2']
         assert output_lines_standard_ALT == ['"##ALT=<ID=DEL,Description=""Deletion"">"', '"##ALT=<ID=DEL,Description=""Deletion"">"']
         print("here is ", output_lines_standard_INFO)
-        assert output_lines_standard_INFO == [
+        assert output_lines_standard_INFO ==  [
+            '##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier.">',
             '##INFO=<ID=Name,Number=.,Type=String,Description="name">',
             '##INFO=<ID=Alias,Number=.,Type=String,Description="A secondary name.">',
             '##INFO=<ID=variant_call_so_id,Number=.,Type=String,Description="variant call SO id">',
             '##INFO=<ID=parent,Number=.,Type=String,Description="parent">',
             '##INFO=<ID=submitter_variant_call_id,Number=.,Type=Integer,Description="submitter variant call id">',
             '##INFO=<ID=remap_score,Number=.,Type=Float,Description="remap score">',
+            '##INFO=<ID=Variant_seq,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">',
             '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
             '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
             '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
@@ -373,19 +361,18 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
 
 
+
     #12
     def test_get_alt(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	81	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=77,78;End_range=80,81;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        dgva_attribute_dict = read_info_attributes(self.dgva_input_file)
-        gvf_attribute_dict = read_info_attributes(self.gvf_input_file)
+        info_attribute_dict = read_info_attributes(self.info_attribute_input_file)
+
         symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(self.symbolic_allele_file)
         assembly_file = self.assembly
-        # custom meta-information lines for this VCF file
-        lines_custom_structured = []
-        lines_custom_unstructured = []
+
         # standard structured meta-information lines for this VCF file
         lines_standard_alt = []
         lines_standard_info = []
@@ -411,8 +398,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
-                    dgva_attribute_dict,
-                    gvf_attribute_dict,
+                    info_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -453,12 +439,14 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         ]
         print("unique_info_lines_to_add", unique_info_lines_to_add)
         assert unique_info_lines_to_add ==  [
+            '##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier.">',
             '##INFO=<ID=Name,Number=.,Type=String,Description="name">',
             '##INFO=<ID=Alias,Number=.,Type=String,Description="A secondary name.">',
             '##INFO=<ID=variant_call_so_id,Number=.,Type=String,Description="variant call SO id">',
             '##INFO=<ID=parent,Number=.,Type=String,Description="parent">',
             '##INFO=<ID=submitter_variant_call_id,Number=.,Type=Integer,Description="submitter variant call id">',
             '##INFO=<ID=remap_score,Number=.,Type=Float,Description="remap score">',
+            '##INFO=<ID=Variant_seq,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">',
             '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
             '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
             '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
@@ -466,6 +454,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">',
             '##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">'
         ]
+
 
 
     #14

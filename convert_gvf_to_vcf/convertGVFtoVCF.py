@@ -175,8 +175,7 @@ def get_gvf_attributes(column9_of_gvf):
 
 # CAVEATS: 1) assume sample_name is present in the GVF file. If absent consider adding UnknownSample1, UnknownSample2 etc.
 def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
-                                         dgva_attribute_dict,  #dgva specific attributes and values to populate the header
-                                         gvf_attribute_dict,
+                                         info_attribute_dict,  #dgva specific attributes and values to populate the header
                                          field_lines_dictionary,  # note this also contains custom lines and standard lines
                                          all_possible_lines_dictionary):
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
@@ -184,17 +183,17 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     catching_for_review = []
     #print("dgva_attribute_dict", dgva_attribute_dict)
     mapping_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'attribute_mapper.tsv'))
-    # created a rough guide to attributes_for_custom_structured_metainformation in dgvaINFOattributes.tsv = this probably should be refined at a later date
-    # TODO: edit dgvaINFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
+    # created a rough guide to attributes_for_custom_structured_metainformation in INFOattributes.tsv = this probably should be refined at a later date
+    # TODO: edit INFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
     for attrib_key in gvf_attribute_dictionary:
         # if dgva specific key, create custom INFO tag's meta information line
-        if attrib_key in dgva_attribute_dict:
+        if attrib_key in info_attribute_dict:
             field_lines_dictionary["INFO"].append(
                 generate_custom_structured_metainformation_line(
                     vcf_key="INFO", vcf_key_id=attrib_key,
-                    vcf_key_number=dgva_attribute_dict[attrib_key][1],
-                    vcf_key_type=dgva_attribute_dict[attrib_key][2],
-                    vcf_key_description=dgva_attribute_dict[attrib_key][3],
+                    vcf_key_number=info_attribute_dict[attrib_key][1],
+                    vcf_key_type=info_attribute_dict[attrib_key][2],
+                    vcf_key_description=info_attribute_dict[attrib_key][3],
                     optional_extra_fields=None)
             )
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
@@ -204,9 +203,9 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             field_lines_dictionary["INFO"].append(
                 generate_custom_structured_metainformation_line(
                     vcf_key="INFO", vcf_key_id=attrib_key,
-                    vcf_key_number=gvf_attribute_dict[attrib_key][1],
-                    vcf_key_type=gvf_attribute_dict[attrib_key][2],
-                    vcf_key_description=gvf_attribute_dict[attrib_key][3],
+                    vcf_key_number=info_attribute_dict[attrib_key][1],
+                    vcf_key_type=info_attribute_dict[attrib_key][2],
+                    vcf_key_description=info_attribute_dict[attrib_key][3],
                     optional_extra_fields=None)
             )
         elif attrib_key in mapping_attribute_dict:
@@ -326,8 +325,7 @@ def read_in_gvf_file(gvf_input):
 #TODO: ID this can be a semi-colon separated list or a '.' (if no value = '.'; one value = value; more than one = value;value)
 class VcfLine:
     def __init__(self, gvf_feature_line_object,
-                 dgva_attribute_dict,
-                 gvf_attribute_dict,
+                 info_attribute_dict,
                  symbolic_allele_dictionary,
                  assembly_file,
                  field_lines_dictionary,
@@ -335,8 +333,7 @@ class VcfLine:
 
         # ATTRIBUTES
         self.vcf_value = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes,
-                                                              dgva_attribute_dict,
-                                                              gvf_attribute_dict,
+                                                              info_attribute_dict,
                                                               field_lines_dictionary,
                                                               all_possible_lines_dictionary)
         self.assembly = assembly_file
@@ -752,8 +749,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     all_header_lines_per_type_dict = {
         htype: generate_vcf_header_structured_lines(htype) for htype in ["ALT", "INFO", "FILTER", "FORMAT"]
     }
-    dgva_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'dgvaINFOattributes.tsv'))  # needed to generate custom strings
-    gvf_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'gvfINFOattributes.tsv'))
+    info_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'INFOattributes.tsv'))  # needed to generate custom strings
 
     symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(os.path.join(etc_folder, 'svALTkeys.tsv'))
 
@@ -762,8 +758,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     # (1:many; key=chrom_pos; 1 key: many vcf objects)
     for gvf_featureline in gvf_lines_obj_list:
         vcf_object = VcfLine(gvf_featureline,
-                             dgva_attribute_dict,
-                             gvf_attribute_dict,
+                             info_attribute_dict,
                              symbolic_allele_dictionary,
                              assembly_file,
                              header_standard_lines_dictionary,
