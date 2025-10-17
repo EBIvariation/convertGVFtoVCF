@@ -92,8 +92,6 @@ def generate_vcf_header_structured_lines(header_type):
 def generate_custom_unstructured_metainformation_line(vcf_unstructured_key,
                                                       vcf_unstructured_value):
     """ Generates a formatted unstructured metainformation line using a custom key value pair.
-    This is stored in the list called lines_custom_unstructured.
-    :param lines_custom_unstructured: list to store custom unstructured metainformation lines
     :param vcf_unstructured_key: key for custom unstructured metainformation line
     :param vcf_unstructured_value: value for custom unstructured metainformation line
     :return: custom_unstructured_string
