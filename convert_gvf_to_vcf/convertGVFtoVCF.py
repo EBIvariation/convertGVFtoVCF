@@ -177,7 +177,6 @@ def get_gvf_attributes(column9_of_gvf):
 def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                                          dgva_attribute_dict,
                                          gvf_attribute_dict,
-                                         lines_custom_structured,
                                          standard_lines_dictionary,
                                          all_possible_lines_dictionary):
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
@@ -187,10 +186,11 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     # created a rough guide to attributes_for_custom_structured_metainformation in dgvaINFOattributes.tsv = this probably should be refined at a later date
     # TODO: edit dgvaINFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
     print(gvf_attribute_dictionary)
+    print("dgva", dgva_attribute_dict)
     for attrib_key in gvf_attribute_dictionary:
         # if dgva specific key, create custom string otherwise do standard
         if attrib_key in dgva_attribute_dict:
-            lines_custom_structured.append(
+            standard_lines_dictionary["INFO"].append(
                 generate_custom_structured_metainformation_line(
                     vcf_key="INFO", vcf_key_id=attrib_key,
                     vcf_key_number=dgva_attribute_dict[attrib_key][1],
@@ -225,7 +225,8 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
         elif (attrib_key == "Alias" or attrib_key == "Variant_effect" or attrib_key == "Variant_codon" or
               attrib_key == "Reference_codon" or attrib_key == "Variant_aa" or attrib_key == "Reference_aa" or
               attrib_key == "breakpoint_detail" or attrib_key == "Sequence_context"):
-            lines_custom_structured.append(
+            #lines_custom_structured.append(
+            standard_lines_dictionary["INFO"].append(
                 generate_custom_structured_metainformation_line(
                     vcf_key="INFO", vcf_key_id=attrib_key,
                     vcf_key_number=gvf_attribute_dict[attrib_key][1],
@@ -338,7 +339,6 @@ class VcfLine:
                  gvf_attribute_dict,
                  symbolic_allele_dictionary,
                  assembly_file,
-                 lines_custom_structured,
                  standard_lines_dictionary,
                  all_possible_lines_dictionary):
 
@@ -346,7 +346,6 @@ class VcfLine:
         self.vcf_value = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes,
                                                               dgva_attribute_dict,
                                                               gvf_attribute_dict,
-                                                              lines_custom_structured,
                                                               standard_lines_dictionary,
                                                               all_possible_lines_dictionary)
         self.assembly = assembly_file
@@ -785,7 +784,6 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
                              gvf_attribute_dict,
                              symbolic_allele_dictionary,
                              assembly_file,
-                             header_lines_for_this_vcf,
                              header_standard_lines_dictionary,
                              all_header_lines_per_type_dict)
 
