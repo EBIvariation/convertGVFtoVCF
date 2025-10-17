@@ -512,10 +512,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     #18
     def test_generate_custom_unstructured_metainfomation_line(self):
-        lines_custom_unstructured = []
-        formatted_string = generate_custom_unstructured_metainformation_line("test_string_key", "test_string_value", lines_custom_unstructured)
+        formatted_string = generate_custom_unstructured_metainformation_line("test_string_key", "test_string_value")
         assert formatted_string == "##test_string_key=test_string_value"
-        assert formatted_string in lines_custom_unstructured
 
 if __name__ == '__main__':
     unittest.main()
