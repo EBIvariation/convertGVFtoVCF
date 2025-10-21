@@ -601,92 +601,58 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
     :param standard_lines_dictionary: dictionary of standard lines
     :return: unique_pragmas_to_add, sample_names: a list of pragmas (this list contains no duplicates), list of sample names
     """
-    pragmas_to_add = []
-    unique_pragmas_to_add = []
+    pragmas_to_add, unique_pragmas_to_add = ([],) * 2
     sample_names = []
-
-    unique_alt_lines_to_add = []
-    unique_info_lines_to_add = []
-    unique_filter_lines_to_add = []
-    unique_format_lines_to_add = []
+    unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = ([],) * 4
     # MANDATORY: file format for VCF
-    pragma_fileformat = generate_custom_unstructured_metainformation_line("fileformat", "VCFv4.4")
-    pragmas_to_add.append(pragma_fileformat)
+    pragmas_to_add.append(generate_custom_unstructured_metainformation_line("fileformat", "VCFv4.4"))
     #Go through essential pragmas
     #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
     for pragma in gvf_pragmas:
-        # file date
+        pragma_value = pragma.split(" ")[1]
         if pragma.startswith("##file-date"):
-            date = pragma.split(" ")[1].replace("-", "")
-            pragma_filedate = generate_custom_unstructured_metainformation_line("fileDate", date)
-            pragmas_to_add.append(pragma_filedate)
-        # source
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("fileDate", pragma_value.replace("-", "")))
         for vcf_obj in list_of_vcf_objects:
-            pragma_source = generate_custom_unstructured_metainformation_line("source", vcf_obj.source)
-            pragmas_to_add.append(pragma_source)
-        # reference #TODO: add this
-        # contig: recommended, see section 1.4.7 of VCF specification # TODO: add this
-        # phasing # not required
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("source", vcf_obj.source))
+        #TODO: add this: reference, contig: recommended, see section 1.4.7 of VCF specification, phasing # not required
         if pragma.startswith("##gff-version"):
-            gff_version_number = pragma.split(" ")[1]
-            pragma_gff_version_number = generate_custom_unstructured_metainformation_line("gff-version", gff_version_number)
-            pragmas_to_add.append(pragma_gff_version_number)
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("gff-version", pragma_value))
         elif pragma.startswith("##gvf-version"):
-            gvf_version_number = pragma.split(" ")[1]
-            pragma_gvf_version_number = generate_custom_unstructured_metainformation_line("gvf-version", gvf_version_number)
-            pragmas_to_add.append(pragma_gvf_version_number)
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("gvf-version", pragma_value))
         elif pragma.startswith("##species"):
-            species_value = pragma.split(" ")[1]
-            pragma_species_value = generate_custom_unstructured_metainformation_line("species", species_value)
-            pragmas_to_add.append(pragma_species_value)
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("species", pragma_value))
         elif pragma.startswith("##genome-build"):
-            genome_build = pragma.split("genome-build ")[1]
-            pragma_genome_build = generate_custom_unstructured_metainformation_line("genome-build", genome_build)
-            pragmas_to_add.append(pragma_genome_build)
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("genome-build", pragma.split("genome-build ")[1]))
         else:
             pass
     # Go through non-essential pragmas
     for non_essential_pragma in gvf_non_essential:
-        if non_essential_pragma.startswith("#Study_accession"):
-            study_accession = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_study_accession = generate_custom_unstructured_metainformation_line("Study_accession", study_accession)
-            pragmas_to_add.append(non_essential_pragma_study_accession)
-        elif non_essential_pragma.startswith("#Study_type"):
-            study_type = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_study_type = generate_custom_unstructured_metainformation_line("Study_type", study_type)
-            pragmas_to_add.append(non_essential_pragma_study_type)
-        elif non_essential_pragma.startswith("#Display_name"):
-            display_name = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_display_name = generate_custom_unstructured_metainformation_line("Display_name", display_name)
-            pragmas_to_add.append(non_essential_pragma_display_name)
-        elif non_essential_pragma.startswith("#Publication"):
-            publication = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_publication = generate_custom_unstructured_metainformation_line("Publication", publication)
-            pragmas_to_add.append(non_essential_pragma_publication)
-        elif non_essential_pragma.startswith("#Study"):
-            study = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_study = generate_custom_unstructured_metainformation_line("Study", study)
-            pragmas_to_add.append(non_essential_pragma_study)
-        elif non_essential_pragma.startswith("#Assembly_name"):
-            assembly_name = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_assembly_name = generate_custom_unstructured_metainformation_line("Assembly_name", assembly_name)
-            pragmas_to_add.append(non_essential_pragma_assembly_name)
-        elif non_essential_pragma.startswith("#subject"):
-            subject = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_subject = generate_custom_unstructured_metainformation_line("subject", subject)
-            pragmas_to_add.append(non_essential_pragma_subject)
-        elif non_essential_pragma.startswith("#sample"):
-            sample_information = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_sample = generate_custom_unstructured_metainformation_line("sample", sample_information)
-            pragmas_to_add.append(non_essential_pragma_sample)
-            list_of_sample_information = sample_information.split(";")
-            for sample_info in list_of_sample_information:
-                if sample_info.startswith("sample_name"):
-                    sample_name = sample_info.split("=")[1]
-                    sample_names.append(sample_name)
+        if len(non_essential_pragma.split(": ")) > 1:
+            non_essential_pragma_value = non_essential_pragma.split(": ")[1]
+            if non_essential_pragma.startswith("#sample"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("sample", non_essential_pragma_value))
+                list_of_sample_information = non_essential_pragma_value.split(";")
+                for sample_info in list_of_sample_information:
+                    if sample_info.startswith("sample_name"):
+                        sample_names.append(sample_info.split("=")[1])
+            elif non_essential_pragma.startswith("#Study_accession"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Study_accession", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#Study_type"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Study_type", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#Display_name"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Display_name", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#Publication"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Publication", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#Study"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Study", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#Assembly_name"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Assembly_name", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#subject"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("subject", non_essential_pragma_value))
+            else:
+                print("Skipping unknown non-essential GVF pragma:", non_essential_pragma)
         else:
             print("Skipping unknown non-essential GVF pragma:", non_essential_pragma)
-
     print("Total number of samples in this VCF: ", len(sample_names))
 
     for pragma in pragmas_to_add:
