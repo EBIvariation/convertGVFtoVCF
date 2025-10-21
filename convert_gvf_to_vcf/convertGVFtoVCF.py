@@ -601,9 +601,13 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
     :param standard_lines_dictionary: dictionary of standard lines
     :return: unique_pragmas_to_add, sample_names: a list of pragmas (this list contains no duplicates), list of sample names
     """
-    pragmas_to_add, unique_pragmas_to_add = ([],) * 2
+    pragmas_to_add = []
+    unique_pragmas_to_add = []
     sample_names = []
-    unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add = ([],) * 4
+    unique_alt_lines_to_add = []
+    unique_info_lines_to_add = []
+    unique_filter_lines_to_add = []
+    unique_format_lines_to_add = []
     # MANDATORY: file format for VCF
     pragmas_to_add.append(generate_custom_unstructured_metainformation_line("fileformat", "VCFv4.4"))
     #Go through essential pragmas
