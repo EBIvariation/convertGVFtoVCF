@@ -39,7 +39,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         info_attribute_dict = read_info_attributes(self.info_attribute_input_file)
         assert len(info_attribute_dict) > 1
         kv = next(iter(info_attribute_dict.items()))
-        key_to_check = "3'_inner_flank_link"
+        key_to_check = next(iter(info_attribute_dict))
         value_to_check = ["3'_inner_flank_link", '.', 'String', 'Three prime inner flank link', 'DGVa']
         assert kv[0] == key_to_check
         assert kv[1] == value_to_check
