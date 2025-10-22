@@ -707,21 +707,12 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
 
     print("Total number of samples in this VCF: ", len(sample_names))
 
-    for pragma in pragmas_to_add:
-        if pragma not in unique_pragmas_to_add:
-            unique_pragmas_to_add.append(pragma)
-    for alt_line in standard_lines_dictionary["ALT"]:
-        if alt_line not in unique_alt_lines_to_add:
-            unique_alt_lines_to_add.append(alt_line)
-    for info_line in standard_lines_dictionary["INFO"]:
-        if info_line not in unique_info_lines_to_add:
-            unique_info_lines_to_add.append(info_line)
-    for filter_line in standard_lines_dictionary["FILTER"]:
-        if filter_line not in unique_filter_lines_to_add:
-            unique_filter_lines_to_add.append(filter_line)
-    for format_line in standard_lines_dictionary["FORMAT"]:
-        if format_line not in unique_format_lines_to_add:
-            unique_format_lines_to_add.append(format_line)
+    unique_pragmas_to_add = list(dict.fromkeys(pragma for pragma in pragmas_to_add if pragma not in unique_pragmas_to_add))
+    unique_alt_lines_to_add = list(dict.fromkeys(alt_line for alt_line in standard_lines_dictionary["ALT"] if alt_line not in unique_alt_lines_to_add))
+    unique_info_lines_to_add = list(dict.fromkeys(info_line for info_line in standard_lines_dictionary["INFO"] if info_line not in unique_info_lines_to_add))
+    unique_filter_lines_to_add = list(dict.fromkeys(filter_line for filter_line in standard_lines_dictionary["FILTER"] if filter_line not in unique_filter_lines_to_add))
+    unique_format_lines_to_add = list(dict.fromkeys(format_line for format_line in standard_lines_dictionary["FORMAT"] if format_line not in unique_format_lines_to_add))
+
 
     return unique_pragmas_to_add, sample_names, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add
 
