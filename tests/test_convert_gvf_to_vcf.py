@@ -23,7 +23,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
 
-
     def test_read_file(self):
         prefix = "reserved"
         header_type = "FORMAT"
