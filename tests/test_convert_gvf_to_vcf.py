@@ -1,13 +1,15 @@
 import os.path
 import unittest
 
+#from convert_gvf_to_vcf.utils import read_file
 from convert_gvf_to_vcf.convertGVFtoVCF import read_file, generate_custom_unstructured_meta_line, read_in_gvf_file, \
     gvf_features_to_vcf_objects, format_vcf_datalines, \
     generate_vcf_metainformation, generate_vcf_header_structured_lines,  \
     generate_vcf_header_line, populate_sample_formats, \
     format_sample_values, read_info_attributes, read_sequence_ontology_symbolic_allele
-from convert_gvf_to_vcf.convertGVFtoVCF import VcfLine, GvfFeatureline
 
+from convert_gvf_to_vcf.vcfline import VcfLine
+from convert_gvf_to_vcf.gvffeature import GvfFeatureline
 
 class TestConvertGVFtoVCF(unittest.TestCase):
     def setUp(self):
