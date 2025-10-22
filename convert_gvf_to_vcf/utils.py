@@ -4,6 +4,8 @@ from convert_gvf_to_vcf.gvffeature import GvfFeatureline
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
+
+
 def read_file(prefix, header_type):
     """Reads in {reserved/sv}{INFO/FORMAT}keys.tsv files and returns the dictionary where the key is the KEYID
     (usually column 1) and the value is a list of file tokens
