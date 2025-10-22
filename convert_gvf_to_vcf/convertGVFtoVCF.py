@@ -114,6 +114,21 @@ def read_info_attributes(info_attributes_file):
             attribute_dict[key] = attribute_tokens
     return attribute_dict
 
+def read_pragma_mapper(pragma_mapper_file):
+    """ Reads in the pragma mapper file and stores as dictionary.
+    :param pragma_mapper_file: A file containing the pragma and their VCF equivalent
+    :return: pragma_to_vcf_header: dictionary of pragma => vcf header
+    """
+    pragma_to_vcf_header = {}
+    with open(pragma_mapper_file) as pragma_file:
+        next(pragma_file)
+        for line in pragma_file:
+            pragma_tokens = line.rstrip().split("\t")
+            pragma = pragma_tokens[0]
+            vcf_header = pragma_tokens[1]
+            pragma_to_vcf_header[pragma] = vcf_header
+    return pragma_to_vcf_header
+
 
 def read_sequence_ontology_symbolic_allele(so_symbolic_allele_file):
     """ Read in the file containing sequence ontology symbolic allele and returns a dictionary.
@@ -591,6 +606,29 @@ class VcfLine:
         string_to_return = '\t'.join((self.chrom, self.pos, self.key, self.qual, self.filter, self.info, self.source, self.phase, self.end, self.so_type, self.sample_name, self.format))
         return string_to_return
 
+def parse_pragma(pragma_to_parse, delimiter):
+    """ Parses pragma and returns name and value of the pragma.
+    :param pragma_to_parse: pragma
+    :param delimiter: to split by
+    :return: pragma_name, pragma_value: key and value of pragma
+    """
+    try:
+        pragma_tokens = pragma_to_parse.split(delimiter)
+        pragma_name = pragma_tokens[0]
+        print(pragma_tokens)
+
+        if len(pragma_tokens) > 2:
+            pragma_value = pragma_tokens[1:]
+        elif len(pragma_tokens) == 1:
+            pragma_value = pragma_tokens[1]
+        else:
+            print("pragma value", pragma_tokens)
+            pragma_value = None
+        return pragma_name, pragma_value
+    except ValueError:
+        print("Skipping this, can't be parsed", pragma_to_parse)
+
+
 #step 9 using custom unstructured meta-information line = generate_custom_unstructured_metainfomation_line
 def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
                                  standard_lines_dictionary):
@@ -611,7 +649,6 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
     # MANDATORY: file format for VCF
     pragmas_to_add.append(generate_custom_unstructured_metainformation_line("fileformat", "VCFv4.4"))
     #Go through essential pragmas
-    #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
     for pragma in gvf_pragmas:
         pragma_value = pragma.split(" ")[1]
         if pragma.startswith("##file-date"):
@@ -629,6 +666,18 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
             pragmas_to_add.append(generate_custom_unstructured_metainformation_line("genome-build", pragma.split("genome-build ")[1]))
         else:
             pass
+    #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
+    # list_of_pragma = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
+    # pragma_name_to_vcf_header = read_pragma_mapper(os.path.join(etc_folder, 'pragma_mapper.tsv'))
+    # print("gvf_pragmas",gvf_pragmas)
+    # for pragma in gvf_pragmas:
+    #     pragma_name, pragma_value = parse_pragma(pragma, " ")
+    #     if pragma_name in list_of_pragma:
+    #         vcf_header_key = pragma_name_to_vcf_header.get(pragma_name)
+    #         pragmas_to_add.append(
+    #             generate_custom_unstructured_metainformation_line(vcf_header_key, pragma_value))
+    # list_of_non_essential_pragma = ["#sample", "#Study_accession", "#Study_type", "#Display_name", "#Publication"
+    #                                 "#Study", "#Assembly_name", "#subject"]
     # Go through non-essential pragmas
     for non_essential_pragma in gvf_non_essential:
         if len(non_essential_pragma.split(": ")) > 1:
@@ -674,6 +723,7 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
     for format_line in standard_lines_dictionary["FORMAT"]:
         if format_line not in unique_format_lines_to_add:
             unique_format_lines_to_add.append(format_line)
+
     return unique_pragmas_to_add, sample_names, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add
 
 # step 10
