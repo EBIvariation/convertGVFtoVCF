@@ -674,33 +674,6 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
         else:
             print("Skipping unknown non-essential GVF pragma:", non_essential_pragma)
 
-    # for non_essential_pragma in gvf_non_essential:
-    #     if len(non_essential_pragma.split(": ")) > 1:
-    #         non_essential_pragma_value = non_essential_pragma.split(": ")[1]
-    #         if non_essential_pragma.startswith("#sample"):
-    #             pragmas_to_add.append(generate_custom_unstructured_metainformation_line("sample", non_essential_pragma_value))
-    #             list_of_sample_information = non_essential_pragma_value.split(";")
-    #             for sample_info in list_of_sample_information:
-    #                 if sample_info.startswith("sample_name"):
-    #                     sample_names.append(sample_info.split("=")[1])
-    #         elif non_essential_pragma.startswith("#Study_accession"):
-    #             pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Study_accession", non_essential_pragma_value))
-    #         elif non_essential_pragma.startswith("#Study_type"):
-    #             pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Study_type", non_essential_pragma_value))
-    #         elif non_essential_pragma.startswith("#Display_name"):
-    #             pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Display_name", non_essential_pragma_value))
-    #         elif non_essential_pragma.startswith("#Publication"):
-    #             pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Publication", non_essential_pragma_value))
-    #         elif non_essential_pragma.startswith("#Study"):
-    #             pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Study", non_essential_pragma_value))
-    #         elif non_essential_pragma.startswith("#Assembly_name"):
-    #             pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Assembly_name", non_essential_pragma_value))
-    #         elif non_essential_pragma.startswith("#subject"):
-    #             pragmas_to_add.append(generate_custom_unstructured_metainformation_line("subject", non_essential_pragma_value))
-    #         else:
-    #             print("Skipping unknown non-essential GVF pragma:", non_essential_pragma)
-    #     else:
-    #         print("Skipping unknown non-essential GVF pragma:", non_essential_pragma)
     print("Total number of samples in this VCF: ", len(sample_names))
 
     for pragma in pragmas_to_add:
