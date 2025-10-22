@@ -1,7 +1,7 @@
 import os.path
 import unittest
 
-from convert_gvf_to_vcf.convertGVFtoVCF import read_file, generate_custom_unstructured_metainformation_line, read_in_gvf_file, \
+from convert_gvf_to_vcf.convertGVFtoVCF import read_file, generate_custom_unstructured_meta_line, read_in_gvf_file, \
     gvf_features_to_vcf_objects, format_vcf_datalines, \
     generate_vcf_metainformation, generate_vcf_header_structured_lines,  \
     generate_vcf_header_line, populate_sample_formats, \
@@ -417,18 +417,16 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary
         )
         print(unique_pragmas_to_add)
-        assert unique_pragmas_to_add == ['##fileformat=VCFv4.4', '##gff-version=3', '##gvf-version=1.06',
-                                         '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955',
-                                         '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10',
-                                         '##Study_accession=nstd62', '##Study_type=Control Set',
-                                         '##Display_name=Brown_et_al_2012', '##Assembly_name=GRCz10',
-                                         '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9',
-                                         '##subject=subject_name=JenMale7;subject_sex=Male',
-                                         '##subject=subject_name=JenMale6;subject_sex=Male',
-                                         '##sample=sample_name=JenMale6;subject_name=JenMale6',
-                                         '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3',
-                                         '##sample=sample_name=Zon9;subject_name=Zon9',
-                                         '##sample=sample_name=JenMale7;subject_name=JenMale7']
+        assert unique_pragmas_to_add == ['##fileformat=VCFv4.4', '##gff-version=3', '##source=DGVa', '##gvf-version=1.06',
+                                         '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15',
+                                         '##genome-build=NCBIGRCz10', '##Study_accession=nstd62', '##Study_type=Control Set',
+                                         '##Display_name=Brown_et_al_2012', '##Publication_year=2012',
+                                         '##Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants',
+                                         '##Assembly_name=GRCz10', '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9', '##subject=subject_name=JenMale7;subject_sex=Male',
+                                         '##subject=subject_name=JenMale6;subject_sex=Male', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3',
+                                         '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
+
+
         assert unique_alt_lines_to_add == [
             '"##ALT=<ID=DEL,Description=""Deletion"">"',
             '"##ALT=<ID=DUP,Description=""Duplication"">"'
@@ -493,7 +491,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         ]
 
     def test_generate_custom_unstructured_metainfomation_line(self):
-        formatted_string = generate_custom_unstructured_metainformation_line("test_string_key", "test_string_value")
+        formatted_string = generate_custom_unstructured_meta_line("test_string_key", "test_string_value")
         assert formatted_string == "##test_string_key=test_string_value"
 
 if __name__ == '__main__':
