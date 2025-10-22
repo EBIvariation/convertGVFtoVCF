@@ -416,19 +416,19 @@ class TestConvertGVFtoVCF(unittest.TestCase):
          unique_filter_lines_to_add, unique_format_lines_to_add) = generate_vcf_metainformation(
             gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary
         )
-
-        assert unique_pragmas_to_add == [
-            '##fileformat=VCFv4.4',
-            '##gff-version=3',
-            '##gvf-version=1.06',
-            '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955',
-            '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10', '##Study_accession=nstd62',
-            '##Study_type=Control Set', '##Display_name=Brown_et_al_2012', '##Assembly_name=GRCz10',
-            '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9',
-            '##subject=subject_name=JenMale7;subject_sex=Male', '##subject=subject_name=JenMale6;subject_sex=Male',
-            '##sample=sample_name=JenMale6;subject_name=JenMale6',
-            '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3',
-            '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
+        print(unique_pragmas_to_add)
+        assert unique_pragmas_to_add == ['##fileformat=VCFv4.4', '##gff-version=3', '##gvf-version=1.06',
+                                         '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955',
+                                         '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10',
+                                         '##Study_accession=nstd62', '##Study_type=Control Set',
+                                         '##Display_name=Brown_et_al_2012', '##Assembly_name=GRCz10',
+                                         '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9',
+                                         '##subject=subject_name=JenMale7;subject_sex=Male',
+                                         '##subject=subject_name=JenMale6;subject_sex=Male',
+                                         '##sample=sample_name=JenMale6;subject_name=JenMale6',
+                                         '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3',
+                                         '##sample=sample_name=Zon9;subject_name=Zon9',
+                                         '##sample=sample_name=JenMale7;subject_name=JenMale7']
         assert unique_alt_lines_to_add == [
             '"##ALT=<ID=DEL,Description=""Deletion"">"',
             '"##ALT=<ID=DUP,Description=""Duplication"">"'
