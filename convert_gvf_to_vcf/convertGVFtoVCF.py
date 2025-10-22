@@ -19,7 +19,7 @@ def read_file(prefix, header_type):
     keys_tsv_file = os.path.join(etc_folder, f'{prefix}{header_type}keys.tsv')
     print(keys_tsv_file)
     try:
-        with open(keys_tsv_file) as keys_file:
+        with open(keys_tsv_file, encoding='utf-8', errors='replace') as keys_file:
             next(keys_file)  # Skip the header
             for line in keys_file:
                 file_tokens = line.rstrip().split("\t")
@@ -53,16 +53,16 @@ def generate_custom_structured_metainformation_line(vcf_key, vcf_key_id, vcf_key
             extra_keys_kv_lines.append(kv_line)
     vcf_key_extra_keys = ''.join(extra_keys_kv_lines)
     custom_structured_string = (f'##{vcf_key}=<'
-                                f'ID="{vcf_key_id}",'
-                                f'Number="{vcf_key_number}",'
-                                f'Type="{vcf_key_type}",'
+                                f'ID={vcf_key_id},'
+                                f'Number={vcf_key_number},'
+                                f'Type={vcf_key_type},'
                                 f'Description="{vcf_key_description}"'
                                 f'{vcf_key_extra_keys}>')
     return custom_structured_string
 
 
 def generate_vcf_header_structured_lines(header_type):
-    """ Generates a dictionary of standard structured lines for INFO/FILTER/FORMAT/ALT
+    """ Generates a dictionary of all possible standard structured lines for INFO/FILTER/FORMAT/ALT
     :param header_type: type of header file to read i.e. ALT, FILTER, INFO or FORMAT
     :return: dictionary of all possible standard structured lines keys for the header type
     """
@@ -89,31 +89,14 @@ def generate_vcf_header_structured_lines(header_type):
             all_possible_lines[sv_key_id] = sv_line
     return all_possible_lines
 
-
-def generate_standard_structured_metainformation_line(vcf_key_id, standard_lines_for_vcf_key, all_possible_lines):
-    """Generates a standard structured metainformation lines.
-    :param vcf_key_id: VCF tag key id
-    :param standard_lines_for_vcf_key: lines_standard_NAME i.e. list of standard lines for VCF INFO/ALT/FILTER/FORMAT
-    :param all_possible_lines: all_possible_NAME_lines i.e. list of all possible lines for INFO or ALT or FILTER or FORMAT
-    :return: standard_structured_line: a string
-    """
-    standard_structured_line = all_possible_lines[vcf_key_id]
-    standard_lines_for_vcf_key.append(standard_structured_line)
-    return standard_structured_line
-
-
 def generate_custom_unstructured_metainformation_line(vcf_unstructured_key,
-                                                      vcf_unstructured_value,
-                                                      lines_custom_unstructured):
+                                                      vcf_unstructured_value):
     """ Generates a formatted unstructured metainformation line using a custom key value pair.
-    This is stored in the list called lines_custom_unstructured.
-    :param lines_custom_unstructured: list to store custom unstructured metainformation lines
     :param vcf_unstructured_key: key for custom unstructured metainformation line
     :param vcf_unstructured_value: value for custom unstructured metainformation line
     :return: custom_unstructured_string
     """
     custom_unstructured_string = f"##{vcf_unstructured_key}={vcf_unstructured_value}"
-    lines_custom_unstructured.append(custom_unstructured_string)
     return custom_unstructured_string
 
 
@@ -130,6 +113,21 @@ def read_info_attributes(info_attributes_file):
             key = attribute_tokens[0]
             attribute_dict[key] = attribute_tokens
     return attribute_dict
+
+def read_pragma_mapper(pragma_mapper_file):
+    """ Reads in the pragma mapper file and stores as dictionary.
+    :param pragma_mapper_file: A file containing the pragma and their VCF equivalent
+    :return: pragma_to_vcf_header: dictionary of pragma => vcf header
+    """
+    pragma_to_vcf_header = {}
+    with open(pragma_mapper_file) as pragma_file:
+        next(pragma_file)
+        for line in pragma_file:
+            pragma_tokens = line.rstrip().split("\t")
+            pragma = pragma_tokens[0]
+            vcf_header = pragma_tokens[1]
+            pragma_to_vcf_header[pragma] = vcf_header
+    return pragma_to_vcf_header
 
 
 def read_sequence_ontology_symbolic_allele(so_symbolic_allele_file):
@@ -192,46 +190,33 @@ def get_gvf_attributes(column9_of_gvf):
 
 # CAVEATS: 1) assume sample_name is present in the GVF file. If absent consider adding UnknownSample1, UnknownSample2 etc.
 def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
-                                         dgva_attribute_dict,
-                                         gvf_attribute_dict,
-                                         lines_custom_structured,
-                                         standard_lines_dictionary,
+                                         info_attribute_dict,  #dgva specific attributes and values to populate the header
+                                         field_lines_dictionary,  # note this also contains custom lines and standard lines
                                          all_possible_lines_dictionary):
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_vals = {}
     catching_for_review = []
-
-    # created a rough guide to attributes_for_custom_structured_metainformation in dgvaINFOattributes.tsv = this probably should be refined at a later date
-    # TODO: edit dgvaINFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
-    print(gvf_attribute_dictionary)
+    #print("dgva_attribute_dict", dgva_attribute_dict)
+    mapping_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'attribute_mapper.tsv'))
+    # created a rough guide to attributes_for_custom_structured_metainformation in INFOattributes.tsv = this probably should be refined at a later date
+    # TODO: edit INFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
     for attrib_key in gvf_attribute_dictionary:
-        # if dgva specific key, create custom string otherwise do standard
-        if attrib_key in dgva_attribute_dict:
-            lines_custom_structured.append(
+        # if dgva specific key, create custom INFO tag's meta information line
+        if attrib_key in info_attribute_dict:
+            field_lines_dictionary["INFO"].append(
                 generate_custom_structured_metainformation_line(
                     vcf_key="INFO", vcf_key_id=attrib_key,
-                    vcf_key_number=dgva_attribute_dict[attrib_key][1],
-                    vcf_key_type=dgva_attribute_dict[attrib_key][2],
-                    vcf_key_description=dgva_attribute_dict[attrib_key][3],
+                    vcf_key_number=info_attribute_dict[attrib_key][1],
+                    vcf_key_type=info_attribute_dict[attrib_key][2],
+                    vcf_key_description=info_attribute_dict[attrib_key][3],
                     optional_extra_fields=None)
             )
             vcf_vals[attrib_key]=gvf_attribute_dictionary[attrib_key]
-        elif attrib_key == "allele_count":
-            #generate_standard_structured_metainformation_line("INFO", "AC", lines_standard_ALT, lines_standard_INFO, lines_standard_FILTER, lines_standard_FORMAT, all_possible_ALT_lines, all_possible_INFO_lines, all_possible_FILTER_lines, all_possible_FORMAT_lines)
-            lines_standard_info_to_add = generate_standard_structured_metainformation_line("AC", standard_lines_dictionary["INFO"], all_possible_lines_dictionary["INFO"])
-            standard_lines_dictionary["INFO"].append(lines_standard_info_to_add)
-        elif attrib_key == "allele_frequency":
-            lines_standard_info = generate_standard_structured_metainformation_line("AF", standard_lines_dictionary["INFO"], all_possible_lines_dictionary["INFO"])
-        elif attrib_key == "ciend":
-            lines_standard_info = generate_standard_structured_metainformation_line("CIEND", standard_lines_dictionary["INFO"], all_possible_lines_dictionary["INFO"])
-        elif attrib_key == "copy_number":
-            lines_standard_info = generate_standard_structured_metainformation_line("CN", standard_lines_dictionary["INFO"], all_possible_lines_dictionary["INFO"])
-        elif attrib_key == "insertion_length":
-            lines_standard_info = generate_standard_structured_metainformation_line("SVLEN", standard_lines_dictionary["INFO"],
-                                                                                    all_possible_lines_dictionary["INFO"])
-        elif attrib_key == "mate_id":
-            lines_standard_info = generate_standard_structured_metainformation_line("MATEID", standard_lines_dictionary["INFO"],
-                                                                                    all_possible_lines_dictionary["INFO"])
+        elif attrib_key in mapping_attribute_dict:
+            field = mapping_attribute_dict[attrib_key][1]
+            key_for_field = mapping_attribute_dict[attrib_key][2]
+            field_lines_dictionary[field].append(all_possible_lines_dictionary[field][key_for_field])
+
         elif attrib_key == "sample_name":
             #sample_names.append(sample_names)
             pass
@@ -242,34 +227,15 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             pass
         elif attrib_key == "Reference_seq":
             pass
-        elif (attrib_key == "Alias" or attrib_key == "Variant_effect" or attrib_key == "Variant_codon" or
-              attrib_key == "Reference_codon" or attrib_key == "Variant_aa" or attrib_key == "Reference_aa" or
-              attrib_key == "breakpoint_detail" or attrib_key == "Sequence_context"):
-            lines_custom_structured.append(
-                generate_custom_structured_metainformation_line(
-                    vcf_key="INFO", vcf_key_id=attrib_key,
-                    vcf_key_number=gvf_attribute_dict[attrib_key][1],
-                    vcf_key_type=gvf_attribute_dict[attrib_key][2],
-                    vcf_key_description=gvf_attribute_dict[attrib_key][3],
-                    optional_extra_fields=None)
-            )
+
         elif attrib_key == "Dbxref":
             # custom info tag + pase and add to id?
             pass
         elif attrib_key == "Variant_reads":
             # reserved info/format key, AD/AC
             pass
-        elif attrib_key == "Total_reads":
-            # reserved info key, DP
-            pass
-        elif attrib_key == "Variant_freq":
-            # reserve info tag, AF
-            pass
         elif attrib_key == "Zygosity":
             # format and GT tag
-            pass
-        elif attrib_key == "Genotype":
-            # GT
             pass
         elif attrib_key == "Phased":
             # GT or FORMAT PS
@@ -286,6 +252,15 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
         elif attrib_key == "Individual":
             # sampl name for each column
             pass
+        # elif attrib_key == "Total_reads":
+        #     # reserved info key, DP
+        #     pass
+        # elif attrib_key == "Variant_freq":
+        #     # reserve info tag, AF
+        #     pass
+        # elif attrib_key == "Genotype":
+        #     # GT
+        #     pass
         else:
             print("catching these attribute keys for review at a later date", attrib_key)
             catching_for_review.append(attrib_key)
@@ -354,20 +329,16 @@ def read_in_gvf_file(gvf_input):
 #TODO: ID this can be a semi-colon separated list or a '.' (if no value = '.'; one value = value; more than one = value;value)
 class VcfLine:
     def __init__(self, gvf_feature_line_object,
-                 dgva_attribute_dict,
-                 gvf_attribute_dict,
+                 info_attribute_dict,
                  symbolic_allele_dictionary,
                  assembly_file,
-                 lines_custom_structured,
-                 standard_lines_dictionary,
+                 field_lines_dictionary,
                  all_possible_lines_dictionary):
 
         # ATTRIBUTES
         self.vcf_value = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes,
-                                                              dgva_attribute_dict,
-                                                              gvf_attribute_dict,
-                                                              lines_custom_structured,
-                                                              standard_lines_dictionary,
+                                                              info_attribute_dict,
+                                                              field_lines_dictionary,
                                                               all_possible_lines_dictionary)
         self.assembly = assembly_file
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
@@ -392,7 +363,7 @@ class VcfLine:
         self.info = [] # TODO: add info field for self.info
         # calculated last
         self.ref = self.get_ref()
-        self.alt = self.get_alt(standard_lines_dictionary, all_possible_lines_dictionary)
+        self.alt = self.get_alt(field_lines_dictionary, all_possible_lines_dictionary)
 
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
@@ -529,19 +500,17 @@ class VcfLine:
         return reference_allele
 
 
-    def generate_symbolic_allele(self, standard_lines_dictionary, all_possible_lines_dictionary):
+    def generate_symbolic_allele(self, field_lines_dictionary, all_possible_lines_dictionary):
         """ Generates the symbolic allele and stores the corresponding metainformation lines. Also determines if variant is precise or imprecise.
-        :param lines_standard_alt: stores ALT metainformation lines
-        :param lines_standard_info: stores INFO metainformation lines
-        :param all_possible_alt_lines: list of all possible ALT lines
-        :param all_possible_info_lines: list of all possible INFO lines
+        :param field_lines_dictionary: lines for ALT, INFO, etc
+        :param all_possible_lines_dictionary: all possible lines
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
         symbolic_allele_id = self.symbolic_allele_dictionary[self.so_type][1]
         symbolic_allele = f'<{symbolic_allele_id}>'
 
-        lines_standard_alt = standard_lines_dictionary["ALT"]
-        lines_standard_info = standard_lines_dictionary["INFO"]
+        lines_standard_alt = field_lines_dictionary["ALT"]
+        lines_standard_info = field_lines_dictionary["INFO"]
         all_possible_alt_lines = all_possible_lines_dictionary["ALT"]
         all_possible_info_lines = all_possible_lines_dictionary["INFO"]
 
@@ -602,18 +571,16 @@ class VcfLine:
             lines_standard_info.append(all_possible_info_lines["CIEND"])
         return symbolic_allele, self.info, lines_standard_alt, lines_standard_info
 
-    def get_alt(self, standard_lines_dictionary, all_possible_lines_dictionary):
+    def get_alt(self, field_lines_dictionary, all_possible_lines_dictionary):
         """ Gets the ALT allele for the VCF file
-        :param lines_standard_alt: store ALT lines
-        :param lines_standard_info: store NFO lines
-        :param all_possible_alt_lines: dictionary of all possible ALT lines
-        :param all_possible_info_lines: dictionary of all possible INFO lines
+        :param field_lines_dictionary: store INFO,ALT, FILTER, FORMAT lines
+        :param all_possible_lines_dictionary: dictionary of all possible ALT, INFO, FORMAT, FILTER lines
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
         if any(base in self.vcf_value["Variant_seq"] for base in ["A", "C", "G", "T", "N"]):
             alterative_allele = self.vcf_value["Variant_seq"]
         elif self.vcf_value["Variant_seq"] == '.':
-            symbolic_allele, self.info, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(standard_lines_dictionary, all_possible_lines_dictionary)
+            symbolic_allele, self.info, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(field_lines_dictionary, all_possible_lines_dictionary)
             if symbolic_allele is None:
                 alterative_allele = "."
             elif (self.vcf_value["Variant_seq"] == "." or self.vcf_value["Variant_seq"] == "-") and symbolic_allele is not None:
@@ -639,107 +606,106 @@ class VcfLine:
         string_to_return = '\t'.join((self.chrom, self.pos, self.key, self.qual, self.filter, self.info, self.source, self.phase, self.end, self.so_type, self.sample_name, self.format))
         return string_to_return
 
+def parse_pragma(pragma_to_parse, delimiter):
+    """ Parses pragma and returns name and value of the pragma.
+    :param pragma_to_parse: pragma
+    :param delimiter: to split by
+    :return: pragma_name, pragma_value: key and value of pragma
+    """
+    try:
+        pragma_tokens = pragma_to_parse.split(delimiter)
+        pragma_name = pragma_tokens[0]
+        print(pragma_tokens)
+
+        if len(pragma_tokens) > 2:
+            pragma_value = pragma_tokens[1:]
+        elif len(pragma_tokens) == 1:
+            pragma_value = pragma_tokens[1]
+        else:
+            print("pragma value", pragma_tokens)
+            pragma_value = None
+        return pragma_name, pragma_value
+    except ValueError:
+        print("Skipping this, can't be parsed", pragma_to_parse)
+
+
 #step 9 using custom unstructured meta-information line = generate_custom_unstructured_metainfomation_line
-def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
+def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
                                  standard_lines_dictionary):
     """ Generates a list of metainformation lines for the VCF header
-    :param lines_custom_unstructured: a list of formatted unstructured metainformation lines using a custom key value pair
     :param gvf_pragmas: list of gvf pragmas to convert
     :param gvf_non_essential: list of non-essential gvf pragmas to convert
     :param list_of_vcf_objects: list of vcf objects
-    :param lines_standard_alt: list of ALT lines
-    :param lines_standard_info: list of INFO lines
-    :param lines_standard_filter: list of FILTER lines
-    :param lines_standard_format: list of FORMAT lines
+    :param standard_lines_dictionary: dictionary of standard lines
     :return: unique_pragmas_to_add, sample_names: a list of pragmas (this list contains no duplicates), list of sample names
     """
     pragmas_to_add = []
     unique_pragmas_to_add = []
     sample_names = []
-
     unique_alt_lines_to_add = []
     unique_info_lines_to_add = []
     unique_filter_lines_to_add = []
     unique_format_lines_to_add = []
     # MANDATORY: file format for VCF
-    pragma_fileformat = generate_custom_unstructured_metainformation_line("fileformat", "VCFv4.4", lines_custom_unstructured)
-    pragmas_to_add.append(pragma_fileformat)
+    pragmas_to_add.append(generate_custom_unstructured_metainformation_line("fileformat", "VCFv4.4"))
     #Go through essential pragmas
-    #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
     for pragma in gvf_pragmas:
-        # file date
+        pragma_value = pragma.split(" ")[1]
         if pragma.startswith("##file-date"):
-            date = pragma.split(" ")[1].replace("-", "")
-            pragma_filedate = generate_custom_unstructured_metainformation_line("fileDate", date, lines_custom_unstructured)
-            pragmas_to_add.append(pragma_filedate)
-        # source
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("fileDate", pragma_value.replace("-", "")))
         for vcf_obj in list_of_vcf_objects:
-            pragma_source = generate_custom_unstructured_metainformation_line("source", vcf_obj.source, lines_custom_unstructured)
-            pragmas_to_add.append(pragma_source)
-        # reference #TODO: add this
-        # contig: recommended, see section 1.4.7 of VCF specification # TODO: add this
-        # phasing # not required
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("source", vcf_obj.source))
+        #TODO: add this: reference, contig: recommended, see section 1.4.7 of VCF specification, phasing # not required
         if pragma.startswith("##gff-version"):
-            gff_version_number = pragma.split(" ")[1]
-            pragma_gff_version_number = generate_custom_unstructured_metainformation_line("gff-version", gff_version_number, lines_custom_unstructured)
-            pragmas_to_add.append(pragma_gff_version_number)
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("gff-version", pragma_value))
         elif pragma.startswith("##gvf-version"):
-            gvf_version_number = pragma.split(" ")[1]
-            pragma_gvf_version_number = generate_custom_unstructured_metainformation_line("gvf-version", gvf_version_number, lines_custom_unstructured)
-            pragmas_to_add.append(pragma_gvf_version_number)
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("gvf-version", pragma_value))
         elif pragma.startswith("##species"):
-            species_value = pragma.split(" ")[1]
-            pragma_species_value = generate_custom_unstructured_metainformation_line("species", species_value, lines_custom_unstructured)
-            pragmas_to_add.append(pragma_species_value)
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("species", pragma_value))
         elif pragma.startswith("##genome-build"):
-            genome_build = pragma.split("genome-build ")[1]
-            pragma_genome_build = generate_custom_unstructured_metainformation_line("genome-build", genome_build, lines_custom_unstructured)
-            pragmas_to_add.append(pragma_genome_build)
+            pragmas_to_add.append(generate_custom_unstructured_metainformation_line("genome-build", pragma.split("genome-build ")[1]))
         else:
             pass
+    #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
+    # list_of_pragma = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
+    # pragma_name_to_vcf_header = read_pragma_mapper(os.path.join(etc_folder, 'pragma_mapper.tsv'))
+    # print("gvf_pragmas",gvf_pragmas)
+    # for pragma in gvf_pragmas:
+    #     pragma_name, pragma_value = parse_pragma(pragma, " ")
+    #     if pragma_name in list_of_pragma:
+    #         vcf_header_key = pragma_name_to_vcf_header.get(pragma_name)
+    #         pragmas_to_add.append(
+    #             generate_custom_unstructured_metainformation_line(vcf_header_key, pragma_value))
+    # list_of_non_essential_pragma = ["#sample", "#Study_accession", "#Study_type", "#Display_name", "#Publication"
+    #                                 "#Study", "#Assembly_name", "#subject"]
     # Go through non-essential pragmas
     for non_essential_pragma in gvf_non_essential:
-        if non_essential_pragma.startswith("#Study_accession"):
-            study_accession = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_study_accession = generate_custom_unstructured_metainformation_line("Study_accession", study_accession, lines_custom_unstructured)
-            pragmas_to_add.append(non_essential_pragma_study_accession)
-        elif non_essential_pragma.startswith("#Study_type"):
-            study_type = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_study_type = generate_custom_unstructured_metainformation_line("Study_type", study_type, lines_custom_unstructured)
-            pragmas_to_add.append(non_essential_pragma_study_type)
-        elif non_essential_pragma.startswith("#Display_name"):
-            display_name = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_display_name = generate_custom_unstructured_metainformation_line("Display_name", display_name, lines_custom_unstructured)
-            pragmas_to_add.append(non_essential_pragma_display_name)
-        elif non_essential_pragma.startswith("#Publication"):
-            publication = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_publication = generate_custom_unstructured_metainformation_line("Publication", publication, lines_custom_unstructured)
-            pragmas_to_add.append(non_essential_pragma_publication)
-        elif non_essential_pragma.startswith("#Study"):
-            study = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_study = generate_custom_unstructured_metainformation_line("Study", study, lines_custom_unstructured)
-            pragmas_to_add.append(non_essential_pragma_study)
-        elif non_essential_pragma.startswith("#Assembly_name"):
-            assembly_name = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_assembly_name = generate_custom_unstructured_metainformation_line("Assembly_name", assembly_name, lines_custom_unstructured)
-            pragmas_to_add.append(non_essential_pragma_assembly_name)
-        elif non_essential_pragma.startswith("#subject"):
-            subject = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_subject = generate_custom_unstructured_metainformation_line("subject", subject, lines_custom_unstructured)
-            pragmas_to_add.append(non_essential_pragma_subject)
-        elif non_essential_pragma.startswith("#sample"):
-            sample_information = non_essential_pragma.split(": ")[1]
-            non_essential_pragma_sample = generate_custom_unstructured_metainformation_line("sample", sample_information,
-                                                                                            lines_custom_unstructured)
-            pragmas_to_add.append(non_essential_pragma_sample)
-            list_of_sample_information = sample_information.split(";")
-            for sample_info in list_of_sample_information:
-                if sample_info.startswith("sample_name"):
-                    sample_name = sample_info.split("=")[1]
-                    sample_names.append(sample_name)
+        if len(non_essential_pragma.split(": ")) > 1:
+            non_essential_pragma_value = non_essential_pragma.split(": ")[1]
+            if non_essential_pragma.startswith("#sample"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("sample", non_essential_pragma_value))
+                list_of_sample_information = non_essential_pragma_value.split(";")
+                for sample_info in list_of_sample_information:
+                    if sample_info.startswith("sample_name"):
+                        sample_names.append(sample_info.split("=")[1])
+            elif non_essential_pragma.startswith("#Study_accession"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Study_accession", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#Study_type"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Study_type", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#Display_name"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Display_name", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#Publication"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Publication", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#Study"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Study", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#Assembly_name"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("Assembly_name", non_essential_pragma_value))
+            elif non_essential_pragma.startswith("#subject"):
+                pragmas_to_add.append(generate_custom_unstructured_metainformation_line("subject", non_essential_pragma_value))
+            else:
+                print("Skipping unknown non-essential GVF pragma:", non_essential_pragma)
         else:
             print("Skipping unknown non-essential GVF pragma:", non_essential_pragma)
-
     print("Total number of samples in this VCF: ", len(sample_names))
 
     for pragma in pragmas_to_add:
@@ -757,6 +723,7 @@ def generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non
     for format_line in standard_lines_dictionary["FORMAT"]:
         if format_line not in unique_format_lines_to_add:
             unique_format_lines_to_add.append(format_line)
+
     return unique_pragmas_to_add, sample_names, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add
 
 # step 10
@@ -777,7 +744,6 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     """ Creates VCF objects from GVF feature lines and stores the VCF objects.
     :param gvf_lines_obj_list: list of GVF feature line objects
     :param assembly_file: FASTA file to assembly
-    :param all_possible_lines_dictionary: dict of dictionaries. all possible ALT/INFO/FILTER/FORMAT lines
     :return: header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects: dictionary of lists and a list of VCF objects
     """
     vcf_data_lines = {}  # DICTIONARY OF LISTS
@@ -792,21 +758,18 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     all_header_lines_per_type_dict = {
         htype: generate_vcf_header_structured_lines(htype) for htype in ["ALT", "INFO", "FILTER", "FORMAT"]
     }
-    dgva_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'dgvaINFOattributes.tsv'))  # needed to generate custom strings
-    gvf_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'gvfINFOattributes.tsv'))
+    info_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'INFOattributes.tsv'))  # needed to generate custom strings
+
     symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(os.path.join(etc_folder, 'svALTkeys.tsv'))
-    header_lines_for_this_vcf = []
 
     # create a vcf object for every feature line in the GVF (1:1)
     # add the newly created vcf object to the vcf data line it belongs to
     # (1:many; key=chrom_pos; 1 key: many vcf objects)
     for gvf_featureline in gvf_lines_obj_list:
         vcf_object = VcfLine(gvf_featureline,
-                             dgva_attribute_dict,
-                             gvf_attribute_dict,
+                             info_attribute_dict,
                              symbolic_allele_dictionary,
                              assembly_file,
-                             header_lines_for_this_vcf,
                              header_standard_lines_dictionary,
                              all_header_lines_per_type_dict)
 
@@ -887,7 +850,6 @@ def main():
     assert os.path.isfile(assembly_file), "Assembly file does not exist"
 
     # custom meta-information lines for this VCF file
-    lines_custom_unstructured = []
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
 
     (
@@ -908,7 +870,7 @@ def main():
             unique_info_lines_to_add,
             unique_filter_lines_to_add,
             unique_format_lines_to_add
-        ) = generate_vcf_metainformation(lines_custom_unstructured, gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
+        ) = generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         for pragma in unique_pragmas_to_add:
             vcf_output.write(f"{pragma}\n")
         for alt_lines in unique_alt_lines_to_add:
