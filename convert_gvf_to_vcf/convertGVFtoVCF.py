@@ -626,6 +626,13 @@ def parse_pragma(pragma_to_parse, delimiter):
     except ValueError:
         print("Skipping this, can't be parsed", pragma_to_parse)
 
+def get_pragma_name_and_value(pragma_to_parse, delimiter, pragma_list, pragma_name_to_vcf_dict):
+    pragma_name, pragma_value = parse_pragma(pragma_to_parse, delimiter)
+    if pragma_name in pragma_list:
+        vcf_header_key = pragma_name_to_vcf_dict.get(pragma_name)
+    else:
+        vcf_header_key = None
+    return vcf_header_key, pragma_name, pragma_value
 
 #step 9 using custom unstructured meta-information line = generate_custom_unstructured_metainfomation_line
 def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
@@ -652,10 +659,9 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
     pragma_name_to_vcf_header = read_pragma_mapper(os.path.join(etc_folder, 'pragma_mapper.tsv'))
 
     for pragma in gvf_pragmas:
-        pragma_name, pragma_value = parse_pragma(pragma, " ")
-        if pragma_name in list_of_pragma:
-            vcf_header_key = pragma_name_to_vcf_header.get(pragma_name)
-            pragmas_to_add.append(
+        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma, " ", list_of_pragma,
+                                                                              pragma_name_to_vcf_header)
+        pragmas_to_add.append(
                 generate_custom_unstructured_metainformation_line(vcf_header_key, pragma_value))
 
     # Go through non-essential pragmas
