@@ -673,6 +673,7 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
                         sample_names.append(sample_info.split("=")[1])
         else:
             print("Skipping unknown non-essential GVF pragma:", non_essential_pragma)
+
     # for non_essential_pragma in gvf_non_essential:
     #     if len(non_essential_pragma.split(": ")) > 1:
     #         non_essential_pragma_value = non_essential_pragma.split(": ")[1]
