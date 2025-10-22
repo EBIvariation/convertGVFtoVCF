@@ -35,8 +35,8 @@ def read_file(prefix, header_type):
     return file_lines
 
 
-def generate_custom_structured_metainformation_line(vcf_key, vcf_key_id, vcf_key_number, vcf_key_type, vcf_key_description,
-                                                    optional_extra_fields=None):
+def generate_custom_structured_meta_line(vcf_key, vcf_key_id, vcf_key_number, vcf_key_type, vcf_key_description,
+                                         optional_extra_fields=None):
     """ Generates a custom structured meta-information line for INFO/FILTER/FORMAT/ALT
     :param vcf_key: required field INFO, FILTER, FORMAT, ALT
     :param vcf_key_id: required field for structured lines ID
@@ -89,8 +89,8 @@ def generate_vcf_header_structured_lines(header_type):
             all_possible_lines[sv_key_id] = sv_line
     return all_possible_lines
 
-def generate_custom_unstructured_metainformation_line(vcf_unstructured_key,
-                                                      vcf_unstructured_value):
+def generate_custom_unstructured_meta_line(vcf_unstructured_key,
+                                           vcf_unstructured_value):
     """ Generates a formatted unstructured metainformation line using a custom key value pair.
     :param vcf_unstructured_key: key for custom unstructured metainformation line
     :param vcf_unstructured_value: value for custom unstructured metainformation line
@@ -204,7 +204,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
         # if dgva specific key, create custom INFO tag's meta information line
         if attrib_key in info_attribute_dict:
             field_lines_dictionary["INFO"].append(
-                generate_custom_structured_metainformation_line(
+                generate_custom_structured_meta_line(
                     vcf_key="INFO", vcf_key_id=attrib_key,
                     vcf_key_number=info_attribute_dict[attrib_key][1],
                     vcf_key_type=info_attribute_dict[attrib_key][2],
@@ -627,12 +627,32 @@ def parse_pragma(pragma_to_parse, delimiter):
         print("Skipping this, can't be parsed", pragma_to_parse)
 
 def get_pragma_name_and_value(pragma_to_parse, delimiter, pragma_list, pragma_name_to_vcf_dict):
+    """Get pragma name and value and its corresponding VCF header key.
+    :param pragma_to_parse: pragma that will be parsed
+    :param delimiter: the separator
+    :param pragma_list: list of pragmas to search through
+    :param pragma_name_to_vcf_dict: dictionary pragma name and its vcf entry
+    :return vcf_header_key, pragma_name, pragma_value
+    """
     pragma_name, pragma_value = parse_pragma(pragma_to_parse, delimiter)
     if pragma_name in pragma_list:
         vcf_header_key = pragma_name_to_vcf_dict.get(pragma_name)
     else:
         vcf_header_key = None
     return vcf_header_key, pragma_name, pragma_value
+
+def get_pragma_tokens(pragma_value, first_delimiter, second_delimiter):
+    """Get pragma tokens for nested pragmas
+    :param pragma_value: value to parse
+    :param first_delimiter: first separator
+    :param second_delimiter: second separtor
+    :return pragma_tokens
+    """
+    initial_list = pragma_value.split(first_delimiter)
+    pragma_tokens = []
+    for element in initial_list:
+        pragma_tokens = element.split(second_delimiter)
+    return pragma_tokens
 
 #step 9 using custom unstructured meta-information line = generate_custom_unstructured_metainfomation_line
 def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
@@ -652,33 +672,38 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
     unique_filter_lines_to_add = []
     unique_format_lines_to_add = []
     # MANDATORY: file format for VCF
-    pragmas_to_add.append(generate_custom_unstructured_metainformation_line("fileformat", "VCFv4.4"))
+    pragmas_to_add.append(generate_custom_unstructured_meta_line("fileformat", "VCFv4.4"))
     #Go through essential pragmas
     #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
     list_of_pragma = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
-    pragma_name_to_vcf_header = read_pragma_mapper(os.path.join(etc_folder, 'pragma_mapper.tsv'))
-
+    pragma_to_vcf_map = read_pragma_mapper(os.path.join(etc_folder, 'pragma_mapper.tsv'))
     for pragma in gvf_pragmas:
-        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma, " ", list_of_pragma,
-                                                                              pragma_name_to_vcf_header)
+        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma, " ", list_of_pragma, pragma_to_vcf_map)
         pragmas_to_add.append(
-                generate_custom_unstructured_metainformation_line(vcf_header_key, pragma_value))
-
+                generate_custom_unstructured_meta_line(vcf_header_key, pragma_value))
+        # adding in source
+        for vcf_obj in list_of_vcf_objects:
+            pragmas_to_add.append(generate_custom_unstructured_meta_line("source", vcf_obj.source))
     # Go through non-essential pragmas
     list_of_non_essential_pragma = ["#sample", "#Study_accession", "#Study_type", "#Display_name", "#Publication"
                                     "#Study", "#Assembly_name", "#subject"]
     for non_essential_pragma in gvf_non_essential:
-        pragma_name, pragma_value = parse_pragma(non_essential_pragma, ": ")
-        if pragma_name in list_of_non_essential_pragma:
-            vcf_header_key = pragma_name_to_vcf_header.get(pragma_name)
-            pragmas_to_add.append(generate_custom_unstructured_metainformation_line(vcf_header_key, pragma_value))
-            if pragma_name.startswith("#sample"):
-                list_of_sample_information = pragma_value.split(";")
-                for sample_info in list_of_sample_information:
-                    if sample_info.startswith("sample_name"):
-                        sample_names.append(sample_info.split("=")[1])
+        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(non_essential_pragma, ": ", list_of_non_essential_pragma, pragma_to_vcf_map)
+        if pragma_name.startswith("#Publication"):
+            publication_tokens = get_pragma_tokens(pragma_value, ";", "=")
+            pragmas_to_add.append(generate_custom_unstructured_meta_line(publication_tokens[0], publication_tokens[1]))
+        elif pragma_name == "#Study":
+            study_tokens = get_pragma_tokens(pragma_value, ";", "=")
+            pragmas_to_add.append(generate_custom_unstructured_meta_line(study_tokens[0], study_tokens[1]))
         else:
-            print("Skipping unknown non-essential GVF pragma:", non_essential_pragma)
+            if vcf_header_key is not None:
+                pragmas_to_add.append(generate_custom_unstructured_meta_line(vcf_header_key, pragma_value))
+        # populating sample headers
+        if pragma_name.startswith("#sample"):
+            list_of_sample_information = pragma_value.split(";")
+            for sample_info in list_of_sample_information:
+                if sample_info.startswith("sample_name"):
+                    sample_names.append(sample_info.split("=")[1])
 
     print("Total number of samples in this VCF: ", len(sample_names))
 
