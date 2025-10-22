@@ -679,8 +679,7 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
     pragma_to_vcf_map = read_pragma_mapper(os.path.join(etc_folder, 'pragma_mapper.tsv'))
     for pragma in gvf_pragmas:
         vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma, " ", list_of_pragma, pragma_to_vcf_map)
-        pragmas_to_add.append(
-                generate_custom_unstructured_meta_line(vcf_header_key, pragma_value))
+        pragmas_to_add.append(generate_custom_unstructured_meta_line(vcf_header_key, pragma_value))
         # adding in source
         for vcf_obj in list_of_vcf_objects:
             pragmas_to_add.append(generate_custom_unstructured_meta_line("source", vcf_obj.source))
