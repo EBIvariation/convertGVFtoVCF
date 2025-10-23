@@ -27,7 +27,7 @@ class VcfLine:
                  field_lines_dictionary,
                  all_possible_lines_dictionary):
         assisting_converter = Assistingconverter()
-        self.vcf_value = assisting_converter.convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, info_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
+        self.vcf_value, self.info_string = assisting_converter.convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, info_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
         # ATTRIBUTES
         self.assembly = assembly_file
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
@@ -50,6 +50,7 @@ class VcfLine:
         #TODO: specific SV info keys populated from gvf_feature_line
         self.key = self.chrom + "_" + str(self.pos)
         self.info = [] # TODO: add info field for self.info
+        self.info.append(self.info_string)
         # calculated last
         self.ref = self.get_ref()
         self.alt = self.get_alt(field_lines_dictionary, all_possible_lines_dictionary)
