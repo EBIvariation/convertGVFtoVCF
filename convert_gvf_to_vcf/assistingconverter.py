@@ -34,7 +34,6 @@ class Assistingconverter:
         # this also populates ALT INFO FILTER FORMAT with the correct VCF values.
         gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
         vcf_info_values = {} # key is info field value; value is value
-        info = []
         catching_for_review = []
         mapping_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'attribute_mapper.tsv'))
         print("dgva_attribute_dict", gvf_attribute_dictionary) #GVF line in dgva
@@ -88,11 +87,7 @@ class Assistingconverter:
             else:
                 print("catching these attribute keys for review at a later date", attrib_key)
                 catching_for_review.append(attrib_key)
-        print("gvf_attribute_dictionary", gvf_attribute_dictionary) # this will be self.vcf_value in VCFline
-        print(field_lines_dictionary["INFO"])
-        print(vcf_info_values)
 
         info_string = ''.join(f'{key}={value};' for key, value in vcf_info_values.items()).rstrip(';')
         # mapping attribute dictionary
         return gvf_attribute_dictionary, info_string
-        return gvf_attribute_dictionary
