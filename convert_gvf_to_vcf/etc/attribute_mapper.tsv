@@ -7,3 +7,5 @@ mate_id	INFO	MATEID
 Total_reads	INFO	DP
 Variant_freq	INFO	AF
 Genotype	FORMAT	GT
+Zygosity	FORMAT	GT
+Variant_reads	INFO	AD

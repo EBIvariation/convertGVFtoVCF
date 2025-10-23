@@ -1,5 +1,5 @@
 # the purpose of this file is to populate for each field of a VCF line (and perform any necessary calculations to achieve this)
-from convert_gvf_to_vcf.assistingconverter import Assistingconverter
+from convert_gvf_to_vcf.assistingconverter import convert_gvf_attributes_to_vcf_values
 from Bio import SeqIO
 def extract_reference_allele(fasta_file, chromosome_name, position, end):
     """ Extracts the reference allele from the assembly.
@@ -26,8 +26,9 @@ class VcfLine:
                  assembly_file,
                  field_lines_dictionary,
                  all_possible_lines_dictionary):
-        assisting_converter = Assistingconverter()
-        self.vcf_value, self.info_string = assisting_converter.convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, info_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
+        # assisting_converter = Assistingconverter()
+        # self.vcf_value, self.info_string = assisting_converter.convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, info_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
+        self.vcf_value, self.info_string = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, info_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
         # ATTRIBUTES
         self.assembly = assembly_file
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
