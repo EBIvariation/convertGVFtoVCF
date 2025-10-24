@@ -27,8 +27,6 @@ class VcfLine:
                  assembly_file,
                  field_lines_dictionary,
                  all_possible_lines_dictionary):
-        # assisting_converter = Assistingconverter()
-        # self.vcf_value, self.info_string = assisting_converter.convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, info_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
         self.vcf_value, self.info_string = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, info_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
         # ATTRIBUTES
         self.assembly = assembly_file
@@ -60,39 +58,7 @@ class VcfLine:
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
         self.format = "pending" #TODO: set this in convertgvfattributes
-        # # each item in the list exclude_from_info has its own place in the VCF file, so not part of info
-        # exclude_from_info = ["ID", # done above
-        #                      "Variant_seq", # done above
-        #                      "Reference_Seq", # done above
-        #                      "Genotype",
-        #                      "Phased",
-        #                      "sample_name",
-        #                      "Zygosity"]
-        # for k in self.attributes.keys():
-        #     if k not in exclude_from_info:
-        #         self.info = self.info + k + "=" + str(self.attributes[k]) + ";"
-        #     elif k =="ID":
-        #         pass
-        #     elif k == "Variant_seq":
-        #         #TODO: ADD TO ALT
-        #         pass
-        #     elif k == "Reference_Seq":
-        #         # TODO: ADD TO REF
-        #         pass
-        #     elif k == "Genotype":
-        #         # TODO: ADD TO GT (FORMAT)
-        #         pass
-        #     elif k == "Phased":
-        #         # TODO: ADD TO GT
-        #         pass
-        #     elif k == "sample_name":
-        #         # ADD TO LIST: sample_name
-        #         pass
-        #     elif k == "Zygosity":
-        #         # add to format, gt flag
-        #         pass
-        #     else:
-        #         pass
+
 
     def add_padded_base(self, ref, alt, placed_before : bool):
         """ Adds padded base to REF and ALT allele

@@ -65,6 +65,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     # this also populates ALT INFO FILTER FORMAT with the correct VCF values.
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_info_values = {} # key is info field value; value is value
+    vcf_format_values = {} # key is info field value; value is value
     catching_for_review = []
     mapping_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'attribute_mapper.tsv'))
 
@@ -93,13 +94,12 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             field_lines_dictionary[mapping_attribute_dict[attrib_key][1]].append(all_possible_lines_dictionary[mapping_attribute_dict[attrib_key][1]][mapping_attribute_dict[attrib_key][2]])
             # store INFO values
             vcf_info_values[mapping_attribute_dict[attrib_key][2]] = gvf_attribute_dictionary[attrib_key]
-        # GVF keys (not dgva specific)
-        elif attrib_key == "Phased":
-            # GT or FORMAT PS
-            pass
-        elif attrib_key == "Breakpoint_range":
-            # either custom info tag or CIPOS, CIEND, may need imprecise
-            pass
+            # if mapping_attribute_dict[attrib_key][1] == "FORMAT":
+            #     print(all_possible_lines_dictionary[])
+            print(gvf_attribute_dictionary["sample_name"]) # key = samplename
+            print(mapping_attribute_dict[attrib_key][2]) # FORMAT key
+            print(gvf_attribute_dictionary[attrib_key]) # value of FORMATkey for this sample name
+            print(field_lines_dictionary["FORMAT"]) # header line
         else:
             print("catching these attribute keys for review at a later date", attrib_key)
             catching_for_review.append(attrib_key)
