@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from Bio import SeqIO
+
 from convert_gvf_to_vcf.utils import read_file, read_info_attributes, read_pragma_mapper, read_sequence_ontology_symbolic_allele, read_in_gvf_file
 from convert_gvf_to_vcf.vcfline import VcfLine
 

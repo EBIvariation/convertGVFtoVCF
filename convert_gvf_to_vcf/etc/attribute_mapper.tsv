@@ -8,4 +8,5 @@ Total_reads	INFO	DP
 Variant_freq	INFO	AF
 Genotype	FORMAT	GT
 Zygosity	FORMAT	GT
+Phased	FORMAT	PS
 Variant_reads	INFO	AD
