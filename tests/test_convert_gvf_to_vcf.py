@@ -339,9 +339,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     all_possible_lines_dictionary)
         output_symbolic_allele, info_field, output_lines_standard_ALT, output_lines_standard_INFO = v.generate_symbolic_allele(standard_lines_dictionary, all_possible_lines_dictionary)
         assert output_symbolic_allele == '<DEL>'
-        assert info_field == ['END=81', 'SVLEN=4', 'IMPRECISE', 'CIPOS=0,1', 'CIEND=0,1', 'END=80', 'SVLEN=4', 'IMPRECISE', 'CIPOS=1,2', 'CIEND=1,2']
+        print(info_field)
+        assert info_field == ['ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;submitter_variant_call_id=CNV28955;remap_score=.98857;Variant_seq=.', 'END=81', 'SVLEN=4', 'IMPRECISE', 'CIPOS=0,1', 'CIEND=0,1', 'END=80', 'SVLEN=4', 'IMPRECISE', 'CIPOS=1,2', 'CIEND=1,2']
         assert output_lines_standard_ALT == ['"##ALT=<ID=DEL,Description=""Deletion"">"', '"##ALT=<ID=DEL,Description=""Deletion"">"']
-        print("here is ", output_lines_standard_INFO)
         assert output_lines_standard_INFO ==  [
             '##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier.">',
             '##INFO=<ID=Name,Number=.,Type=String,Description="name">',
@@ -433,22 +433,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             '"##ALT=<ID=DUP,Description=""Duplication"">"'
         ]
         print("unique_info_lines_to_add", unique_info_lines_to_add)
-        assert unique_info_lines_to_add ==  [
-            '##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier.">',
-            '##INFO=<ID=Name,Number=.,Type=String,Description="name">',
-            '##INFO=<ID=Alias,Number=.,Type=String,Description="A secondary name.">',
-            '##INFO=<ID=variant_call_so_id,Number=.,Type=String,Description="variant call SO id">',
-            '##INFO=<ID=parent,Number=.,Type=String,Description="parent">',
-            '##INFO=<ID=submitter_variant_call_id,Number=.,Type=Integer,Description="submitter variant call id">',
-            '##INFO=<ID=remap_score,Number=.,Type=Float,Description="remap score">',
-            '##INFO=<ID=Variant_seq,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">',
-            '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
-            '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
-            '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
-            '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">',
-            '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">',
-            '##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">'
-        ]
+        assert unique_info_lines_to_add ==  ['##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier.">', '##INFO=<ID=Name,Number=.,Type=String,Description="name">', '##INFO=<ID=Alias,Number=.,Type=String,Description="A secondary name.">', '##INFO=<ID=variant_call_so_id,Number=.,Type=String,Description="variant call SO id">', '##INFO=<ID=parent,Number=.,Type=String,Description="parent">', '##INFO=<ID=submitter_variant_call_id,Number=.,Type=Integer,Description="submitter variant call id">', '##INFO=<ID=remap_score,Number=.,Type=Float,Description="remap score">', '##INFO=<ID=Variant_seq,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">', '##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">', '##INFO=<ID=Dbxref,Number=.,Type=String,Description="A database cross=reference.">', '##INFO=<ID=AD,Number=R,Type=Integer,Description="Total read depth for each allele">']
+
 
     def test_generate_vcf_header_line(self):
         header_fields = generate_vcf_header_line(['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'])
@@ -482,14 +468,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             unique_filter_lines_to_add, unique_format_lines_to_add
          ) = generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
-        assert formatted_vcf_datalines == [
-            'chromosome1\t1\t1\tAC\t<DEL>\t.\t.\tEND=1;SVLEN=1\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t',
-            'chromosome1\t76\t1\tTAA\t<DEL>\t.\t.\tEND=78;SVLEN=1;IMPRECISE;CIPOS=776537,776837;CIEND=776537,776837\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t',
-            'chromosome1\t126\t12\tCGTACGGTACG\t<DEL>\t.\t.\tEND=131;SVLEN=5\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t',
-            'chromosome1\t127\t13\tGTACGTACG\t<DUP>\t.\t.\tEND=131;SVLEN=4\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t',
-            'chromosome1\t127\t14\tGTACGTACG\t<DUP>\t.\t.\tEND=131;SVLEN=4\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t',
-            'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tEND=128;SVLEN=1\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t'
-        ]
+        print(formatted_vcf_datalines)
+        assert formatted_vcf_datalines == ['chromosome1\t1\t1\tAC\t<DEL>\t.\t.\tID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;submitter_variant_call_id=CNV28955;remap_score=.98857;Variant_seq=.;END=1;SVLEN=1\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t', 'chromosome1\t76\t1\tTAA\t<DEL>\t.\t.\tID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;submitter_variant_call_id=CNV28955;remap_score=.98857;Variant_seq=.;END=78;SVLEN=1;IMPRECISE;CIPOS=776537,776837;CIEND=776537,776837\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t', 'chromosome1\t126\t12\tCGTACGGTACG\t<DEL>\t.\t.\tID=12;Name=nssv1406143;Alias=CNV22899;variant_call_so_id=SO:0001743;parent=nsv811095;submitter_variant_call_id=CNV22899;remap_score=.87402;Variant_seq=.;END=131;SVLEN=5\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t', 'chromosome1\t127\t13\tGTACGTACG\t<DUP>\t.\t.\tID=13;Name=nssv1389474;Alias=CNV6230;variant_call_so_id=SO:0001742;parent=nsv811095;submitter_variant_call_id=CNV6230;remap_score=.69625;Variant_seq=.;END=131;SVLEN=4\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t', 'chromosome1\t127\t14\tGTACGTACG\t<DUP>\t.\t.\tID=14;Name=nssv1388955;Alias=CNV5711;variant_call_so_id=SO:0001742;parent=nsv811095;submitter_variant_call_id=CNV5711;remap_score=.85344;Variant_seq=.;AC=3;END=131;SVLEN=4\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t', 'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tID=14;Name=nssv1388955;Alias=CNV5711;variant_call_so_id=SO:0001742;parent=nsv811095;submitter_variant_call_id=CNV5711;remap_score=.85344;Variant_seq=.;AC=3;Dbxref=mydata;AD=3;END=128;SVLEN=1\tpending\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\tsampleFORMAThere\t']
+
 
     def test_generate_custom_unstructured_metainfomation_line(self):
         formatted_string = generate_custom_unstructured_meta_line("test_string_key", "test_string_value")

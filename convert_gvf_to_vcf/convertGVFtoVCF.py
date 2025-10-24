@@ -4,7 +4,7 @@ import os
 from Bio import SeqIO
 from convert_gvf_to_vcf.utils import read_file, read_info_attributes, read_pragma_mapper, read_sequence_ontology_symbolic_allele, read_in_gvf_file
 from convert_gvf_to_vcf.vcfline import VcfLine
-from convert_gvf_to_vcf.assistingconverter import generate_custom_structured_meta_line
+
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
