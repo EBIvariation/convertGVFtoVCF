@@ -1,6 +1,7 @@
 # the purpose of this file is to populate for each field of a VCF line (and perform any necessary calculations to achieve this)
 from convert_gvf_to_vcf.assistingconverter import convert_gvf_attributes_to_vcf_values
 from Bio import SeqIO
+
 def extract_reference_allele(fasta_file, chromosome_name, position, end):
     """ Extracts the reference allele from the assembly.
     :param fasta_file: FASTA file of the assembly
