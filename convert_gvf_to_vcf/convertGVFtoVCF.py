@@ -245,7 +245,7 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
     """
     sample_name_format_value = populate_sample_formats(list_of_sample_names)
     sample_format_values_string = format_sample_values(sample_name_format_value)
-
+    #TODO: FORMAT needs to be populated here
     formatted_vcf_datalines = []
     for vcf_obj in list_of_vcf_objects:
         vcf_info_string = ";".join(vcf_obj.info)
