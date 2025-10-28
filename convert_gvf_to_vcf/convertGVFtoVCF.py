@@ -210,7 +210,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
         # check the number of objects to see if they are merged
         # for key in vcf_data_lines.keys():
         #     vcf_obj_list = vcf_data_lines[key]
-        #     print("for ", key, " the number of vcf objects is: ", len(vcf_obj_list))
+        #     print("for", key, " the number of vcf objects is: ", len(vcf_obj_list))
     return header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects
 
 def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
@@ -237,9 +237,6 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
     :param list_of_sample_names: list of sample names
     :return: formatted_vcf_datalines: list of formatted vcf datalines
     """
-    # sample_name_dict_format_kv = populate_sample_formats(list_of_sample_names)
-    # sample_format_values_string = format_sample_values(sample_name_dict_format_kv)
-    #TODO: FORMAT needs to be populated here
     formatted_vcf_datalines = []
     for vcf_obj in list_of_vcf_objects:
         sample_name_dict_format_kv = vcf_obj.format_dict
@@ -248,10 +245,10 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
         vcf_line = (f"{vcf_obj.chrom}\t"
                         f"{vcf_obj.pos}\t"
                         f"{vcf_obj.id}\t"
-                        f"{vcf_obj.ref}\t" #TODO: should this always be empty
-                        f"{vcf_obj.alt}\t" #TODO: should this always be empty
-                        f"{vcf_obj.qual}\t" #TODO: should this always be empty
-                        f"{vcf_obj.filter}\t" #TODO: should this always be empty
+                        f"{vcf_obj.ref}\t" 
+                        f"{vcf_obj.alt}\t" 
+                        f"{vcf_obj.qual}\t"
+                        f"{vcf_obj.filter}\t" 
                         #f"{vcf_obj.info}\t"
                         f"{vcf_info_string}\t"
                         f"{vcf_obj.format}\t"
