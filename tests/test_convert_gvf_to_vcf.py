@@ -440,14 +440,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         header_fields = generate_vcf_header_line(['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'])
         assert header_fields == '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tJenMale6\tWilds2-3\tZon9\tJenMale7'
 
-    def test_populate_sample_formats(self):
-        sample_name_format_value = populate_sample_formats(['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'])
-        assert sample_name_format_value == {
-            'JenMale6': 'sampleFORMAThere',
-            'Wilds2-3': 'sampleFORMAThere',
-            'Zon9': 'sampleFORMAThere',
-            'JenMale7': 'sampleFORMAThere'
-        }
+
 
     def test_format_sample_values(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)

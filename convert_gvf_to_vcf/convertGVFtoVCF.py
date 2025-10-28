@@ -213,17 +213,6 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
         #     print("for ", key, " the number of vcf objects is: ", len(vcf_obj_list))
     return header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects
 
-
-def populate_sample_formats(list_of_sample_names):
-    """ Populates a dictionary using a list of sample names. Dictionary key is sample name, value is the sample's format value.
-    :param list_of_sample_names: list of sample names
-    :return:sample_name_format_value: dictionary of sample names => sample format value
-    """
-    sample_name_format_value = {}
-    for sample in list_of_sample_names:
-        sample_name_format_value[sample] = "sampleFORMAThere" #TODO: fill this in
-    return sample_name_format_value
-
 def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     """ Creates a partial vcf data line of sample format values.
     :param sample_name_dict_format_kv: dictionary of sample names => sample format value
