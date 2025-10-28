@@ -235,12 +235,13 @@ def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     #TODO: working on this function
     sample_format_values_string = ""
     uniq_sample_name = list(dict.fromkeys(list_of_sample_names))
-    # print("the dictionary contains:", sample_name_dict_format_kv)
+    print("the dictionary contains:", sample_name_dict_format_kv)
     for sample in uniq_sample_name:
         if sample in sample_name_dict_format_kv:
             format_value = sample_name_dict_format_kv[sample]
-            # print("column is ", sample, "\t", "its key is", format_value[0], "its value is,", format_value[1])
-            sample_format_values_string = sample_format_values_string + format_value[1] + "\t"
+            # print(format_value)
+            # print("column is ", sample, "\t", "its key is", ''.join(format_value.keys()), "its value is,", ''.join(format_value.values()))
+            sample_format_values_string = sample_format_values_string + ':'.join(format_value.values()) + "\t"
             # print("sample_format_values_string",sample_format_values_string)
         else:
             format_value = "." # set to missing value
