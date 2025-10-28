@@ -227,14 +227,26 @@ def populate_sample_formats(list_of_sample_names):
         sample_name_format_value[sample] = "sampleFORMAThere" #TODO: fill this in
     return sample_name_format_value
 
-def format_sample_values(sample_name_format_value):
+def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     """ Creates a partial vcf data line of sample format values.
-    :param sample_name_format_value: dictionary of sample names => sample format value
+    :param sample_name_dict_format_kv: dictionary of sample names => sample format value
     :return: sample_format_values_string: formatted string
     """
+    #TODO: working on this function
     sample_format_values_string = ""
-    for key in sample_name_format_value:
-        sample_format_values_string = sample_format_values_string + sample_name_format_value[key] + "\t"
+    uniq_sample_name = list(dict.fromkeys(list_of_sample_names))
+    # print("the dictionary contains:", sample_name_dict_format_kv)
+    for sample in uniq_sample_name:
+        if sample in sample_name_dict_format_kv:
+            format_value = sample_name_dict_format_kv[sample]
+            # print("column is ", sample, "\t", "its key is", format_value[0], "its value is,", format_value[1])
+            sample_format_values_string = sample_format_values_string + format_value[1] + "\t"
+            # print("sample_format_values_string",sample_format_values_string)
+        else:
+            format_value = "." # set to missing value
+            # print("else column is ", sample, "\t", "its format_value is", format_value)
+            sample_format_values_string = sample_format_values_string + format_value + "\t"
+            # print("sample_format_values_string", sample_format_values_string)
     return sample_format_values_string
 
 def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
@@ -243,11 +255,13 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
     :param list_of_sample_names: list of sample names
     :return: formatted_vcf_datalines: list of formatted vcf datalines
     """
-    sample_name_format_value = populate_sample_formats(list_of_sample_names)
-    sample_format_values_string = format_sample_values(sample_name_format_value)
+    # sample_name_dict_format_kv = populate_sample_formats(list_of_sample_names)
+    # sample_format_values_string = format_sample_values(sample_name_dict_format_kv)
     #TODO: FORMAT needs to be populated here
     formatted_vcf_datalines = []
     for vcf_obj in list_of_vcf_objects:
+        sample_name_dict_format_kv = vcf_obj.format_dict
+        sample_format_values_string = format_sample_values(sample_name_dict_format_kv, list_of_sample_names)
         vcf_info_string = ";".join(vcf_obj.info)
         vcf_line = (f"{vcf_obj.chrom}\t"
                         f"{vcf_obj.pos}\t"

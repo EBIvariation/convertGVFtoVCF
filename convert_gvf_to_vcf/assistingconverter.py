@@ -41,6 +41,7 @@ def get_gvf_attributes(column9_of_gvf):
     # parse by equals sign this creates tag-values, if the value is a comma, create a list
     attributes_in_gvf_line = column9_of_gvf.split(";")
     for attribute in attributes_in_gvf_line:
+        print(attribute)
         attribute_key, attribute_value = attribute.split("=")
         if "," in attribute_value:
             attribute_value_list = attribute_value.split(",")
@@ -100,6 +101,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
 
             field_lines_dictionary["FORMAT"].append(all_possible_lines_dictionary[mapping_attribute_dict[attrib_key][1]][mapping_attribute_dict[attrib_key][2]])
             vcf_format_values[gvf_attribute_dictionary["sample_name"]] = [mapping_attribute_dict[attrib_key][2], gvf_attribute_dictionary[attrib_key]]
+
             # print(vcf_format_values)
             # print(gvf_attribute_dictionary["sample_name"]) # key = samplename
             # print(mapping_attribute_dict[attrib_key][2]) # FORMAT key
@@ -109,4 +111,5 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             print("catching these attribute keys for review at a later date", attrib_key)
             catching_for_review.append(attrib_key)
     info_string = ''.join(f'{key}={value};' for key, value in vcf_info_values.items()).rstrip(';')
-    return gvf_attribute_dictionary, info_string
+    print("vcf_format_values", vcf_format_values)
+    return gvf_attribute_dictionary, info_string, vcf_format_values
