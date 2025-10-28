@@ -230,22 +230,16 @@ def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     :param list_of_sample_names: list of sample names
     :return: sample_format_values_string: formatted string
     """
-    #TODO: working on this function
     sample_format_values_string = ""
     uniq_sample_name = list(dict.fromkeys(list_of_sample_names))
     print("the dictionary contains:", sample_name_dict_format_kv)
     for sample in uniq_sample_name:
         if sample in sample_name_dict_format_kv:
             format_value = sample_name_dict_format_kv[sample]
-            # print(format_value)
-            # print("column is ", sample, "\t", "its key is", ''.join(format_value.keys()), "its value is,", ''.join(format_value.values()))
             sample_format_values_string = sample_format_values_string + ':'.join(format_value.values()) + "\t"
-            # print("sample_format_values_string",sample_format_values_string)
         else:
             format_value = "." # set to missing value
-            # print("else column is ", sample, "\t", "its format_value is", format_value)
             sample_format_values_string = sample_format_values_string + format_value + "\t"
-            # print("sample_format_values_string", sample_format_values_string)
     return sample_format_values_string
 
 def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
