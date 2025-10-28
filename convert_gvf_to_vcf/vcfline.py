@@ -27,7 +27,7 @@ class VcfLine:
                  assembly_file,
                  field_lines_dictionary,
                  all_possible_lines_dictionary):
-        self.vcf_value, self.info_string = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, info_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
+        self.vcf_value, self.info_string, self.format_dict = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, info_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
         # ATTRIBUTES
         self.assembly = assembly_file
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
@@ -57,7 +57,12 @@ class VcfLine:
 
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
-        self.format = "pending" #TODO: set this in convertgvfattributes
+        self.format = ""
+        if self.format_dict:
+            for format in self.format_dict.values():
+                self.format = format[0]
+        else:
+            self.format = "." #TODO: this is temporary, when the multiple VCF lines are merged this will be filled in
 
 
     def add_padded_base(self, ref, alt, placed_before : bool):
