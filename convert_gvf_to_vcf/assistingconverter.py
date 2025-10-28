@@ -66,7 +66,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     # this also populates ALT INFO FILTER FORMAT with the correct VCF values.
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_info_values = {} # key is info field value; value is value
-    vcf_format_values = {} # key is info field value; value is value
+    vcf_format_values = {} # key is format field value; value is value
     catching_for_review = []
     mapping_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'attribute_mapper.tsv'))
 

@@ -221,7 +221,6 @@ def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     """
     sample_format_values_string = ""
     uniq_sample_name = list(dict.fromkeys(list_of_sample_names))
-    print("the dictionary contains:", sample_name_dict_format_kv)
     for sample in uniq_sample_name:
         if sample in sample_name_dict_format_kv:
             format_value = sample_name_dict_format_kv[sample]
