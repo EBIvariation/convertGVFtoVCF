@@ -15,9 +15,7 @@ def generate_vcf_header_structured_lines(header_type):
     :return: dictionary of all possible standard structured lines keys for the header type
     """
     all_possible_lines = {}
-    prefix = {}
-    prefix["reserved"] = True
-    prefix["sv"] = True
+    prefix = {"reserved": True, "sv": True}
     if header_type == 'ALT':
         prefix["reserved"] = False
     if prefix["reserved"]:
@@ -207,13 +205,12 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
         if vcf_object.key in vcf_data_lines:
             vcf_data_lines[vcf_object.key].append(vcf_object)
         else:
-            vcf_data_line_objects_list = []
-            vcf_data_line_objects_list.append(vcf_object)
+            vcf_data_line_objects_list = [vcf_object]
             vcf_data_lines[vcf_object.key] = vcf_data_line_objects_list
         # check the number of objects to see if they are merged
         # for key in vcf_data_lines.keys():
         #     vcf_obj_list = vcf_data_lines[key]
-            # print("for ", key, " the number of vcf objects is: ", len(vcf_obj_list))
+        #     print("for ", key, " the number of vcf objects is: ", len(vcf_obj_list))
     return header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects
 
 
@@ -230,6 +227,7 @@ def populate_sample_formats(list_of_sample_names):
 def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     """ Creates a partial vcf data line of sample format values.
     :param sample_name_dict_format_kv: dictionary of sample names => sample format value
+    :param list_of_sample_names: list of sample names
     :return: sample_format_values_string: formatted string
     """
     #TODO: working on this function
