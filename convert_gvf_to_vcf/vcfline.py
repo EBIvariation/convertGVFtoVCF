@@ -36,7 +36,7 @@ class VcfLine:
         self.source = gvf_feature_line_object.source
         self.so_type = gvf_feature_line_object.feature_type #currently column 3 of gvf, but could be an attribute so perhapsVCF: INFO or FORMAT?
         self.end = int(gvf_feature_line_object.end)
-        self.phase = gvf_feature_line_object.phase # this is always a placeholder'.'
+        self.phase = gvf_feature_line_object.phase # this is always a placeholder '.'
 
         # VCF DATALINE
         self.chrom = gvf_feature_line_object.seqid
@@ -58,9 +58,8 @@ class VcfLine:
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
         self.format = ""
-        list_of_format_keys = []
         if self.format_dict:
-            list_of_format_keys = [format_key for format in self.format_dict.values() for format_key in format.keys()]
+            list_of_format_keys = [format_key for format_value in self.format_dict.values() for format_key in format_value.keys()]
             self.format = ":".join(list_of_format_keys)
         else:
             self.format = "." #TODO: this is temporary, when the multiple VCF lines are merged this will be filled in

@@ -337,12 +337,12 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     assembly_file,
                     standard_lines_dictionary,
                     all_possible_lines_dictionary)
-        output_symbolic_allele, info_field, output_lines_standard_ALT, output_lines_standard_INFO = v.generate_symbolic_allele(standard_lines_dictionary, all_possible_lines_dictionary)
+        (output_symbolic_allele, info_field, output_lines_standard_alt, output_lines_standard_info) = v.generate_symbolic_allele(standard_lines_dictionary, all_possible_lines_dictionary)
         assert output_symbolic_allele == '<DEL>'
         print(info_field)
         assert info_field == ['ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;submitter_variant_call_id=CNV28955;remap_score=.98857;Variant_seq=.', 'END=81', 'SVLEN=4', 'IMPRECISE', 'CIPOS=0,1', 'CIEND=0,1', 'END=80', 'SVLEN=4', 'IMPRECISE', 'CIPOS=1,2', 'CIEND=1,2']
-        assert output_lines_standard_ALT == ['"##ALT=<ID=DEL,Description=""Deletion"">"', '"##ALT=<ID=DEL,Description=""Deletion"">"']
-        assert output_lines_standard_INFO ==  [
+        assert output_lines_standard_alt == ['"##ALT=<ID=DEL,Description=""Deletion"">"', '"##ALT=<ID=DEL,Description=""Deletion"">"']
+        assert output_lines_standard_info ==  [
             '##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier.">',
             '##INFO=<ID=Name,Number=.,Type=String,Description="name">',
             '##INFO=<ID=Alias,Number=.,Type=String,Description="A secondary name.">',
