@@ -91,15 +91,11 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             # store INFO values
             vcf_info_values[attrib_key] = gvf_attribute_dictionary[attrib_key]
         elif attrib_key in mapping_attribute_dict:
-            # create and store header line
+            # INFO: create and store header line then store value
             field_lines_dictionary[mapping_attribute_dict[attrib_key][1]].append(all_possible_lines_dictionary[mapping_attribute_dict[attrib_key][1]][mapping_attribute_dict[attrib_key][2]])
-            # store INFO values
             vcf_info_values[mapping_attribute_dict[attrib_key][2]] = gvf_attribute_dictionary[attrib_key]
-            #TODO: link this to populate_sample_formats
-
+            # FORMAT: create and store header line then store value
             field_lines_dictionary["FORMAT"].append(all_possible_lines_dictionary[mapping_attribute_dict[attrib_key][1]][mapping_attribute_dict[attrib_key][2]])
-            # make this a dictionary
-            # vcf_format_values[gvf_attribute_dictionary["sample_name"]] = [mapping_attribute_dict[attrib_key][2], gvf_attribute_dictionary[attrib_key]]
             format_key = mapping_attribute_dict[attrib_key][2]
             format_value = gvf_attribute_dictionary[attrib_key]
             sample_name = gvf_attribute_dictionary.get("sample_name")
@@ -107,7 +103,6 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                 vcf_format_values[sample_name].update({format_key: format_value})
             else:
                 vcf_format_values[sample_name] = {format_key: format_value}
-
         else:
             print("catching these attribute keys for review at a later date", attrib_key)
             catching_for_review.append(attrib_key)
