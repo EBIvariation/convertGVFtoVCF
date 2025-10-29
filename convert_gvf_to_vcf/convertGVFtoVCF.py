@@ -2,7 +2,8 @@ import argparse
 import os
 
 
-from convert_gvf_to_vcf.utils import read_file, read_info_attributes, read_pragma_mapper, read_sequence_ontology_symbolic_allele, read_in_gvf_file
+from convert_gvf_to_vcf.utils import read_file, read_info_attributes, read_pragma_mapper, \
+                                      read_sequence_ontology_symbolic_allele, read_in_gvf_file
 from convert_gvf_to_vcf.vcfline import VcfLine
 
 # setting up paths to useful directories
@@ -25,7 +26,8 @@ def generate_vcf_header_structured_lines(header_type):
             number = reserved_key[r_key][1]
             type_for_key = reserved_key[r_key][2]
             description = reserved_key[r_key][3]
-            reserved_string = f'##{header_type}=<ID={key_id},Number={number},Type={type_for_key},Description="{description}">'
+            reserved_string = (f'##{header_type}='
+                               f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
             all_possible_lines[key_id] = reserved_string
     if prefix['sv']:
         sv_key = read_file("sv", header_type)
@@ -102,7 +104,7 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
     :param gvf_non_essential: list of non-essential gvf pragmas to convert
     :param list_of_vcf_objects: list of vcf objects
     :param standard_lines_dictionary: dictionary of standard lines
-    :return: unique_pragmas_to_add, sample_names: a list of pragmas (this list contains no duplicates), list of sample names
+    :return: unique_pragmas_to_add, sample_names: a list of pragmas (removed duplicates), list of sample names
     """
     pragmas_to_add = []
     unique_pragmas_to_add = []
@@ -244,10 +246,10 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
         vcf_line = (f"{vcf_obj.chrom}\t"
                         f"{vcf_obj.pos}\t"
                         f"{vcf_obj.id}\t"
-                        f"{vcf_obj.ref}\t" 
-                        f"{vcf_obj.alt}\t" 
+                        f"{vcf_obj.ref}\t"
+                        f"{vcf_obj.alt}\t"
                         f"{vcf_obj.qual}\t"
-                        f"{vcf_obj.filter}\t" 
+                        f"{vcf_obj.filter}\t"
                         #f"{vcf_obj.info}\t"
                         f"{vcf_info_string}\t"
                         f"{vcf_obj.format}\t"

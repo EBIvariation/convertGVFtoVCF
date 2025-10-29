@@ -1,6 +1,8 @@
 # this file contains readers only
 import os
+import yaml
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
+
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
@@ -45,6 +47,15 @@ def read_info_attributes(info_attributes_file):
             key = attribute_tokens[0]
             attribute_dict[key] = attribute_tokens
     return attribute_dict
+
+def read_yaml(yaml_file):
+    """Reads a yaml file (of attributes) and returns dictionary
+    :param yaml_file: file of attributes
+    :return: : A dictionary of attributes.
+    """
+    with open(yaml_file) as y_file:
+        attributes = yaml.safe_load(y_file)
+    return attributes
 
 def read_pragma_mapper(pragma_mapper_file):
     """ Reads in the pragma mapper file and stores as dictionary.
@@ -103,4 +114,3 @@ def read_in_gvf_file(gvf_input):
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
         gvf_lines_obj_list.append(line_object)
     return gvf_pragmas, gvf_non_essential, gvf_lines_obj_list
-

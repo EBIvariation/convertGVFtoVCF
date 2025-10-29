@@ -1,5 +1,5 @@
-# this is to store each field of the GVF line
 class GvfFeatureline:
+    """This is to store each field of the GVF line"""
     def __init__(self, seqid, source, so_type, start, end, score, strand, phase, attributes):
         """ Initialise GvfFeature line
         :param seqid: sequence ID i.e. chromosome number
@@ -27,5 +27,6 @@ class GvfFeatureline:
         Helper to print variables of the GVF feature line
         :return:line_to_print
         """
-        line_to_print = self.seqid + "\t" + self.source + "\t" + self.feature_type + "\t" + self.start + "\t" + self.end + "\t" + self.score +"\t" + self.strand + "\t" + self.phase + "\t" + self.attributes
+        line_to_print = (self.seqid + "\t" + self.source + "\t" + self.feature_type + "\t" + self.start + "\t" +
+                         self.end + "\t" + self.score +"\t" + self.strand + "\t" + self.phase + "\t" + self.attributes)
         return line_to_print
