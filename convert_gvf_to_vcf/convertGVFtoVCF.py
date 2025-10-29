@@ -188,7 +188,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     all_header_lines_per_type_dict = {
         htype: generate_vcf_header_structured_lines(htype) for htype in ["ALT", "INFO", "FILTER", "FORMAT"]
     }
-    info_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'INFOattributes.tsv'))  # needed to generate custom strings
+    # info_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'INFOattributes.tsv'))  # needed to generate custom strings
 
     symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(os.path.join(etc_folder, 'svALTkeys.tsv'))
 
@@ -197,7 +197,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     # (1:many; key=chrom_pos; 1 key: many vcf objects)
     for gvf_featureline in gvf_lines_obj_list:
         vcf_object = VcfLine(gvf_featureline,
-                             info_attribute_dict,
+                             # info_attribute_dict,
                              symbolic_allele_dictionary,
                              assembly_file,
                              header_standard_lines_dictionary,
