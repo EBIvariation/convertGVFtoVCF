@@ -91,20 +91,16 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             vcf_info_values[attrib_key] = gvf_attribute_dictionary[attrib_key]
         elif attrib_key in mapping_attribute_dict:
             field_name_and_values = mapping_attribute_dict[attrib_key]
-
+            # INFO: create and store header line then store value
             field_name = "INFO"
             if field_name in field_name_and_values:
                 field_key = field_name_and_values[field_name]["FieldKey"]
-                # INFO: create and store header line then store value
                 field_lines_dictionary[field_name].append(all_possible_lines_dictionary[field_name][field_key])
-                # vcf_info_values[mapping_attribute_dict[attrib_key][2]] = gvf_attribute_dictionary[attrib_key]
-                vcf_info_values[field_name] = gvf_attribute_dictionary[attrib_key]
-
+                vcf_info_values[field_key] = gvf_attribute_dictionary[attrib_key]
             # FORMAT: create and store header line then store value
             field_name = "FORMAT"
             if field_name in field_name_and_values:
                 field_key = field_name_and_values[field_name]["FieldKey"]
-            # field_lines_dictionary[field_name].append(all_possible_lines_dictionary[mapping_attribute_dict[attrib_key][1]][mapping_attribute_dict[attrib_key][2]])
                 field_lines_dictionary[field_name].append(all_possible_lines_dictionary[field_name][field_key])
                 format_key = field_key
                 format_value = gvf_attribute_dictionary[attrib_key]
@@ -117,5 +113,5 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             print("catching these attribute keys for review at a later date", attrib_key, attrib_value)
             catching_for_review.append(attrib_key)
     info_string = ''.join(f'{key}={value};' for key, value in vcf_info_values.items()).rstrip(';')
-
+    print(vcf_info_values)
     return gvf_attribute_dictionary, info_string, vcf_format_values
