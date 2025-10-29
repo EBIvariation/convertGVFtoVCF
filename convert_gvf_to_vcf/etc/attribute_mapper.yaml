@@ -1,74 +1,202 @@
+allele_ancestral:
+    INFO:
+        FieldKey: AA
+        Number: 1
+        Type: String
+        Description: "Ancestral allele"
+        From: ReservedVCF
 allele_count:
     INFO:
         FieldKey: AC
         Number: A
         Type: Integer
         Description: "Allele count in genotypes, for each ALT allele, in the same order as listed"
+        From: ReservedVCF
+allele_depth_forward:
+    INFO:
+        FieldKey: ADF
+        Number: R
+        Type: Integer
+        Description: "Read depth for each allele on the forward strand"
+        From: ReservedVCF
+allele_depth_reverse:
+    INFO:
+        FieldKey: ADR
+        Number: R
+        Type: Integer
+        Description: "Read depth for each allele on the reverse strand"
+        From: ReservedVCF
 allele_frequency:
     INFO:
         FieldKey: AF
         Number: A
         Type: Float
         Description: "Allele frequency for each ALT allele in the same order as listed (estimated from primary data, not called genotypes)"
+        From: ReservedVCF
+allele_number:
+    INFO:
+        FieldKey: AN
+        Number: 1
+        Type: Integer
+        Description: "Total number of alleles in called genotypes"
+        From: [DGVa, ReservedVCF]
+base_quality:
+    INFO:
+        FieldKey: BQ
+        Number: 1
+        Type: Float
+        Description: "RMS base quality"
+        From: ReservedVCF
 ciend:
     INFO:
         FieldKey: CIEND
         Number: .
         Type: Integer
         Description: "Confidence interval around END for symbolic structural variants"
+cigar_string:
+    INFO:
+        FieldKey: CIGAR
+        Number: A
+        Type: String
+        Description: "Cigar string describing how to align an alternate allele to the reference allele"
+        From: ReservedVCF
 copy_number:
     INFO:
         FieldKey: CN
         Number: A
         Type: Float
         Description: "Copy number of CNV/breakpoint"
-mate_id:
+dbsnp:
     INFO:
-        FieldKey: MATEID
-        Number: A
-        Type: String
-        Description: "ID of mate breakend"
+        FieldKey: DB
+        Number: 0
+        Type: Flag
+        Description: "dbSNP membership"
+        From: ReservedVCF
 Total_reads:
     INFO:
         FieldKey: DP
         Number: 1
         Type: Integer
         Description: "Combined depth across samples"
+        From: [DGVa, ReservedVCF]
+end:
+    INFO:
+        FieldKey: END
+        Number: 1
+        Type: Integer
+        Description: "End position on CHROM (used with symbolic alleles; see below)"
+        From: ReservedVCF
+hapmap2:
+    INFO:
+        FieldKey: H2
+        Number: 0
+        Type: Flag
+        Description: "HapMap2 membership"
+        From: ReservedVCF
+hapmap3:
+    INFO:
+        FieldKey: H3
+        Number: 0
+        Type: Flag
+        Description: "HapMap3 membership"
+        From: ReservedVCF
+mapping_quality:
+    INFO:
+        FieldKey: MQ
+        Number: 1
+        Type: Float
+        Description: "RMS mapping quality"
+        From: ReservedVCF
+mapping_quality_zero:
+    INFO:
+        FieldKey: MQ0
+        Number: 1
+        Type: Integer
+        Description: "Number of MAPQ == 0 reads"
+        From: ReservedVCF
+mate_id:
+    INFO:
+        FieldKey: MATEID
+        Number: A
+        Type: String
+        Description: "ID of mate breakend"
+number_samples:
+    INFO:
+        FieldKey: NS
+        Number: 1
+        Type: Integer
+        Description: "Number of samples with data"
+        From: ReservedVCF
+strand_bias:
+    INFO:
+        FieldKey: SB
+        Number: 4
+        Type: Integer
+        Description: "Strand bias"
+        From: ReservedVCF
+somatic:
+    INFO:
+        FieldKey: SOMATIC
+        Number: 0
+        Type: Flag
+        Description: "Somatic mutation (for cancer genomics)"
+        From: ReservedVCF
+validated:
+    INFO:
+        FieldKey: VALIDATED
+        Number: 0
+        Type: Flag
+        Description: "Validated by follow-up experiment"
+        From: ReservedVCF
+thousand_genomes:
+    INFO:
+        FieldKey: 1000G
+        Number: 0
+        Type: Flag
+        Description: "1000 Genomes membership"
+        From: ReservedVCF
 Variant_freq:
     INFO:
         FieldKey: AF
         Number: A
         Type: Float
         Description: "Allele frequency for each ALT allele in the same order as listed (estimated from primary data, not called genotypes)"
+        From: [GVF, ReservedVCF]
 Genotype:
     FORMAT:
         FieldKey: GT
         Number: 1
         Type: String
         Description: "Genotype"
+        From: [GVF, ReservedVCF]
 Zygosity:
     FORMAT:
         FieldKey: GT
         Number: 1
         Type: String
         Description: "Zygosity"
+        From: [GVF, ReservedVCF]
 Phased:
     FORMAT:
         FieldKey: PS
         Number: 1
         Type: Integer
         Description: "Phase set"
+        From: [GVF, ReservedVCF]
 Variant_reads:
     INFO:
         FieldKey: AD
         Number: R
         Type: Integer
         Description: "Total read depth for each allele"
+        From: [GVF, ReservedVCF]
     FORMAT:
         FieldKey: AD
         Number: R
         Type: Integer
         Description: "Read depth for each allele"
+        From: [GVF, ReservedVCF]
 3'_inner_flank_link:
     INFO:
         FieldKey: TIFL
@@ -82,13 +210,6 @@ Variant_reads:
         Number: .
         Type: String
         Description: "Five prime inner flank link"
-        From: DGVa
-allele_number:
-    INFO:
-        FieldKey: AN
-        Number: 1
-        Type: Integer
-        Description: "Total number of alleles in called genotypes"
         From: DGVa
 assertion_method:
     INFO:
