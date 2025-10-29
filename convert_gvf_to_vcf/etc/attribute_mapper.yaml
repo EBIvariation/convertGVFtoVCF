@@ -47,12 +47,55 @@ base_quality:
         Type: Float
         Description: "RMS base quality"
         From: ReservedVCF
+breakpoint_id:
+    INFO:
+        FieldKey: BKPTID
+        Number: A
+        Type: String
+        Description: "ID of the assembled alternate allele in the assembly file"
+        From: SVVCF
+cicn:
+    INFO:
+        FieldKey: CICN
+        Number: .
+        Type: Float
+        Description: "Confidence interval around copy number"
+        From: SVVCF
 ciend:
     INFO:
         FieldKey: CIEND
         Number: .
         Type: Integer
         Description: "Confidence interval around END for symbolic structural variants"
+        From: SVVCF
+cilen:
+    INFO:
+        FieldKey: CILEN
+        Number: .
+        Type: Integer
+        Description: "Confidence interval for the SVLEN field"
+        From: SVVCF
+cirb:
+    INFO:
+        FieldKey: CIRB
+        Number: .
+        Type: Integer
+        Description: "Confidence interval around RB"
+        From: SVVCF
+ciruc:
+    INFO:
+        FieldKey: CIRUC
+        Number: .
+        Type: Float
+        Description: "Confidence interval around RUC"
+        From: SVVCF
+cipos:
+    INFO:
+        FieldKey: CIPOS
+        Number: .
+        Type: Integer
+        Description: "Confidence interval around POS for symbolic structural variants"
+        From: SVVCF
 cigar_string:
     INFO:
         FieldKey: CIGAR
@@ -66,6 +109,7 @@ copy_number:
         Number: A
         Type: Float
         Description: "Copy number of CNV/breakpoint"
+        From: SVVCF
 dbsnp:
     INFO:
         FieldKey: DB
@@ -73,6 +117,27 @@ dbsnp:
         Type: Flag
         Description: "dbSNP membership"
         From: ReservedVCF
+dbripid:
+    INFO:
+        FieldKey: DBRIPID
+        Number: A
+        Type: String
+        Description: "ID of this element in DBRIP"
+        From: SVVCF
+dbvarid:
+    INFO:
+        FieldKey: DBVARID
+        Number: A
+        Type: String
+        Description: "ID of this element in DBVAR"
+        From: SVVCF
+dgvid:
+    INFO:
+        FieldKey: DGVID
+        Number: A
+        Type: String
+        Description: "ID of this element in Database of Genomic Variation"
+        From: SVVCF
 Total_reads:
     INFO:
         FieldKey: DP
@@ -85,8 +150,22 @@ end:
         FieldKey: END
         Number: 1
         Type: Integer
-        Description: "End position on CHROM (used with symbolic alleles; see below)"
-        From: ReservedVCF
+        Description: "End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record"
+        From: [ReservedVCF, SVVCF]
+event:
+    INFO:
+        FieldKey: EVENT
+        Number: A
+        Type: String
+        Description: "ID of associated event"
+        From: SVVCF
+event_type:
+    INFO:
+        FieldKey: EVENTTYPE
+        Number: A
+        Type: String
+        Description: "Type of associated event"
+        From: SVVCF
 hapmap2:
     INFO:
         FieldKey: H2
@@ -101,6 +180,27 @@ hapmap3:
         Type: Flag
         Description: "HapMap3 membership"
         From: ReservedVCF
+homlen:
+    INFO:
+        FieldKey: HOMLEN
+        Number: A
+        Type: Integer
+        Description: "Length of base pair identical micro-homology at breakpoints"
+        From: SVVCF
+homseq:
+    INFO:
+        FieldKey: HOMSEQ
+        Number: A
+        Type: String
+        Description: "Sequence of base pair identical micro-homology at breakpoints"
+        From: SVVCF
+imprecise:
+    INFO:
+        FieldKey: IMPRECISE
+        Number: 0
+        Type: Flag
+        Description: "Imprecise structural variation"
+        From: SVVCF
 mapping_quality:
     INFO:
         FieldKey: MQ
@@ -121,6 +221,28 @@ mate_id:
         Number: A
         Type: String
         Description: "ID of mate breakend"
+        From: SVVCF
+meinfo:
+    INFO:
+        FieldKey: MEINFO
+        Number: .
+        Type: String
+        Description: "Mobile element info of the form NAME,START,END,POLARITY"
+        From: SVVCF
+metrans:
+    INFO:
+        FieldKey: METRANS
+        Number: .
+        Type: String
+        Description: "Mobile element transduction info of the form CHR,START,END,POLARITY"
+        From: SVVCF
+novel:
+    INFO:
+        FieldKey: NOVEL
+        Number: 0
+        Type: Flag
+        Description: "Indicates a novel structural variation"
+        From: SVVCF
 number_samples:
     INFO:
         FieldKey: NS
@@ -128,6 +250,55 @@ number_samples:
         Type: Integer
         Description: "Number of samples with data"
         From: ReservedVCF
+parid:
+    INFO:
+        FieldKey: PARID
+        Number: A
+        Type: String
+        Description: "ID of partner breakend"
+        From: SVVCF
+repeat_number:
+    INFO:
+        FieldKey: RN
+        Number: A
+        Type: Integer
+        Description: "Total number of repeat sequences in this allele"
+        From: SVVCF
+repeat_seq:
+    INFO:
+        FieldKey: RUS
+        Number: .
+        Type: String
+        Description: "Repeat unit sequence of the corresponding repeat sequence"
+        From: SVVCF
+repeat_length:
+    INFO:
+        FieldKey: RUL
+        Number: .
+        Type: Integer
+        Description: "Repeat unit length of the corresponding repeat sequence"
+        From: SVVCF
+repeat_count:
+    INFO:
+        FieldKey: RUC
+        Number: .
+        Type: Float
+        Description: "Repeat unit count of corresponding repeat sequence"
+        From: SVVCF
+repeat_base:
+    INFO:
+        FieldKey: RB
+        Number: .
+        Type: Integer
+        Description: "Total number of bases in the corresponding repeat sequence"
+        From: SVVCF
+repeat_base_indiv:
+    INFO:
+        FieldKey: RUB
+        Number: .
+        Type: Integer
+        Description: "Number of bases in each individual repeat unit"
+        From: SVVCF
 strand_bias:
     INFO:
         FieldKey: SB
@@ -142,6 +313,28 @@ somatic:
         Type: Flag
         Description: "Somatic mutation (for cancer genomics)"
         From: ReservedVCF
+svclaim:
+    INFO:
+        FieldKey: SVCLAIM
+        Number: A
+        Type: String
+        Description: "Claim made by the structural variant call. Valid values are D, J, DJ for abundance, adjacency and both respectively"
+        From: SVVCF
+svlen:
+    INFO:
+        FieldKey: SVLEN
+        Number: A
+        Type: String
+        Description: "Length of structural variant"
+        From: SVVCF
+svtype:
+    INFO:
+        FieldKey: SVTYPE
+        Number: 1
+        Type: String
+        Description: "Type of structural variant"
+        From: SVVCF
+
 validated:
     INFO:
         FieldKey: VALIDATED
