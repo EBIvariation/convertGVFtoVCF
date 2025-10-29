@@ -66,7 +66,6 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     vcf_format_values = {} # key is format field value; value is value
     catching_for_review = []
     mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml')) # formerly attributes_mapper and INFOattributes
-
     # created a rough guide to attributes_for_custom_structured_metainformation in INFOattributes.tsv = this probably should be refined at a later date
     # TODO: edit INFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
 

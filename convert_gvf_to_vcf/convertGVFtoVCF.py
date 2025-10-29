@@ -3,7 +3,8 @@ import os
 
 
 from convert_gvf_to_vcf.utils import read_file, read_info_attributes, read_pragma_mapper, \
-                                      read_sequence_ontology_symbolic_allele, read_in_gvf_file
+                                      read_sequence_ontology_symbolic_allele, read_in_gvf_file, \
+                                    read_yaml
 from convert_gvf_to_vcf.vcfline import VcfLine
 
 # setting up paths to useful directories
@@ -30,12 +31,25 @@ def generate_vcf_header_structured_lines(header_type):
                 reserved_string = (f'##{header_type}='
                                    f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
                 all_possible_lines[key_id] = reserved_string
+        else:
+            #TODO
+            mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml'))  # formerly attributes_mapper and INFOattributes
+            for attribute in mapping_attribute_dict:
+                for keys in mapping_attribute_dict[attribute].keys():
+                    key_id = mapping_attribute_dict[attribute][keys]["FieldKey"]
+                    number = mapping_attribute_dict[attribute][keys]["Number"]
+                    type_for_key = mapping_attribute_dict[attribute][keys]["Type"]
+                    description = mapping_attribute_dict[attribute][keys]["Description"]
+                    header_string = (f'##{header_type}='
+                                       f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
+                    all_possible_lines[key_id] = header_string
     if prefix['sv']:
-        sv_key = read_file("sv", header_type)
-        for s_key in sv_key:
-            sv_key_id = sv_key[s_key][0]
-            sv_line = sv_key[s_key][1]
-            all_possible_lines[sv_key_id] = sv_line
+        if header_type is not "INFO":
+            sv_key = read_file("sv", header_type)
+            for s_key in sv_key:
+                sv_key_id = sv_key[s_key][0]
+                sv_line = sv_key[s_key][1]
+                all_possible_lines[sv_key_id] = sv_line
     return all_possible_lines
 
 def generate_custom_unstructured_meta_line(vcf_unstructured_key,
@@ -171,7 +185,6 @@ def generate_vcf_header_line(samples):
 
 def gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                 assembly_file):
-
     """ Creates VCF objects from GVF feature lines and stores the VCF objects.
     :param gvf_lines_obj_list: list of GVF feature line objects
     :param assembly_file: FASTA file to assembly
@@ -189,6 +202,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     all_header_lines_per_type_dict = {
         htype: generate_vcf_header_structured_lines(htype) for htype in ["ALT", "INFO", "FILTER", "FORMAT"]
     }
+
     # info_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'INFOattributes.tsv'))  # needed to generate custom strings
 
     symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(os.path.join(etc_folder, 'svALTkeys.tsv'))

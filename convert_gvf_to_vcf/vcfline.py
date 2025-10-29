@@ -27,6 +27,7 @@ class VcfLine:
                  assembly_file,
                  field_lines_dictionary,
                  all_possible_lines_dictionary):
+        print(all_possible_lines_dictionary)
         self.vcf_value, self.info_string, self.format_dict = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, field_lines_dictionary, all_possible_lines_dictionary)
         # ATTRIBUTES
         self.assembly = assembly_file
