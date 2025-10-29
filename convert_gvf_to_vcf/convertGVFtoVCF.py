@@ -20,15 +20,16 @@ def generate_vcf_header_structured_lines(header_type):
     if header_type == 'ALT':
         prefix["reserved"] = False
     if prefix["reserved"]:
-        reserved_key = read_file("reserved", header_type)
-        for r_key in reserved_key:
-            key_id = reserved_key[r_key][0]
-            number = reserved_key[r_key][1]
-            type_for_key = reserved_key[r_key][2]
-            description = reserved_key[r_key][3]
-            reserved_string = (f'##{header_type}='
-                               f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
-            all_possible_lines[key_id] = reserved_string
+        if header_type is not "INFO":
+            reserved_key = read_file("reserved", header_type)
+            for r_key in reserved_key:
+                key_id = reserved_key[r_key][0]
+                number = reserved_key[r_key][1]
+                type_for_key = reserved_key[r_key][2]
+                description = reserved_key[r_key][3]
+                reserved_string = (f'##{header_type}='
+                                   f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
+                all_possible_lines[key_id] = reserved_string
     if prefix['sv']:
         sv_key = read_file("sv", header_type)
         for s_key in sv_key:
