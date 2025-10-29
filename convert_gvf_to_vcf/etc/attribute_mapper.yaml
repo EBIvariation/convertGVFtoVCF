@@ -1,0 +1,71 @@
+allele_count:
+    INFO:
+        FieldKey: AC
+        Number: A
+        Type: Integer
+        Description: "Allele count in genotypes, for each ALT allele, in the same order as listed"
+allele_frequency:
+    INFO:
+        FieldKey: AF
+        Number: A
+        Type: Float
+        Description: "Allele frequency for each ALT allele in the same order as listed (estimated from primary data, not called genotypes)"
+ciend:
+    INFO:
+        FieldKey: CIEND
+        Number: .
+        Type: Integer
+        Description: "Confidence interval around END for symbolic structural variants"
+copy_number:
+    INFO:
+        FieldKey: CN
+        Number: A
+        Type: Float
+        Description: "Copy number of CNV/breakpoint"
+mate_id:
+    INFO:
+        FieldKey: MATEID
+        Number: A
+        Type: String
+        Description: "ID of mate breakend"
+Total_reads:
+    INFO:
+        FieldKey: DP
+        Number: 1
+        Type: Integer
+        Description: "Combined depth across samples"
+Variant_freq:
+    INFO:
+        FieldKey: AF
+        Number: A
+        Type: Float
+        Description: "Allele frequency for each ALT allele in the same order as listed (estimated from primary data, not called genotypes)"
+Genotype:
+    FORMAT:
+        FieldKey: GT
+        Number: 1
+        Type: String
+        Description: "Genotype"
+Zygosity:
+    FORMAT:
+        FieldKey: GT
+        Number: 1
+        Type: String
+        Description: "Zygosity"
+Phased:
+    FORMAT:
+        FieldKey: PS
+        Number: 1
+        Type: Integer
+        Description: "Phase set"
+Variant_reads:
+    INFO:
+        FieldKey: AD
+        Number: R
+        Type: Integer
+        Description: "Total read depth for each allele"
+    FORMAT:
+        FieldKey: AD
+        Number: R
+        Type: Integer
+        Description: "Read depth for each allele"
