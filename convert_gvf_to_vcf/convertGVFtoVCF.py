@@ -21,7 +21,7 @@ def generate_vcf_header_structured_lines(header_type):
     if header_type == 'ALT':
         prefix["reserved"] = False
     if prefix["reserved"]:
-        if header_type is not "INFO":
+        if header_type != "INFO" and header_type != "FORMAT":
             reserved_key = read_file("reserved", header_type)
             for r_key in reserved_key:
                 key_id = reserved_key[r_key][0]
@@ -34,17 +34,19 @@ def generate_vcf_header_structured_lines(header_type):
         else:
             #TODO
             mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml'))  # formerly attributes_mapper and INFOattributes
+
             for attribute in mapping_attribute_dict:
-                for keys in mapping_attribute_dict[attribute].keys():
-                    key_id = mapping_attribute_dict[attribute][keys]["FieldKey"]
-                    number = mapping_attribute_dict[attribute][keys]["Number"]
-                    type_for_key = mapping_attribute_dict[attribute][keys]["Type"]
-                    description = mapping_attribute_dict[attribute][keys]["Description"]
+                keys = list(mapping_attribute_dict[attribute].keys())
+                for key in keys:
+                    key_id = mapping_attribute_dict[attribute][key]["FieldKey"]
+                    number = mapping_attribute_dict[attribute][key]["Number"]
+                    type_for_key = mapping_attribute_dict[attribute][key]["Type"]
+                    description = mapping_attribute_dict[attribute][key]["Description"]
                     header_string = (f'##{header_type}='
-                                       f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
+                                           f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
                     all_possible_lines[key_id] = header_string
     if prefix['sv']:
-        if header_type is not "INFO":
+        if header_type != "INFO":
             sv_key = read_file("sv", header_type)
             for s_key in sv_key:
                 sv_key_id = sv_key[s_key][0]

@@ -19,8 +19,20 @@ allele_depth_forward:
         Type: Integer
         Description: "Read depth for each allele on the forward strand"
         From: ReservedVCF
+    FORMAT:
+        FieldKey: ADF
+        Number: R
+        Type: Integer
+        Description: "Read depth for each allele on the forward strand"
+        From: ReservedVCF
 allele_depth_reverse:
     INFO:
+        FieldKey: ADR
+        Number: R
+        Type: Integer
+        Description: "Read depth for each allele on the reverse strand"
+        From: ReservedVCF
+    FORMAT:
         FieldKey: ADR
         Number: R
         Type: Integer
@@ -145,6 +157,12 @@ Total_reads:
         Type: Integer
         Description: "Combined depth across samples"
         From: [DGVa, ReservedVCF]
+    FORMAT:
+        FieldKey: DP
+        Number: 1
+        Type: Integer
+        Description: "Read depth"
+        From: [ DGVa, ReservedVCF ]
 end:
     INFO:
         FieldKey: END
@@ -166,6 +184,48 @@ event_type:
         Type: String
         Description: "Type of associated event"
         From: SVVCF
+expected_count:
+    FORMAT:
+        FieldKey: EC
+        Number: A
+        Type: Integer
+        Description: "Expected alternate allele counts"
+        From: ReservedVCF
+filter_called:
+    FORMAT:
+        FieldKey: FT
+        Number: 1
+        Type: String
+        Description: "Filter indicating if this genotype was 'called'"
+        From: ReservedVCF
+genotype_likelihoods:
+    FORMAT:
+        FieldKey: GL
+        Number: G
+        Type: Float
+        Description: "Genotype likelihoods"
+        From: ReservedVCF
+genotype_probabilities:
+    FORMAT:
+        FieldKey: GP
+        Number: G
+        Type: Float
+        Description: "Genotype posterior probabilities"
+        From: ReservedVCF
+genotype_quality:
+    FORMAT:
+        FieldKey: GQ
+        Number: 1
+        Type: Integer
+        Description: "Conditional genotype quality"
+        From: ReservedVCF
+haplotype_quality:
+    FORMAT:
+        FieldKey: HQ
+        Number: 2
+        Type: Integer
+        Description: "Haplotype quality"
+        From: ReservedVCF
 hapmap2:
     INFO:
         FieldKey: H2
@@ -206,6 +266,12 @@ mapping_quality:
         FieldKey: MQ
         Number: 1
         Type: Float
+        Description: "RMS mapping quality"
+        From: ReservedVCF
+    FORMAT:
+        FieldKey: MQ
+        Number: 1
+        Type: Integer
         Description: "RMS mapping quality"
         From: ReservedVCF
 mapping_quality_zero:
@@ -257,6 +323,27 @@ parid:
         Type: String
         Description: "ID of partner breakend"
         From: SVVCF
+phred_likelihoods:
+    FORMAT:
+        FieldKey: PL
+        Number: G
+        Type: Integer
+        Description: "Phred-scaled genotype likelihoods rounded to the closest integer"
+        From: ReservedVCF
+phred_probabilities:
+    FORMAT:
+        FieldKey: PP
+        Number: G
+        Type: Integer
+        Description: "Phred-scaled genotype posterior probabilities rounded to the closest integer"
+        From: ReservedVCF
+phasing_quality:
+    FORMAT:
+        FieldKey: PQ
+        Number: 1
+        Type: Integer
+        Description: "Phasing quality"
+        From: ReservedVCF
 repeat_number:
     INFO:
         FieldKey: RN
