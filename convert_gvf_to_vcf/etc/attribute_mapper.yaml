@@ -1,3 +1,18 @@
+# Below is an example format
+# name: (this can be the name of gvf_attribute or if unavailable, a general name)
+#   FIELD: (INFO/FORMAT)
+#       FieldKey: Initials
+#       Number: Values for Field tag (codes available: A, R, G, ., 1, 0, n)
+#       Type: Data type
+#       Description: explanation
+#       From: where this came from, VCF specification (Reserved, SV), or GVF specification or DGVa
+ancestral_haplotype:
+    FORMAT:
+        FieldKey: AHAP
+        Number: 1
+        Type: Integer
+        Description: "Unique identifier of ancestral haplotype"
+        From: SVVCF
 allele_ancestral:
     INFO:
         FieldKey: AA
@@ -73,6 +88,12 @@ cicn:
         Type: Float
         Description: "Confidence interval around copy number"
         From: SVVCF
+    FORMAT:
+        FieldKey: CICN
+        Number: 2
+        Type: Float
+        Description: "Confidence interval around copy number"
+        From: SVVCF
 ciend:
     INFO:
         FieldKey: CIEND
@@ -121,6 +142,33 @@ copy_number:
         Number: A
         Type: Float
         Description: "Copy number of CNV/breakpoint"
+        From: SVVCF
+    FORMAT:
+        FieldKey: CN
+        Number: 1
+        Type: Float
+        Description: "CopyNumber"
+        From: SVVCF
+copy_number_likelihood:
+    FORMAT:
+        FieldKey: CNL
+        Number: G
+        Type: Float
+        Description: "Copy number genotype likelihood"
+        From: SVVCF
+copy_number_probability:
+    FORMAT:
+        FieldKey: CNP
+        Number: G
+        Type: Float
+        Description: "Copy number posterior probabilities"
+        From: SVVCF
+copy_number_quality:
+    FORMAT:
+        FieldKey: CNQ
+        Number: 1
+        Type: Float
+        Description: "Copy number genotype quality"
         From: SVVCF
 dbsnp:
     INFO:
@@ -219,6 +267,13 @@ genotype_quality:
         Type: Integer
         Description: "Conditional genotype quality"
         From: ReservedVCF
+haplotype_identifier:
+    FORMAT:
+        FieldKey: HAP
+        Number: 1
+        Type: Integer
+        Description: "Unique haplotype identifier"
+        From: SVVCF
 haplotype_quality:
     FORMAT:
         FieldKey: HQ
@@ -308,6 +363,13 @@ novel:
         Number: 0
         Type: Flag
         Description: "Indicates a novel structural variation"
+        From: SVVCF
+novel_phred_score:
+    FORMAT:
+        FieldKey: NQ
+        Number: 1
+        Type: Integer
+        Description: "Phred style probability score that the variant is novel"
         From: SVVCF
 number_samples:
     INFO:

@@ -32,7 +32,6 @@ def generate_vcf_header_structured_lines(header_type):
                                    f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
                 all_possible_lines[key_id] = reserved_string
         else:
-            #TODO
             mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml'))  # formerly attributes_mapper and INFOattributes
 
             for attribute in mapping_attribute_dict:
@@ -46,7 +45,7 @@ def generate_vcf_header_structured_lines(header_type):
                                            f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
                     all_possible_lines[key_id] = header_string
     if prefix['sv']:
-        if header_type != "INFO":
+        if header_type != "INFO" and header_type != "FORMAT":
             sv_key = read_file("sv", header_type)
             for s_key in sv_key:
                 sv_key_id = sv_key[s_key][0]
