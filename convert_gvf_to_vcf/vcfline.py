@@ -178,8 +178,8 @@ class VcfLine:
         all_possible_alt_lines = all_possible_lines_dictionary["ALT"]
         all_possible_info_lines = all_possible_lines_dictionary["INFO"]
 
-        if symbolic_allele_id in all_possible_alt_lines:
-            lines_standard_alt.append(all_possible_alt_lines[symbolic_allele_id])
+        if self.so_type in all_possible_alt_lines:
+            lines_standard_alt.append(all_possible_alt_lines[self.so_type])
 
         info_svlen = None
         if self.length:
@@ -218,7 +218,8 @@ class VcfLine:
             elif symbolic_allele == "<*>":
                 info_end = "END=" + str(self.pos + len(self.ref))
             else:
-                "Cannot identify symbolic allele"
+                print("Cannot identify symbolic allele")
+
         # for all variants (precise and imprecise)
         self.info.append(info_end)
         lines_standard_info.append(all_possible_info_lines["END"])

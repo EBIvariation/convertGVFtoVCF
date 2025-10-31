@@ -2,55 +2,41 @@ import argparse
 import os
 
 
-from convert_gvf_to_vcf.utils import read_file, read_info_attributes, read_pragma_mapper, \
-                                      read_sequence_ontology_symbolic_allele, read_in_gvf_file, \
-                                    read_yaml
+from convert_gvf_to_vcf.utils import read_pragma_mapper, \
+    read_in_gvf_file, \
+    read_yaml, read_mapping_dictionary
 from convert_gvf_to_vcf.vcfline import VcfLine
 
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
-def generate_vcf_header_structured_lines(header_type):
+def generate_vcf_header_structured_lines(header_type, mapping_attribute_dict):
     """ Generates a dictionary of all possible standard structured lines for INFO/FILTER/FORMAT/ALT
     :param header_type: type of header file to read i.e. ALT, FILTER, INFO or FORMAT
+    :param mapping_attribute_dict: dictionary of all attributes
     :return: dictionary of all possible standard structured lines keys for the header type
     """
     all_possible_lines = {}
-    prefix = {"reserved": True, "sv": True}
-    if header_type == 'ALT':
-        prefix["reserved"] = False
-    if prefix["reserved"]:
-        if header_type != "INFO" and header_type != "FORMAT":
-            reserved_key = read_file("reserved", header_type)
-            for r_key in reserved_key:
-                key_id = reserved_key[r_key][0]
-                number = reserved_key[r_key][1]
-                type_for_key = reserved_key[r_key][2]
-                description = reserved_key[r_key][3]
-                reserved_string = (f'##{header_type}='
-                                   f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
-                all_possible_lines[key_id] = reserved_string
-        else:
-            mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml'))  # formerly attributes_mapper and INFOattributes
 
-            for attribute in mapping_attribute_dict:
-                keys = list(mapping_attribute_dict[attribute].keys())
-                for key in keys:
-                    key_id = mapping_attribute_dict[attribute][key]["FieldKey"]
-                    number = mapping_attribute_dict[attribute][key]["Number"]
-                    type_for_key = mapping_attribute_dict[attribute][key]["Type"]
-                    description = mapping_attribute_dict[attribute][key]["Description"]
-                    header_string = (f'##{header_type}='
-                                           f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
-                    all_possible_lines[key_id] = header_string
-    if prefix['sv']:
-        if header_type != "INFO" and header_type != "FORMAT":
-            sv_key = read_file("sv", header_type)
-            for s_key in sv_key:
-                sv_key_id = sv_key[s_key][0]
-                sv_line = sv_key[s_key][1]
-                all_possible_lines[sv_key_id] = sv_line
+    for attribute in mapping_attribute_dict:
+        if mapping_attribute_dict[attribute].get(header_type) is not None and header_type != "ALT":
+            key_id = mapping_attribute_dict[attribute][header_type]["FieldKey"]
+            number = mapping_attribute_dict[attribute][header_type]["Number"]
+            type_for_key = mapping_attribute_dict[attribute][header_type]["Type"]
+            description = mapping_attribute_dict[attribute][header_type]["Description"]
+            header_string = (f'##{header_type}='
+                             f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
+            all_possible_lines[key_id] = header_string
+        elif mapping_attribute_dict[attribute].get(header_type) is not None and header_type == "ALT":
+            key_id = mapping_attribute_dict[attribute][header_type]["FieldKey"]
+            description = mapping_attribute_dict[attribute][header_type]["Description"]
+            header_string = (f'##{header_type}='
+                                 f'<ID={key_id},Description="{description}">')
+            all_possible_lines[key_id] = header_string
+        else:
+            pass
+    # print(all_possible_lines)
     return all_possible_lines
 
 def generate_custom_unstructured_meta_line(vcf_unstructured_key,
@@ -185,10 +171,12 @@ def generate_vcf_header_line(samples):
     return vcf_header
 
 def gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                assembly_file):
+                                assembly_file, mapping_attribute_dict, symbolic_allele_dictionary):
     """ Creates VCF objects from GVF feature lines and stores the VCF objects.
     :param gvf_lines_obj_list: list of GVF feature line objects
     :param assembly_file: FASTA file to assembly
+    :param mapping_attribute_dict: dictionary of attributes
+    :param symbolic_allele_dictionary: symbolic_allele_dictionary
     :return: header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects: dictionary of lists and a list of VCF objects
     """
     vcf_data_lines = {}  # DICTIONARY OF LISTS
@@ -201,12 +189,8 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
         "FORMAT": [],
     }
     all_header_lines_per_type_dict = {
-        htype: generate_vcf_header_structured_lines(htype) for htype in ["ALT", "INFO", "FILTER", "FORMAT"]
+        htype: generate_vcf_header_structured_lines(htype, mapping_attribute_dict) for htype in ["ALT", "INFO", "FILTER", "FORMAT"]
     }
-
-    # info_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'INFOattributes.tsv'))  # needed to generate custom strings
-
-    symbolic_allele_dictionary = read_sequence_ontology_symbolic_allele(os.path.join(etc_folder, 'svALTkeys.tsv'))
 
     # create a vcf object for every feature line in the GVF (1:1)
     # add the newly created vcf object to the vcf data line it belongs to
@@ -258,7 +242,7 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
     for vcf_obj in list_of_vcf_objects:
         sample_name_dict_format_kv = vcf_obj.format_dict
         sample_format_values_string = format_sample_values(sample_name_dict_format_kv, list_of_sample_names)
-        vcf_info_string = ";".join(vcf_obj.info)
+        vcf_info_string = ";".join([inf for inf in vcf_obj.info if inf is not None])
         vcf_line = (f"{vcf_obj.chrom}\t"
                         f"{vcf_obj.pos}\t"
                         f"{vcf_obj.id}\t"
@@ -292,12 +276,19 @@ def main():
     # custom meta-information lines for this VCF file
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
 
+    mapping_attribute_dict = read_yaml(
+        os.path.join(etc_folder, 'attribute_mapper.yaml'))  # formerly attributes_mapper and INFOattributes
+
+    symbolic_allele_dictionary = read_mapping_dictionary(mapping_attribute_dict)
+
     (
         header_standard_lines_dictionary,
         vcf_data_lines,
         list_of_vcf_objects
-    ) = gvf_features_to_vcf_objects(gvf_lines_obj_list, assembly_file)
+    ) = gvf_features_to_vcf_objects(gvf_lines_obj_list, assembly_file, mapping_attribute_dict, symbolic_allele_dictionary)
 
+    # print("header_standard_lines_dictionary", header_standard_lines_dictionary)
+    # TODO: resolve empty ALT dictionary
 
     print("Writing to the following VCF output: ", args.vcf_output)
     print("Generating the VCF header and the meta-information lines")

@@ -1,11 +1,12 @@
 # Below is an example format
 # name: (this can be the name of gvf_attribute or if unavailable, a general name)
-#   FIELD: (INFO/FORMAT)
+#   FIELD: (INFO/FORMAT/ALT)
 #       FieldKey: Initials
-#       Number: Values for Field tag (codes available: A, R, G, ., 1, 0, n)
-#       Type: Data type
+#       Number: [INFO/FORMAT]Values for Field tag (codes available: A, R, G, ., 1, 0, n)
+#       Type: [INFO/FORMAT] Data type
 #       Description: explanation
 #       From: where this came from, VCF specification (Reserved, SV), or GVF specification or DGVa
+#       SOID: [ALT]if applicable, the sequence ontology ID
 ancestral_haplotype:
     FORMAT:
         FieldKey: AHAP
@@ -67,6 +68,18 @@ allele_number:
         Type: Integer
         Description: "Total number of alleles in called genotypes"
         From: [DGVa, ReservedVCF]
+alu_deletion:
+    ALT:
+        FieldKey: DEL:ME:ALU
+        Description: "Alu deletion"
+        From: SVVCF
+        SOID: SO:0002070
+alu_insertion:
+    ALT:
+        FieldKey: INS
+        Description: "Alu insertion"
+        From: SVVCF
+        SOID: SO:0002063
 base_quality:
     INFO:
         FieldKey: BQ
@@ -136,6 +149,18 @@ cigar_string:
         Type: String
         Description: "Cigar string describing how to align an alternate allele to the reference allele"
         From: ReservedVCF
+complex_structural_alteration:
+    ALT:
+        FieldKey: None
+        Description: "complex_structural_alteration"
+        From: SVVCF
+        SOID: SO:0001784
+complex_substitution:
+    ALT:
+        FieldKey: None
+        Description: "Complex substituition"
+        From: SVVCF
+        SOID: SO:1000005
 copy_number:
     INFO:
         FieldKey: CN
@@ -149,6 +174,18 @@ copy_number:
         Type: Float
         Description: "CopyNumber"
         From: SVVCF
+copy_number_gain:
+    ALT:
+        FieldKey: DUP
+        Description: "Duplication"
+        From: SVVCF
+        SOID: SO:0001742
+copy_number_loss:
+    ALT:
+        FieldKey: DEL
+        Description: "Deletion"
+        From: SVVCF
+        SOID: SO:0001743
 copy_number_likelihood:
     FORMAT:
         FieldKey: CNL
@@ -170,6 +207,12 @@ copy_number_quality:
         Type: Float
         Description: "Copy number genotype quality"
         From: SVVCF
+copy_number_variation:
+    ALT:
+        FieldKey: CNV
+        Description: "Copy number variable region"
+        From: SVVCF
+        SOID: SO:0001019
 dbsnp:
     INFO:
         FieldKey: DB
@@ -191,6 +234,18 @@ dbvarid:
         Type: String
         Description: "ID of this element in DBVAR"
         From: SVVCF
+deletion:
+    ALT:
+        FieldKey: DEL
+        Description: "Deletion"
+        From: SVVCF
+        SOID: SO:0000159
+delins:
+    ALT:
+        FieldKey: None
+        Description: "Deletion-Insertion"
+        From: SVVCF
+        SOID: SO:1000032
 dgvid:
     INFO:
         FieldKey: DGVID
@@ -198,6 +253,12 @@ dgvid:
         Type: String
         Description: "ID of this element in Database of Genomic Variation"
         From: SVVCF
+duplication:
+    ALT:
+        FieldKey: DUP
+        Description: "Duplication"
+        From: SVVCF
+        SOID: SO:1000035
 Total_reads:
     INFO:
         FieldKey: DP
@@ -309,6 +370,30 @@ homseq:
         Type: String
         Description: "Sequence of base pair identical micro-homology at breakpoints"
         From: SVVCF
+insertion:
+    ALT:
+        FieldKey: INS
+        Description: "Insertion"
+        From: SVVCF
+        SOID: SO:0000667
+intrachromosomal_translocation:
+    ALT:
+        FieldKey: BND
+        Description: "Intrachromosomal translocation"
+        From: SVVCF
+        SOID: SO:0002061
+interchromosomal_translocation:
+    ALT:
+        FieldKey: BND
+        Description: "Interchromosomal translocation"
+        From: SVVCF
+        SOID: SO:0002060
+inversion:
+    ALT:
+        FieldKey: INV
+        Description: "Inversion"
+        From: SVVCF
+        SOID: SO:1000036
 imprecise:
     INFO:
         FieldKey: IMPRECISE
@@ -316,6 +401,18 @@ imprecise:
         Type: Flag
         Description: "Imprecise structural variation"
         From: SVVCF
+line1_deletion:
+    ALT:
+        FieldKey: DEL:ME:LINE1
+        Description: "LINE1 deletion"
+        From: SVVCF
+        SOID: SO:0002069
+line1_insertion:
+    ALT:
+        FieldKey: INS:ME:LINE1
+        Description: "LINE1 Insertion"
+        From: SVVCF
+        SOID: SO:0002064
 mapping_quality:
     INFO:
         FieldKey: MQ
@@ -357,6 +454,12 @@ metrans:
         Type: String
         Description: "Mobile element transduction info of the form CHR,START,END,POLARITY"
         From: SVVCF
+mobile_element_insertion:
+    ALT:
+        FieldKey: INS:ME
+        Description: "Mobile element insertion"
+        From: SVVCF
+        SOID: SO:0001837
 novel:
     INFO:
         FieldKey: NOVEL
@@ -371,6 +474,12 @@ novel_phred_score:
         Type: Integer
         Description: "Phred style probability score that the variant is novel"
         From: SVVCF
+novel_sequence_insertion:
+    ALT:
+        FieldKey: INS
+        Description: "Novel sequence insertion"
+        From: SVVCF
+        SOID: SO:0001838
 number_samples:
     INFO:
         FieldKey: NS
@@ -448,6 +557,12 @@ repeat_base_indiv:
         Type: Integer
         Description: "Number of bases in each individual repeat unit"
         From: SVVCF
+short_tandem_repeat_variation:
+    ALT:
+        FieldKey: CNV:TR
+        Description: "Tandem repeat determined based on DNA abundance"
+        From: SVVCF
+        SOID: SO:0002096
 strand_bias:
     INFO:
         FieldKey: SB
@@ -462,6 +577,12 @@ somatic:
         Type: Flag
         Description: "Somatic mutation (for cancer genomics)"
         From: ReservedVCF
+sva_insertion:
+    ALT:
+        FieldKey: INS:ME:SVA
+        Description: "SVA insertion"
+        From: SVVCF
+        SOID: SO:0002065
 svclaim:
     INFO:
         FieldKey: SVCLAIM
@@ -483,7 +604,6 @@ svtype:
         Type: String
         Description: "Type of structural variant"
         From: SVVCF
-
 validated:
     INFO:
         FieldKey: VALIDATED
@@ -491,6 +611,12 @@ validated:
         Type: Flag
         Description: "Validated by follow-up experiment"
         From: ReservedVCF
+tandem_duplication:
+    ALT:
+        FieldKey: DUP:TANDEM
+        Description: "Tandem duplication"
+        SOID: SO:1000173
+        From: SVVCF
 thousand_genomes:
     INFO:
         FieldKey: 1000G
@@ -498,6 +624,12 @@ thousand_genomes:
         Type: Flag
         Description: "1000 Genomes membership"
         From: ReservedVCF
+sequence_alteration:
+    ALT:
+        FieldKey: None
+        Description: "Sequence alteration"
+        From: SVVCF
+        SOID: SO:0001059
 Variant_freq:
     INFO:
         FieldKey: AF
