@@ -178,8 +178,8 @@ class VcfLine:
         all_possible_alt_lines = all_possible_lines_dictionary["ALT"]
         all_possible_info_lines = all_possible_lines_dictionary["INFO"]
 
-        if self.so_type in all_possible_alt_lines:
-            lines_standard_alt.append(all_possible_alt_lines[self.so_type])
+        if symbolic_allele_id in all_possible_alt_lines:
+            lines_standard_alt.append(all_possible_alt_lines[symbolic_allele_id])
 
         info_svlen = None
         if self.length:
@@ -234,6 +234,8 @@ class VcfLine:
             lines_standard_info.append(all_possible_info_lines["CIPOS"])
             self.info.append(info_ciend)
             lines_standard_info.append(all_possible_info_lines["CIEND"])
+        print("lines_standard_alt]", lines_standard_alt)
+        print("lines_standard_info", lines_standard_info)
         return symbolic_allele, self.info, lines_standard_alt, lines_standard_info
 
     def get_alt(self, field_lines_dictionary, all_possible_lines_dictionary):

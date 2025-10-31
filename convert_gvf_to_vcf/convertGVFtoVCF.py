@@ -31,9 +31,11 @@ def generate_vcf_header_structured_lines(header_type, mapping_attribute_dict):
         elif mapping_attribute_dict[attribute].get(header_type) is not None and header_type == "ALT":
             key_id = mapping_attribute_dict[attribute][header_type]["FieldKey"]
             description = mapping_attribute_dict[attribute][header_type]["Description"]
-            header_string = (f'##{header_type}='
-                                 f'<ID={key_id},Description="{description}">')
-            all_possible_lines[key_id] = header_string
+            if key_id is not None:
+                header_string = (f'##{header_type}='
+                                     f'<ID={key_id},Description="{description}">')
+                all_possible_lines[key_id] = header_string
+                print("string: ",header_string)
         else:
             pass
     # print(all_possible_lines)
@@ -156,6 +158,7 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
     unique_filter_lines_to_add = list(dict.fromkeys(filter_line for filter_line in standard_lines_dictionary["FILTER"] if filter_line not in unique_filter_lines_to_add))
     unique_format_lines_to_add = list(dict.fromkeys(format_line for format_line in standard_lines_dictionary["FORMAT"] if format_line not in unique_format_lines_to_add))
 
+
     return unique_pragmas_to_add, sample_names, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add
 
 # step 10
@@ -191,7 +194,8 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     all_header_lines_per_type_dict = {
         htype: generate_vcf_header_structured_lines(htype, mapping_attribute_dict) for htype in ["ALT", "INFO", "FILTER", "FORMAT"]
     }
-
+    print("header_standard_lines_dictionary", header_standard_lines_dictionary)
+    print("all_header_lines_per_type_dict", all_header_lines_per_type_dict)
     # create a vcf object for every feature line in the GVF (1:1)
     # add the newly created vcf object to the vcf data line it belongs to
     # (1:many; key=chrom_pos; 1 key: many vcf objects)
@@ -287,7 +291,7 @@ def main():
         list_of_vcf_objects
     ) = gvf_features_to_vcf_objects(gvf_lines_obj_list, assembly_file, mapping_attribute_dict, symbolic_allele_dictionary)
 
-    # print("header_standard_lines_dictionary", header_standard_lines_dictionary)
+
     # TODO: resolve empty ALT dictionary
 
     print("Writing to the following VCF output: ", args.vcf_output)
