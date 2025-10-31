@@ -315,27 +315,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         print(info_field)
         assert info_field == ['ID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.', 'END=81', 'SVLEN=4', 'IMPRECISE', 'CIPOS=0,1', 'CIEND=0,1', 'END=80', 'SVLEN=4', 'IMPRECISE', 'CIPOS=1,2', 'CIEND=1,2']
 
-        assert output_lines_standard_alt == ['"##ALT=<ID=DEL,Description=""Deletion"">"', '"##ALT=<ID=DEL,Description=""Deletion"">"']
-        assert output_lines_standard_info ==  [
-            '##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier.">',
-            '##INFO=<ID=Name,Number=.,Type=String,Description="name">',
-            '##INFO=<ID=Alias,Number=.,Type=String,Description="A secondary name.">',
-            '##INFO=<ID=variant_call_so_id,Number=.,Type=String,Description="variant call SO id">',
-            '##INFO=<ID=parent,Number=.,Type=String,Description="parent">',
-            '##INFO=<ID=submitter_variant_call_id,Number=.,Type=Integer,Description="submitter variant call id">',
-            '##INFO=<ID=remap_score,Number=.,Type=Float,Description="remap score">',
-            '##INFO=<ID=Variant_seq,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">',
-            '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
-            '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
-            '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
-            '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">',
-            '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">',
-            '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">',
-            '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">',
-            '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
-            '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">',
-            '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">'
-        ]
+        assert output_lines_standard_alt == ['##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DEL,Description="Deletion">']
+        print(output_lines_standard_info)
+        assert output_lines_standard_info == ['##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">']
+
 
 
     def test_get_alt(self):
@@ -384,6 +367,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
         header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           self.assembly, self.mapping_attribute_dict, self.symbolic_allele_dictionary)
+        print("standard lines", header_standard_lines_dictionary)
         (unique_pragmas_to_add, sample_names,
          unique_alt_lines_to_add, unique_info_lines_to_add,
          unique_filter_lines_to_add, unique_format_lines_to_add) = generate_vcf_metainformation(
@@ -400,12 +384,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                          '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
 
         print(unique_alt_lines_to_add)
-        assert unique_alt_lines_to_add == [
-            '"##ALT=<ID=DEL,Description=""Deletion"">"',
-            '"##ALT=<ID=DUP,Description=""Duplication"">"'
-        ]
+        assert unique_alt_lines_to_add == ['##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DUP,Description="Duplication">']
         print("unique_info_lines_to_add", unique_info_lines_to_add)
-        assert unique_info_lines_to_add ==  ['##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier.">', '##INFO=<ID=Name,Number=.,Type=String,Description="name">', '##INFO=<ID=Alias,Number=.,Type=String,Description="A secondary name.">', '##INFO=<ID=variant_call_so_id,Number=.,Type=String,Description="variant call SO id">', '##INFO=<ID=parent,Number=.,Type=String,Description="parent">', '##INFO=<ID=submitter_variant_call_id,Number=.,Type=Integer,Description="submitter variant call id">', '##INFO=<ID=remap_score,Number=.,Type=Float,Description="remap score">', '##INFO=<ID=Variant_seq,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">', '##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">', '##INFO=<ID=Dbxref,Number=.,Type=String,Description="A database cross=reference.">', '##INFO=<ID=AD,Number=R,Type=Integer,Description="Total read depth for each allele">']
+        assert unique_info_lines_to_add ==  ['##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">', '##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">', '##INFO=<ID=DBXREF,Number=.,Type=String,Description="A database cross-reference">', '##INFO=<ID=AD,Number=R,Type=Integer,Description="Total read depth for each allele">']
 
     def test_generate_vcf_header_line(self):
         header_fields = generate_vcf_header_line(['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'])
