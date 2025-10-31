@@ -6,7 +6,7 @@ from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_meta
     gvf_features_to_vcf_objects, format_vcf_datalines, \
     generate_vcf_metainformation, generate_vcf_header_structured_lines,  \
     generate_vcf_header_line,  \
-    format_sample_values, read_yaml, read_mapping_dictionary
+    format_sample_values, read_yaml, read_pragma_mapper, read_mapping_dictionary
 
 from convert_gvf_to_vcf.vcfline import VcfLine
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
@@ -20,17 +20,22 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.etc_folder =  os.path.join(self.input_folder_parent, "etc")
         self.mapping_attribute_dict = read_yaml(
             os.path.join(self.etc_folder, 'attribute_mapper.yaml'))  # formerly attributes_mapper and INFOattributes
-
         self.etc_folder =  os.path.join(self.input_folder_parent, "etc")
         self.symbolic_allele_dictionary = read_mapping_dictionary(self.mapping_attribute_dict)
-        # self.info_attribute_input_file = os.path.join(self.input_folder_parent, "etc", "INFOattributes.tsv")
-        # self.symbolic_allele_file = os.path.join(self.input_folder_parent,"etc", 'svALTkeys2.tsv')
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
 
     def test_read_yaml(self):
         test_yaml_dictionary = read_yaml(os.path.join(self.etc_folder, 'attribute_mapper.yaml'))
         assert len(test_yaml_dictionary) > 0
+
+    def test_read_pragma_mapper(self):
+        pragma_to_vcf_header = read_pragma_mapper(os.path.join(self.etc_folder, 'pragma_mapper.tsv'))
+        assert len(pragma_to_vcf_header) > 0
+
+    def test_read_mapping_dictionary(self):
+        symbolic_allele_dictionary = read_mapping_dictionary(self.mapping_attribute_dict)
+        assert len(symbolic_allele_dictionary) > 0
 
     def test_read_in_gvf_file(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
@@ -45,6 +50,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # standard structured meta-information lines for this VCF file
         header_lines_for_this_vcf, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(gvf_lines_obj_list,
                                                                           assembly_file,self.mapping_attribute_dict, self.symbolic_allele_dictionary)
+        assert len(gvf_pragmas) > 1
+        assert len(gvf_non_essential) > 1
+        assert len(gvf_lines_obj_list) > 1
+        assert len(header_lines_for_this_vcf) > 1
         assert len(vcf_data_lines) > 1
         assert len(list_of_vcf_objects) > 1
 
@@ -381,9 +390,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                          '##subject=subject_name=JenMale6;subject_sex=Male', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3',
                                          '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
 
-        print(unique_alt_lines_to_add)
+
         assert unique_alt_lines_to_add == ['##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DUP,Description="Duplication">']
-        print("unique_info_lines_to_add", unique_info_lines_to_add)
         assert unique_info_lines_to_add ==  ['##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">', '##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">', '##INFO=<ID=DBXREF,Number=.,Type=String,Description="A database cross-reference">', '##INFO=<ID=AD,Number=R,Type=Integer,Description="Total read depth for each allele">']
 
     def test_generate_vcf_header_line(self):
