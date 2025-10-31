@@ -28,11 +28,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
 
-    # def test_read_file(self):
-    #     prefix = "reserved"
-    #     header_type = "FORMAT"
-    #     file_lines = read_file(prefix,header_type)
-    #     assert len(file_lines) > 1
+    def test_read_yaml(self):
+        test_yaml_dictionary = read_yaml(os.path.join(self.etc_folder, 'attribute_mapper.yaml'))
+        assert len(test_yaml_dictionary) > 0
 
     def test_read_in_gvf_file(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)

@@ -166,7 +166,7 @@ class VcfLine:
 
     def generate_symbolic_allele(self, field_lines_dictionary, all_possible_lines_dictionary):
         """ Generates the symbolic allele and stores the corresponding metainformation lines. Also determines if variant is precise or imprecise.
-        :param field_lines_dictionary: lines for ALT, INFO, etc
+        :param field_lines_dictionary: lines for ALT, INFO, etc.
         :param all_possible_lines_dictionary: all possible lines
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """

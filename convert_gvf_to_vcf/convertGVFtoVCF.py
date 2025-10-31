@@ -281,7 +281,7 @@ def main():
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
 
     mapping_attribute_dict = read_yaml(
-        os.path.join(etc_folder, 'attribute_mapper.yaml'))  # formerly attributes_mapper and INFOattributes
+        os.path.join(etc_folder, 'attribute_mapper.yaml'))  # formerly reserved or sv keys for alt,info,format,filter
 
     symbolic_allele_dictionary = read_mapping_dictionary(mapping_attribute_dict)
 
