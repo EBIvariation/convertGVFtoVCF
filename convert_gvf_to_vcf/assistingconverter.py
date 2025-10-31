@@ -1,6 +1,6 @@
 # this is an assistant converter to help convert gvf attributes
 import os
-from convert_gvf_to_vcf.utils import read_info_attributes, read_yaml
+from convert_gvf_to_vcf.utils import read_yaml
 
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
