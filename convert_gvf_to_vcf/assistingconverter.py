@@ -1,4 +1,6 @@
-# this is an assistant converter to help convert gvf attributes
+"""
+This is an assistant converter to help convert gvf attributes
+"""
 import os
 from convert_gvf_to_vcf.utils import read_yaml
 
@@ -6,12 +8,13 @@ from convert_gvf_to_vcf.utils import read_yaml
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
-def generate_custom_structured_meta_line(vcf_key, vcf_key_id, vcf_key_number, vcf_key_type, vcf_key_description,
+def generate_custom_structured_meta_line(vcf_key, vcf_key_id, vcf_key_number,
+                                         vcf_key_type, vcf_key_description,
                                          optional_extra_fields=None):
     """ Generates a custom structured meta-information line for INFO/FILTER/FORMAT/ALT
     :param vcf_key: required field INFO, FILTER, FORMAT, ALT
     :param vcf_key_id: required field for structured lines ID
-    :param vcf_key_number: The number of values that can be included or special character: A or R or G or .
+    :param vcf_key_number: Number of values included or special character: A or R or G or .
     :param vcf_key_type: Values are Integer, Float, Character, String
     :param vcf_key_description: Description
     :param optional_extra_fields: an optional field, dictionary of custom fields and their values
@@ -53,11 +56,12 @@ def get_gvf_attributes(column9_of_gvf):
 def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                                          field_lines_dictionary,
                                          all_possible_lines_dictionary):
-    """Converts GVF attributes to a dictionary that will store VCF values. Populates ALT INFO FILTER FORMAT with the correct VCF values.
+    """Converts GVF attributes to a dictionary that will store VCF values.
+    Populates ALT INFO FILTER FORMAT with the correct VCF values.
     :param column9_of_gvf: attributes column of gvf file
     :param field_lines_dictionary: dictionaries for ALT INFO FILTER and FORMAT
     :param all_possible_lines_dictionary: all possible VCF header lines
-    :return gvf_attribute_dictionary, info_string: dictionary of GVF attributes and formatted info string.
+    :return gvf_attribute_dictionary, info_string: dict of GVF attributes and formatted info string.
     """
     # this converts GVF attributes to a dictionary that will make VCF values
     # this also populates ALT INFO FILTER FORMAT with the correct VCF values.
@@ -65,9 +69,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     vcf_info_values = {} # key is info field value; value is value
     vcf_format_values = {} # key is format field value; value is value
     catching_for_review = []
-    mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml')) # formerly attributes_mapper and INFOattributes
-    # created a rough guide to attributes_for_custom_structured_metainformation in INFOattributes.tsv = this probably should be refined at a later date
-    # TODO: edit INFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
+    mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml'))
 
     for attrib_key, attrib_value in gvf_attribute_dictionary.items():
 
@@ -101,7 +103,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                 else:
                     vcf_format_values[sample_name] = {format_key: format_value}
         else:
-            print("catching these attribute keys for review at a later date", attrib_key, attrib_value)
+            print("catching attribute keys for review at a later date", attrib_key, attrib_value)
             catching_for_review.append(attrib_key)
     info_string = ''.join(f'{key}={value};' for key, value in vcf_info_values.items()).rstrip(';')
 
