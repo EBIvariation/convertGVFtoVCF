@@ -35,9 +35,12 @@ def read_pragma_mapper(pragma_mapper_file):
     return pragma_to_vcf_header
 
 def read_mapping_dictionary(mapping_dictionary):
+    """Reads in mapping dictionary and returns a symbolic allele dictionary.
+    :param mapping_dictionary: mapping dictionary
+    :return symbolic_allele_dict: stores information for a symbolic allele
+    """
     symbolic_allele_dict = {}
     for attribute in mapping_dictionary:
-        # print(mapping_attribute_dict[attribute].get(header_type))
         header_type= "ALT"
         if mapping_dictionary[attribute].get(header_type) is not None:
             if mapping_dictionary[attribute].get(header_type).get("FieldKey") is not None:

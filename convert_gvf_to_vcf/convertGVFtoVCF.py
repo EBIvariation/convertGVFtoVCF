@@ -35,7 +35,6 @@ def generate_vcf_header_structured_lines(header_type, mapping_attribute_dict):
                 header_string = (f'##{header_type}='
                                      f'<ID={key_id},Description="{description}">')
                 all_possible_lines[key_id] = header_string
-                print("string: ",header_string)
         else:
             pass
     # print(all_possible_lines)
@@ -194,8 +193,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     all_header_lines_per_type_dict = {
         htype: generate_vcf_header_structured_lines(htype, mapping_attribute_dict) for htype in ["ALT", "INFO", "FILTER", "FORMAT"]
     }
-    print("header_standard_lines_dictionary", header_standard_lines_dictionary)
-    print("all_header_lines_per_type_dict", all_header_lines_per_type_dict)
+
     # create a vcf object for every feature line in the GVF (1:1)
     # add the newly created vcf object to the vcf data line it belongs to
     # (1:many; key=chrom_pos; 1 key: many vcf objects)
