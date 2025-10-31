@@ -1,6 +1,9 @@
-# the purpose of this file is to populate for each field of a VCF line (and perform any necessary calculations to achieve this)
-from convert_gvf_to_vcf.assistingconverter import convert_gvf_attributes_to_vcf_values
+"""
+The purpose of this file is to populate for each field of a VCF line (and perform any necessary calculations to achieve this)
+"""
 from Bio import SeqIO
+from convert_gvf_to_vcf.assistingconverter import convert_gvf_attributes_to_vcf_values
+
 
 def extract_reference_allele(fasta_file, chromosome_name, position, end):
     """ Extracts the reference allele from the assembly.
@@ -22,14 +25,12 @@ def extract_reference_allele(fasta_file, chromosome_name, position, end):
 
 class VcfLine:
     def __init__(self, gvf_feature_line_object,
-                 info_attribute_dict,
                  symbolic_allele_dictionary,
                  assembly_file,
                  field_lines_dictionary,
                  all_possible_lines_dictionary):
-        # assisting_converter = Assistingconverter()
-        # self.vcf_value, self.info_string = assisting_converter.convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, info_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
-        self.vcf_value, self.info_string = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, info_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
+
+        self.vcf_value, self.info_string, self.format_dict = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, field_lines_dictionary, all_possible_lines_dictionary)
         # ATTRIBUTES
         self.assembly = assembly_file
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
@@ -38,7 +39,7 @@ class VcfLine:
         self.source = gvf_feature_line_object.source
         self.so_type = gvf_feature_line_object.feature_type #currently column 3 of gvf, but could be an attribute so perhapsVCF: INFO or FORMAT?
         self.end = int(gvf_feature_line_object.end)
-        self.phase = gvf_feature_line_object.phase # this is always a placeholder'.'
+        self.phase = gvf_feature_line_object.phase # this is always a placeholder '.'
 
         # VCF DATALINE
         self.chrom = gvf_feature_line_object.seqid
@@ -49,9 +50,8 @@ class VcfLine:
         self.filter = "." # this is always a placeholder '.'; perhaps could add s50.
 
         # INFO
-        #TODO: specific SV info keys populated from gvf_feature_line
         self.key = self.chrom + "_" + str(self.pos)
-        self.info = [] # TODO: add info field for self.info
+        self.info = []
         self.info.append(self.info_string)
         # calculated last
         self.ref = self.get_ref()
@@ -59,40 +59,13 @@ class VcfLine:
 
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
-        self.format = "pending" #TODO: set this in convertgvfattributes
-        # # each item in the list exclude_from_info has its own place in the VCF file, so not part of info
-        # exclude_from_info = ["ID", # done above
-        #                      "Variant_seq", # done above
-        #                      "Reference_Seq", # done above
-        #                      "Genotype",
-        #                      "Phased",
-        #                      "sample_name",
-        #                      "Zygosity"]
-        # for k in self.attributes.keys():
-        #     if k not in exclude_from_info:
-        #         self.info = self.info + k + "=" + str(self.attributes[k]) + ";"
-        #     elif k =="ID":
-        #         pass
-        #     elif k == "Variant_seq":
-        #         #TODO: ADD TO ALT
-        #         pass
-        #     elif k == "Reference_Seq":
-        #         # TODO: ADD TO REF
-        #         pass
-        #     elif k == "Genotype":
-        #         # TODO: ADD TO GT (FORMAT)
-        #         pass
-        #     elif k == "Phased":
-        #         # TODO: ADD TO GT
-        #         pass
-        #     elif k == "sample_name":
-        #         # ADD TO LIST: sample_name
-        #         pass
-        #     elif k == "Zygosity":
-        #         # add to format, gt flag
-        #         pass
-        #     else:
-        #         pass
+        self.format = ""
+        if self.format_dict:
+            list_of_format_keys = [format_key for format_value in self.format_dict.values() for format_key in format_value.keys()]
+            self.format = ":".join(list_of_format_keys)
+        else:
+            self.format = "." #TODO: this is temporary, when the multiple VCF lines are merged this will be filled in
+
 
     def add_padded_base(self, ref, alt, placed_before : bool):
         """ Adds padded base to REF and ALT allele
@@ -194,7 +167,7 @@ class VcfLine:
 
     def generate_symbolic_allele(self, field_lines_dictionary, all_possible_lines_dictionary):
         """ Generates the symbolic allele and stores the corresponding metainformation lines. Also determines if variant is precise or imprecise.
-        :param field_lines_dictionary: lines for ALT, INFO, etc
+        :param field_lines_dictionary: lines for ALT, INFO, etc.
         :param all_possible_lines_dictionary: all possible lines
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
@@ -246,7 +219,8 @@ class VcfLine:
             elif symbolic_allele == "<*>":
                 info_end = "END=" + str(self.pos + len(self.ref))
             else:
-                "Cannot identify symbolic allele"
+                print("Cannot identify symbolic allele")
+
         # for all variants (precise and imprecise)
         self.info.append(info_end)
         lines_standard_info.append(all_possible_info_lines["END"])

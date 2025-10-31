@@ -1,17 +1,20 @@
-# this is an assistant converter to help convert gvf attributes
+"""
+This is an assistant converter to help convert gvf attributes
+"""
 import os
-from convert_gvf_to_vcf.utils import read_info_attributes
+from convert_gvf_to_vcf.utils import read_yaml
 
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
-def generate_custom_structured_meta_line(vcf_key, vcf_key_id, vcf_key_number, vcf_key_type, vcf_key_description,
+def generate_custom_structured_meta_line(vcf_key, vcf_key_id, vcf_key_number,
+                                         vcf_key_type, vcf_key_description,
                                          optional_extra_fields=None):
     """ Generates a custom structured meta-information line for INFO/FILTER/FORMAT/ALT
     :param vcf_key: required field INFO, FILTER, FORMAT, ALT
     :param vcf_key_id: required field for structured lines ID
-    :param vcf_key_number: The number of values that can be included or special character: A or R or G or .
+    :param vcf_key_number: Number of values included or special character: A or R or G or .
     :param vcf_key_type: Values are Integer, Float, Character, String
     :param vcf_key_description: Description
     :param optional_extra_fields: an optional field, dictionary of custom fields and their values
@@ -51,57 +54,57 @@ def get_gvf_attributes(column9_of_gvf):
 
 
 def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
-                                         info_attribute_dict,
                                          field_lines_dictionary,
                                          all_possible_lines_dictionary):
-    """Converts GVF attributes to a dictionary that will store VCF values. Populates ALT INFO FILTER FORMAT with the correct VCF values.
+    """Converts GVF attributes to a dictionary that will store VCF values.
+    Populates ALT INFO FILTER FORMAT with the correct VCF values.
     :param column9_of_gvf: attributes column of gvf file
-    :param info_attribute_dict: dictionary of INFOattributes.tsv file values
     :param field_lines_dictionary: dictionaries for ALT INFO FILTER and FORMAT
     :param all_possible_lines_dictionary: all possible VCF header lines
-    :return gvf_attribute_dictionary, info_string: dictionary of GVF attributes and formatted info string.
+    :return gvf_attribute_dictionary, info_string: dict of GVF attributes and formatted info string.
     """
     # this converts GVF attributes to a dictionary that will make VCF values
     # this also populates ALT INFO FILTER FORMAT with the correct VCF values.
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_info_values = {} # key is info field value; value is value
+    vcf_format_values = {} # key is format field value; value is value
     catching_for_review = []
-    mapping_attribute_dict = read_info_attributes(os.path.join(etc_folder, 'attribute_mapper.tsv'))
+    mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml'))
 
-    # created a rough guide to attributes_for_custom_structured_metainformation in INFOattributes.tsv = this probably should be refined at a later date
-    # TODO: edit INFOattributes.tsv i.e. replace unknown placeholders '.' with the actual answer, provide a more informative description
-    # for each attribute in the DGVa GVF file,
-    # if the attributes is in the INFOattributes.tsv add to INFO dictionary
-    # else if attirbute is in attribute_mapper.tsv add to its specific dictionary (INFO/FORMAT)
-    # else if attribute is a specific case, deal with appropriately.
-    for attrib_key in gvf_attribute_dictionary:
-        # if dgva specific key, create custom INFO tag's meta information line
-        if attrib_key in info_attribute_dict:
-            # create and store header line
-            field_lines_dictionary["INFO"].append(
-                generate_custom_structured_meta_line(
-                    vcf_key="INFO", vcf_key_id=attrib_key,
-                    vcf_key_number=info_attribute_dict[attrib_key][1],
-                    vcf_key_type=info_attribute_dict[attrib_key][2],
-                    vcf_key_description=info_attribute_dict[attrib_key][3],
-                    optional_extra_fields=None)
-            )
-            # store INFO values
-            vcf_info_values[attrib_key] = gvf_attribute_dictionary[attrib_key]
-        elif attrib_key in mapping_attribute_dict:
-            # create and store header line
-            field_lines_dictionary[mapping_attribute_dict[attrib_key][1]].append(all_possible_lines_dictionary[mapping_attribute_dict[attrib_key][1]][mapping_attribute_dict[attrib_key][2]])
-            # store INFO values
-            vcf_info_values[mapping_attribute_dict[attrib_key][2]] = gvf_attribute_dictionary[attrib_key]
-        # GVF keys (not dgva specific)
-        elif attrib_key == "Phased":
-            # GT or FORMAT PS
-            pass
-        elif attrib_key == "Breakpoint_range":
-            # either custom info tag or CIPOS, CIEND, may need imprecise
-            pass
+    for attrib_key, attrib_value in gvf_attribute_dictionary.items():
+
+        if attrib_key in mapping_attribute_dict:
+            field_name_and_values = mapping_attribute_dict[attrib_key]
+            # INFO: create and store header line then store value
+            field_name = "INFO"
+            if field_name in field_name_and_values:
+                field_key = field_name_and_values[field_name]["FieldKey"]
+                field_key_number = field_name_and_values[field_name]["Number"]
+                field_key_type = field_name_and_values[field_name]["Type"]
+                field_key_desc = field_name_and_values[field_name]["Description"]
+                header = generate_custom_structured_meta_line(
+                            vcf_key=field_name, vcf_key_id=field_key,
+                            vcf_key_number=field_key_number,
+                            vcf_key_type=field_key_type,
+                            vcf_key_description=field_key_desc,
+                            optional_extra_fields=None)
+                field_lines_dictionary[field_name].append(header)
+                vcf_info_values[field_key] = gvf_attribute_dictionary[attrib_key]
+            # FORMAT: create and store header line then store value
+            field_name = "FORMAT"
+            if field_name in field_name_and_values:
+                field_key = field_name_and_values[field_name]["FieldKey"]
+                field_lines_dictionary[field_name].append(all_possible_lines_dictionary[field_name][field_key])
+                format_key = field_key
+                format_value = gvf_attribute_dictionary[attrib_key]
+                sample_name = gvf_attribute_dictionary.get("sample_name")
+                if sample_name in vcf_format_values:
+                    vcf_format_values[sample_name].update({format_key: format_value})
+                else:
+                    vcf_format_values[sample_name] = {format_key: format_value}
         else:
-            print("catching these attribute keys for review at a later date", attrib_key)
+            print("catching attribute keys for review at a later date", attrib_key, attrib_value)
             catching_for_review.append(attrib_key)
     info_string = ''.join(f'{key}={value};' for key, value in vcf_info_values.items()).rstrip(';')
-    return gvf_attribute_dictionary, info_string
+
+    return gvf_attribute_dictionary, info_string, vcf_format_values
