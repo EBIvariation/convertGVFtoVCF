@@ -7,7 +7,7 @@ from convert_gvf_to_vcf.utils import read_pragma_mapper, \
     read_in_gvf_file, \
     read_yaml, read_mapping_dictionary
 from convert_gvf_to_vcf.vcfline import VcfLine
-from convert_gvf_to_vcf.logger import logger
+from convert_gvf_to_vcf.logger import set_up_logging
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
@@ -269,20 +269,28 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
     return formatted_vcf_datalines
 
 def main():
-    logger.info("Running the GVF to VCF converter")
-    # step 1
+
     parser = argparse.ArgumentParser()
     parser.add_argument("gvf_input", help="GVF input file.")
     parser.add_argument("vcf_output", help="VCF output file.")
     parser.add_argument("-a", "--assembly", help="FASTA assembly file")
+    parser.add_argument("--log", help="Path to log file")
     args = parser.parse_args()
+
+    if args.log:
+        logger, log_path = set_up_logging(args.log)
+    else:
+        logger, log_path = set_up_logging()
+    logger.info("Running the GVF to VCF converter")
     logger.info("The provided input file is: %s", args.gvf_input)
     logger.info("The provided output file is: %s", args.vcf_output)
     if args.assembly:
         logger.info("The provided assembly file is: %s", args.assembly)
+
     assembly_file = os.path.abspath(args.assembly)
     assert os.path.isfile(assembly_file), "Assembly file does not exist"
 
+    logger.info("The log file is %s", log_path)
     # custom meta-information lines for this VCF file
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
 
