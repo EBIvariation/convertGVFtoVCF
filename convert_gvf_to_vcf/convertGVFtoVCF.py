@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 
 
@@ -6,7 +7,7 @@ from convert_gvf_to_vcf.utils import read_pragma_mapper, \
     read_in_gvf_file, \
     read_yaml, read_mapping_dictionary
 from convert_gvf_to_vcf.vcfline import VcfLine
-
+from convert_gvf_to_vcf.logger import logger
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
@@ -268,17 +269,17 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
     return formatted_vcf_datalines
 
 def main():
-    print("Running the GVF to VCF converter")
+    logger.info("Running the GVF to VCF converter")
     # step 1
     parser = argparse.ArgumentParser()
     parser.add_argument("gvf_input", help="GVF input file.")
     parser.add_argument("vcf_output", help="VCF output file.")
     parser.add_argument("-a", "--assembly", help="FASTA assembly file")
     args = parser.parse_args()
-    print("The provided input file is: ", args.gvf_input)
-    print("The provided output file is: ", args.vcf_output)
+    logger.info("The provided input file is: %s", args.gvf_input)
+    logger.info("The provided output file is: %s", args.vcf_output)
     if args.assembly:
-        print("The provided assembly file is: ", args.assembly)
+        logger.info("The provided assembly file is: %s", args.assembly)
     assembly_file = os.path.abspath(args.assembly)
     assert os.path.isfile(assembly_file), "Assembly file does not exist"
 
@@ -299,8 +300,8 @@ def main():
 
     # TODO: resolve empty ALT dictionary
 
-    print("Writing to the following VCF output: ", args.vcf_output)
-    print("Generating the VCF header and the meta-information lines")
+    logger.info("Writing to the following VCF output: %s", args.vcf_output)
+    logger.info("Generating the VCF header and the meta-information lines")
 
     with open(args.vcf_output, "w") as vcf_output:
         (
@@ -323,12 +324,12 @@ def main():
             vcf_output.write(f"{format_lines}\n")
         header_fields = generate_vcf_header_line(samples)
         vcf_output.write(f"{header_fields}\n")
-        print("Generating the VCF datalines")
+        logger.info("Generating the VCF datalines")
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
         for line in formatted_vcf_datalines:
             vcf_output.write(f"{line}\n")
     vcf_output.close()
-    print("GVF to VCF conversion complete")
+    logger.info("GVF to VCF conversion complete")
 
 
 if __name__ == "__main__":
