@@ -148,8 +148,14 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
             for sample_info in list_of_sample_information:
                 if sample_info.startswith("sample_name"):
                     sample_names.append(sample_info.split("=")[1])
-
-    print("Total number of samples in this VCF: ", len(sample_names))
+    # ensure unique sample names and preserve order
+    seen_sample_names = set()
+    uniq_sample_name = []
+    for sample in sample_names:
+        if sample not in seen_sample_names:
+            seen_sample_names.add(sample)
+            uniq_sample_name.append(sample)
+    print("Total number of samples in this VCF: ", len(uniq_sample_name))
 
     unique_pragmas_to_add = list(dict.fromkeys(pragma for pragma in pragmas_to_add if pragma not in unique_pragmas_to_add))
     unique_alt_lines_to_add = list(dict.fromkeys(alt_line for alt_line in standard_lines_dictionary["ALT"] if alt_line not in unique_alt_lines_to_add))
@@ -158,7 +164,7 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
     unique_format_lines_to_add = list(dict.fromkeys(format_line for format_line in standard_lines_dictionary["FORMAT"] if format_line not in unique_format_lines_to_add))
 
 
-    return unique_pragmas_to_add, sample_names, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add
+    return unique_pragmas_to_add, uniq_sample_name, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add
 
 # step 10
 def generate_vcf_header_line(samples):
@@ -224,8 +230,8 @@ def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     :return: sample_format_values_string: formatted string
     """
     sample_format_values_string = ""
-    uniq_sample_name = list(dict.fromkeys(list_of_sample_names))
-    for sample in uniq_sample_name:
+
+    for sample in list_of_sample_names:
         if sample in sample_name_dict_format_kv:
             format_value = sample_name_dict_format_kv[sample]
             sample_format_values_string = sample_format_values_string + ':'.join(format_value.values()) + "\t"
