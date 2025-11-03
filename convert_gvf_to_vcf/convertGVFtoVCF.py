@@ -230,14 +230,15 @@ def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     :return: sample_format_values_string: formatted string
     """
     sample_format_values_string = ""
-
+    sample_format_value_tokens = []
     for sample in list_of_sample_names:
         if sample in sample_name_dict_format_kv:
             format_value = sample_name_dict_format_kv[sample]
-            sample_format_values_string = sample_format_values_string + ':'.join(format_value.values()) + "\t"
+            sample_format_value_tokens.append(':'.join(format_value.values()))
         else:
             format_value = "." # set to missing value
-            sample_format_values_string = sample_format_values_string + format_value + "\t"
+            sample_format_value_tokens.append(format_value)
+    sample_format_values_string = '\t'.join(sample_format_value_tokens)
     return sample_format_values_string
 
 def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
