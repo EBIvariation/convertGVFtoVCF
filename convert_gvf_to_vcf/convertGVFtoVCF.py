@@ -269,7 +269,7 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
     return formatted_vcf_datalines
 
 def main():
-
+    # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("gvf_input", help="GVF input file.")
     parser.add_argument("vcf_output", help="VCF output file.")
@@ -291,12 +291,12 @@ def main():
     assert os.path.isfile(assembly_file), "Assembly file does not exist"
 
     logger.info("The log file is %s", log_path)
+
     # custom meta-information lines for this VCF file
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
-
+    # store attributes and symbolic alleles
     mapping_attribute_dict = read_yaml(
         os.path.join(etc_folder, 'attribute_mapper.yaml'))  # formerly reserved or sv keys for alt,info,format,filter
-
     symbolic_allele_dictionary = read_mapping_dictionary(mapping_attribute_dict)
 
     (
@@ -306,11 +306,8 @@ def main():
     ) = gvf_features_to_vcf_objects(gvf_lines_obj_list, assembly_file, mapping_attribute_dict, symbolic_allele_dictionary)
 
 
-    # TODO: resolve empty ALT dictionary
-
     logger.info("Writing to the following VCF output: %s", args.vcf_output)
     logger.info("Generating the VCF header and the meta-information lines")
-
     with open(args.vcf_output, "w") as vcf_output:
         (
             unique_pragmas_to_add,
