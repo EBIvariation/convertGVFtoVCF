@@ -7,7 +7,8 @@ from convert_gvf_to_vcf.utils import read_pragma_mapper, \
     read_in_gvf_file, \
     read_yaml, read_mapping_dictionary
 from convert_gvf_to_vcf.vcfline import VcfLine
-from convert_gvf_to_vcf.logger import set_up_logging
+from convert_gvf_to_vcf.logger import set_up_logging, logger
+
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
@@ -67,10 +68,10 @@ def parse_pragma(pragma_to_parse, delimiter):
             # pragma_value = ''.join(map(str, pragma_tokens[0]))
         else:
             pragma_value = None
-            print("WARNING: no value for the following pragma", pragma_to_parse)
+            logger.warning("WARNING: no value for the following pragma %s", pragma_to_parse)
         return pragma_name, pragma_value
     except ValueError:
-        print("Skipping this, can't be parsed", pragma_to_parse)
+        logger.error("Skipping this, can't be parsed %s", pragma_to_parse)
 
 def get_pragma_name_and_value(pragma_to_parse, delimiter, pragma_list, pragma_name_to_vcf_dict):
     """Get pragma name and value and its corresponding VCF header key.
@@ -156,7 +157,7 @@ def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_obj
         if sample not in seen_sample_names:
             seen_sample_names.add(sample)
             uniq_sample_name.append(sample)
-    print("Total number of samples in this VCF: ", len(uniq_sample_name))
+
 
     unique_pragmas_to_add = list(dict.fromkeys(pragma for pragma in pragmas_to_add if pragma not in unique_pragmas_to_add))
     unique_alt_lines_to_add = list(dict.fromkeys(alt_line for alt_line in standard_lines_dictionary["ALT"] if alt_line not in unique_alt_lines_to_add))
@@ -269,6 +270,7 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
     return formatted_vcf_datalines
 
 def main():
+
     # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("gvf_input", help="GVF input file.")
@@ -278,25 +280,27 @@ def main():
     args = parser.parse_args()
 
     if args.log:
-        logger, log_path = set_up_logging(args.log)
+        log_path = set_up_logging(args.log)
     else:
-        logger, log_path = set_up_logging()
+        log_path = set_up_logging()
+
     logger.info("Running the GVF to VCF converter")
     logger.info("The provided input file is: %s", args.gvf_input)
     logger.info("The provided output file is: %s", args.vcf_output)
+
     if args.assembly:
         logger.info("The provided assembly file is: %s", args.assembly)
-
     assembly_file = os.path.abspath(args.assembly)
     assert os.path.isfile(assembly_file), "Assembly file does not exist"
 
     logger.info("The log file is %s", log_path)
 
     # custom meta-information lines for this VCF file
+    logger.info("Reading in the following GVF input: " + args.gvf_input)
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
     # store attributes and symbolic alleles
-    mapping_attribute_dict = read_yaml(
-        os.path.join(etc_folder, 'attribute_mapper.yaml'))  # formerly reserved or sv keys for alt,info,format,filter
+    mapping_attribute_dict = read_yaml(os.path.join(etc_folder, "attribute_mapper.yaml"))
+    logger.info("Reading in the attributes file: " + "attribute_mapper.yaml")
     symbolic_allele_dictionary = read_mapping_dictionary(mapping_attribute_dict)
 
     (
@@ -317,6 +321,7 @@ def main():
             unique_filter_lines_to_add,
             unique_format_lines_to_add
         ) = generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
+        logger.info("Total number of samples in this VCF: %s", len(samples))
         for pragma in unique_pragmas_to_add:
             vcf_output.write(f"{pragma}\n")
         for alt_lines in unique_alt_lines_to_add:
