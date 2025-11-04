@@ -102,8 +102,8 @@ def get_pragma_tokens(pragma_value, first_delimiter, second_delimiter):
     return pragma_tokens
 
 #step 9 using custom unstructured meta-information line = generate_custom_unstructured_metainfomation_line
-def generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
-                                 standard_lines_dictionary):
+def generate_vcf_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
+                          standard_lines_dictionary):
     """ Generates a list of metainformation lines for the VCF header
     :param gvf_pragmas: list of gvf pragmas to convert
     :param gvf_non_essential: list of non-essential gvf pragmas to convert
@@ -270,7 +270,6 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
     return formatted_vcf_datalines
 
 def main():
-
     # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("gvf_input", help="GVF input file.")
@@ -285,18 +284,16 @@ def main():
         log_path = set_up_logging()
 
     logger.info("Running the GVF to VCF converter")
-    logger.info("The provided input file is: %s", args.gvf_input)
-    logger.info("The provided output file is: %s", args.vcf_output)
-
+    logger.info(f"The provided input file is: {args.gvf_input}")
+    logger.info(f"The provided output file is: {args.vcf_output}")
     if args.assembly:
-        logger.info("The provided assembly file is: %s", args.assembly)
+        logger.info(f"The provided assembly file is: {args.assembly}")
     assembly_file = os.path.abspath(args.assembly)
     assert os.path.isfile(assembly_file), "Assembly file does not exist"
-
-    logger.info("The log file is %s", log_path)
+    logger.info(f"The log file is {log_path}")
 
     # custom meta-information lines for this VCF file
-    logger.info("Reading in the following GVF input: " + args.gvf_input)
+    logger.info(f"Reading in the following GVF input: {args.gvf_input}")
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
     # store attributes and symbolic alleles
     mapping_attribute_dict = read_yaml(os.path.join(etc_folder, "attribute_mapper.yaml"))
@@ -310,7 +307,7 @@ def main():
     ) = gvf_features_to_vcf_objects(gvf_lines_obj_list, assembly_file, mapping_attribute_dict, symbolic_allele_dictionary)
 
 
-    logger.info("Writing to the following VCF output: %s", args.vcf_output)
+    logger.info(f"Writing to the following VCF output: {args.vcf_output}")
     logger.info("Generating the VCF header and the meta-information lines")
     with open(args.vcf_output, "w") as vcf_output:
         (
@@ -320,8 +317,8 @@ def main():
             unique_info_lines_to_add,
             unique_filter_lines_to_add,
             unique_format_lines_to_add
-        ) = generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
-        logger.info("Total number of samples in this VCF: %s", len(samples))
+        ) = generate_vcf_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
+        logger.info(f"Total number of samples in this VCF: {len(samples)}")
         for pragma in unique_pragmas_to_add:
             vcf_output.write(f"{pragma}\n")
         for alt_lines in unique_alt_lines_to_add:

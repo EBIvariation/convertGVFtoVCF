@@ -8,30 +8,30 @@ from convert_gvf_to_vcf.logger import logger
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
-def generate_custom_structured_meta_line(vcf_key, vcf_key_id, vcf_key_number,
-                                         vcf_key_type, vcf_key_description,
-                                         optional_extra_fields=None):
+def generate_custom_structured_meta_line(field, id, number,
+                                         data_type, description,
+                                         optional_data=None):
     """ Generates a custom structured meta-information line for INFO/FILTER/FORMAT/ALT
-    :param vcf_key: required field INFO, FILTER, FORMAT, ALT
-    :param vcf_key_id: required field for structured lines ID
-    :param vcf_key_number: Number of values included or special character: A or R or G or .
-    :param vcf_key_type: Values are Integer, Float, Character, String
-    :param vcf_key_description: Description
-    :param optional_extra_fields: an optional field, dictionary of custom fields and their values
+    :param field: required field INFO, FILTER, FORMAT, ALT
+    :param id: required field for structured lines ID
+    :param number: Number of values included or special character: A or R or G or .
+    :param data_type: Values are Integer, Float, Character, String
+    :param description: Description
+    :param optional_data: an optional field, dictionary of custom fields and their values
     :return: custom_structured_string
     """
     extra_keys_kv_lines = []
-    if optional_extra_fields:
-        for extra_field in optional_extra_fields:
-            kv_line = "," + extra_field + "=" + '"' + optional_extra_fields[extra_field] + '"'
+    if optional_data:
+        for extra_field in optional_data:
+            kv_line = "," + extra_field + "=" + '"' + optional_data[extra_field] + '"'
             extra_keys_kv_lines.append(kv_line)
-    vcf_key_extra_keys = ''.join(extra_keys_kv_lines)
-    custom_structured_string = (f'##{vcf_key}=<'
-                                f'ID={vcf_key_id},'
-                                f'Number={vcf_key_number},'
-                                f'Type={vcf_key_type},'
-                                f'Description="{vcf_key_description}"'
-                                f'{vcf_key_extra_keys}>')
+    vcf_extra_keys = ''.join(extra_keys_kv_lines)
+    custom_structured_string = (f'##{field}=<'
+                                f'ID={id},'
+                                f'Number={number},'
+                                f'Type={data_type},'
+                                f'Description="{description}"'
+                                f'{vcf_extra_keys}>')
     return custom_structured_string
 
 def get_gvf_attributes(column9_of_gvf):
@@ -65,13 +65,10 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     :param all_possible_lines_dictionary: all possible VCF header lines
     :return gvf_attribute_dictionary, info_string: dict of GVF attributes and formatted info string.
     """
-    # this converts GVF attributes to a dictionary that will make VCF values
-    # this also populates ALT INFO FILTER FORMAT with the correct VCF values.
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_info_values = {} # key is info field value; value is value
     vcf_format_values = {} # key is format field value; value is value
     catching_for_review = []
-    # mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml'))
 
     for attrib_key, attrib_value in gvf_attribute_dictionary.items():
         if attrib_key in mapping_attribute_dict:
@@ -80,12 +77,12 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             field = "INFO"
             if field in field_values:
                 header = generate_custom_structured_meta_line(
-                    vcf_key=field,
-                    vcf_key_id=field_values[field]["FieldKey"],
-                    vcf_key_number=field_values[field]["Number"],
-                    vcf_key_type=field_values[field]["Type"],
-                    vcf_key_description=field_values[field]["Description"],
-                    optional_extra_fields=None
+                    field=field,
+                    id=field_values[field]["FieldKey"],
+                    number=field_values[field]["Number"],
+                    data_type=field_values[field]["Type"],
+                    description=field_values[field]["Description"],
+                    optional_data=None
                 )
                 field_lines_dictionary[field].append(header)
                 vcf_info_values[field_values[field]["FieldKey"]] = gvf_attribute_dictionary[attrib_key]
@@ -99,7 +96,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                 else:
                     vcf_format_values[sample_name] = {field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]}
         else:
-            logger.info("catching attribute keys for review at a later date %s %s" % (attrib_key, attrib_value))
+            logger.info(f"catching attribute keys for review at a later date {attrib_key} {attrib_value}")
             catching_for_review.append(attrib_key)
     info_string = ''.join(f'{key}={value};' for key, value in vcf_info_values.items()).rstrip(';')
 
