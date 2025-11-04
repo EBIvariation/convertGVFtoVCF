@@ -74,27 +74,25 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     for attrib_key, attrib_value in gvf_attribute_dictionary.items():
 
         if attrib_key in mapping_attribute_dict:
-            field_name_and_values = mapping_attribute_dict[attrib_key]
+            field_values = mapping_attribute_dict[attrib_key]
             # INFO: create and store header line then store value
-            field_name = "INFO"
-            if field_name in field_name_and_values:
-                field_key = field_name_and_values[field_name]["FieldKey"]
-                field_key_number = field_name_and_values[field_name]["Number"]
-                field_key_type = field_name_and_values[field_name]["Type"]
-                field_key_desc = field_name_and_values[field_name]["Description"]
+            field = "INFO"
+            if field in field_values:
+                field_key = field_values[field]["FieldKey"]
                 header = generate_custom_structured_meta_line(
-                            vcf_key=field_name, vcf_key_id=field_key,
-                            vcf_key_number=field_key_number,
-                            vcf_key_type=field_key_type,
-                            vcf_key_description=field_key_desc,
-                            optional_extra_fields=None)
-                field_lines_dictionary[field_name].append(header)
+                    vcf_key=field,
+                    vcf_key_id=field_values[field]["FieldKey"],
+                    vcf_key_number=field_values[field]["Number"],
+                    vcf_key_type=field_values[field]["Type"],
+                    vcf_key_description=field_values[field]["Description"],
+                    optional_extra_fields=None)
+                field_lines_dictionary[field].append(header)
                 vcf_info_values[field_key] = gvf_attribute_dictionary[attrib_key]
             # FORMAT: create and store header line then store value
-            field_name = "FORMAT"
-            if field_name in field_name_and_values:
-                field_key = field_name_and_values[field_name]["FieldKey"]
-                field_lines_dictionary[field_name].append(all_possible_lines_dictionary[field_name][field_key])
+            field = "FORMAT"
+            if field in field_values:
+                field_key = field_values[field]["FieldKey"]
+                field_lines_dictionary[field].append(all_possible_lines_dictionary[field][field_key])
                 format_key = field_key
                 format_value = gvf_attribute_dictionary[attrib_key]
                 sample_name = gvf_attribute_dictionary.get("sample_name")
