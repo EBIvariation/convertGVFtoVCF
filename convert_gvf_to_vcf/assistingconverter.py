@@ -91,15 +91,12 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             # FORMAT: create and store header line then store value
             field = "FORMAT"
             if field in field_values:
-                field_key = field_values[field]["FieldKey"]
-                field_lines_dictionary[field].append(all_possible_lines_dictionary[field][field_key])
-                format_key = field_key
-                format_value = gvf_attribute_dictionary[attrib_key]
+                field_lines_dictionary[field].append(all_possible_lines_dictionary[field][field_values[field]["FieldKey"]])
                 sample_name = gvf_attribute_dictionary.get("sample_name")
                 if sample_name in vcf_format_values:
-                    vcf_format_values[sample_name].update({format_key: format_value})
+                    vcf_format_values[sample_name].update({field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]})
                 else:
-                    vcf_format_values[sample_name] = {format_key: format_value}
+                    vcf_format_values[sample_name] = {field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]}
         else:
             print("catching attribute keys for review at a later date", attrib_key, attrib_value)
             catching_for_review.append(attrib_key)
