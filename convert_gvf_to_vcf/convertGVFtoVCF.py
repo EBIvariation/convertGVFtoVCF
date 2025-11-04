@@ -23,23 +23,20 @@ def generate_vcf_header_structured_lines(header_type, mapping_attribute_dict):
 
     for attribute in mapping_attribute_dict:
         if mapping_attribute_dict[attribute].get(header_type) is not None and header_type != "ALT":
-            key_id = mapping_attribute_dict[attribute][header_type]["FieldKey"]
-            number = mapping_attribute_dict[attribute][header_type]["Number"]
-            type_for_key = mapping_attribute_dict[attribute][header_type]["Type"]
-            description = mapping_attribute_dict[attribute][header_type]["Description"]
             header_string = (f'##{header_type}='
-                             f'<ID={key_id},Number={number},Type={type_for_key},Description="{description}">')
-            all_possible_lines[key_id] = header_string
+                             f'<ID={mapping_attribute_dict[attribute][header_type]["FieldKey"]},'
+                             f'Number={mapping_attribute_dict[attribute][header_type]["Number"]},'
+                             f'Type={mapping_attribute_dict[attribute][header_type]["Type"]},'
+                             f'Description="{mapping_attribute_dict[attribute][header_type]["Description"]}">')
+            all_possible_lines[mapping_attribute_dict[attribute][header_type]["FieldKey"]] = header_string
         elif mapping_attribute_dict[attribute].get(header_type) is not None and header_type == "ALT":
-            key_id = mapping_attribute_dict[attribute][header_type]["FieldKey"]
-            description = mapping_attribute_dict[attribute][header_type]["Description"]
-            if key_id is not None:
+            if mapping_attribute_dict[attribute][header_type]["FieldKey"] is not None:
                 header_string = (f'##{header_type}='
-                                     f'<ID={key_id},Description="{description}">')
-                all_possible_lines[key_id] = header_string
+                                 f'<ID={mapping_attribute_dict[attribute][header_type]["FieldKey"]},'
+                                 f'Description="{mapping_attribute_dict[attribute][header_type]["Description"]}">')
+                all_possible_lines[mapping_attribute_dict[attribute][header_type]["FieldKey"]] = header_string
         else:
             pass
-    # print(all_possible_lines)
     return all_possible_lines
 
 def generate_custom_unstructured_meta_line(vcf_unstructured_key,
@@ -158,13 +155,11 @@ def generate_vcf_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
             seen_sample_names.add(sample)
             uniq_sample_name.append(sample)
 
-
     unique_pragmas_to_add = list(dict.fromkeys(pragma for pragma in pragmas_to_add if pragma not in unique_pragmas_to_add))
     unique_alt_lines_to_add = list(dict.fromkeys(alt_line for alt_line in standard_lines_dictionary["ALT"] if alt_line not in unique_alt_lines_to_add))
     unique_info_lines_to_add = list(dict.fromkeys(info_line for info_line in standard_lines_dictionary["INFO"] if info_line not in unique_info_lines_to_add))
     unique_filter_lines_to_add = list(dict.fromkeys(filter_line for filter_line in standard_lines_dictionary["FILTER"] if filter_line not in unique_filter_lines_to_add))
     unique_format_lines_to_add = list(dict.fromkeys(format_line for format_line in standard_lines_dictionary["FORMAT"] if format_line not in unique_format_lines_to_add))
-
 
     return unique_pragmas_to_add, uniq_sample_name, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add
 
@@ -187,12 +182,12 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     :param assembly_file: FASTA file to assembly
     :param mapping_attribute_dict: dictionary of attributes
     :param symbolic_allele_dictionary: symbolic_allele_dictionary
-    :return: header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects: dictionary of lists and a list of VCF objects
+    :return: standard_header_lines, vcf_data_lines, list_of_vcf_objects: header lines for this VCF, datalines for this VCF and a list of VCF objects
     """
     vcf_data_lines = {}  # DICTIONARY OF LISTS
     list_of_vcf_objects = []
     # standard meta-information lines for this VCF file
-    header_standard_lines_dictionary ={
+    standard_header_lines ={
         "ALT": [],
         "INFO": [],
         "FILTER": [],
@@ -210,7 +205,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
                              mapping_attribute_dict,
                              symbolic_allele_dictionary,
                              assembly_file,
-                             header_standard_lines_dictionary,
+                             standard_header_lines,
                              all_header_lines_per_type_dict)
 
         list_of_vcf_objects.append(vcf_object)
@@ -223,7 +218,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
         # for key in vcf_data_lines.keys():
         #     vcf_obj_list = vcf_data_lines[key]
         #     print("for", key, " the number of vcf objects is: ", len(vcf_obj_list))
-    return header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects
+    return standard_header_lines, vcf_data_lines, list_of_vcf_objects
 
 def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     """ Creates a partial vcf data line of sample format values.
@@ -231,7 +226,6 @@ def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     :param list_of_sample_names: list of sample names
     :return: sample_format_values_string: formatted string
     """
-    sample_format_values_string = ""
     sample_format_value_tokens = []
     for sample in list_of_sample_names:
         if sample in sample_name_dict_format_kv:
@@ -301,7 +295,7 @@ def main():
     symbolic_allele_dictionary = read_mapping_dictionary(mapping_attribute_dict)
 
     (
-        header_standard_lines_dictionary,
+        header_lines,
         vcf_data_lines,
         list_of_vcf_objects
     ) = gvf_features_to_vcf_objects(gvf_lines_obj_list, assembly_file, mapping_attribute_dict, symbolic_allele_dictionary)
@@ -317,7 +311,7 @@ def main():
             unique_info_lines_to_add,
             unique_filter_lines_to_add,
             unique_format_lines_to_add
-        ) = generate_vcf_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
+        ) = generate_vcf_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_lines)
         logger.info(f"Total number of samples in this VCF: {len(samples)}")
         for pragma in unique_pragmas_to_add:
             vcf_output.write(f"{pragma}\n")
