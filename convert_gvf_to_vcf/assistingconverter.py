@@ -78,16 +78,16 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             # INFO: create and store header line then store value
             field = "INFO"
             if field in field_values:
-                field_key = field_values[field]["FieldKey"]
                 header = generate_custom_structured_meta_line(
                     vcf_key=field,
                     vcf_key_id=field_values[field]["FieldKey"],
                     vcf_key_number=field_values[field]["Number"],
                     vcf_key_type=field_values[field]["Type"],
                     vcf_key_description=field_values[field]["Description"],
-                    optional_extra_fields=None)
+                    optional_extra_fields=None
+                )
                 field_lines_dictionary[field].append(header)
-                vcf_info_values[field_key] = gvf_attribute_dictionary[attrib_key]
+                vcf_info_values[field_values[field]["FieldKey"]] = gvf_attribute_dictionary[attrib_key]
             # FORMAT: create and store header line then store value
             field = "FORMAT"
             if field in field_values:
