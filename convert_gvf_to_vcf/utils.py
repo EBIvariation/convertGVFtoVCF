@@ -64,7 +64,7 @@ def read_in_gvf_file(gvf_input):
     gvf_non_essential = []  # list of non-essential lines starting with: #
     features = []
     gvf_lines_obj_list = []  # list of objects when reading in gvf files, one object represents a gvf line
-    print("Reading in the following GVF input: " + gvf_input)
+
     with open(gvf_input) as gvf_file:
         for line in gvf_file:
             if line.startswith("##"):

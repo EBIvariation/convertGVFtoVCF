@@ -3,7 +3,7 @@ This is an assistant converter to help convert gvf attributes
 """
 import os
 from convert_gvf_to_vcf.utils import read_yaml
-
+from convert_gvf_to_vcf.logger import logger
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
@@ -72,7 +72,6 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml'))
 
     for attrib_key, attrib_value in gvf_attribute_dictionary.items():
-
         if attrib_key in mapping_attribute_dict:
             field_values = mapping_attribute_dict[attrib_key]
             # INFO: create and store header line then store value
@@ -98,7 +97,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                 else:
                     vcf_format_values[sample_name] = {field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]}
         else:
-            print("catching attribute keys for review at a later date", attrib_key, attrib_value)
+            logger.info("catching attribute keys for review at a later date %s %s" % (attrib_key, attrib_value))
             catching_for_review.append(attrib_key)
     info_string = ''.join(f'{key}={value};' for key, value in vcf_info_values.items()).rstrip(';')
 
