@@ -25,12 +25,13 @@ def extract_reference_allele(fasta_file, chromosome_name, position, end):
 
 class VcfLine:
     def __init__(self, gvf_feature_line_object,
+                 mapping_attribute_dict,
                  symbolic_allele_dictionary,
                  assembly_file,
                  field_lines_dictionary,
                  all_possible_lines_dictionary):
 
-        self.vcf_value, self.info_string, self.format_dict = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, field_lines_dictionary, all_possible_lines_dictionary)
+        self.vcf_value, self.info_string, self.format_dict = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, mapping_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
         # ATTRIBUTES
         self.assembly = assembly_file
         self.symbolic_allele_dictionary = symbolic_allele_dictionary
