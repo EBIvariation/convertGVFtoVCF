@@ -54,11 +54,13 @@ def get_gvf_attributes(column9_of_gvf):
 
 
 def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
+                                         mapping_attribute_dict,
                                          field_lines_dictionary,
                                          all_possible_lines_dictionary):
     """Converts GVF attributes to a dictionary that will store VCF values.
     Populates ALT INFO FILTER FORMAT with the correct VCF values.
     :param column9_of_gvf: attributes column of gvf file
+    :param mapping_attribute_dict: attributes
     :param field_lines_dictionary: dictionaries for ALT INFO FILTER and FORMAT
     :param all_possible_lines_dictionary: all possible VCF header lines
     :return gvf_attribute_dictionary, info_string: dict of GVF attributes and formatted info string.
@@ -69,7 +71,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     vcf_info_values = {} # key is info field value; value is value
     vcf_format_values = {} # key is format field value; value is value
     catching_for_review = []
-    mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml'))
+    # mapping_attribute_dict = read_yaml(os.path.join(etc_folder, 'attribute_mapper.yaml'))
 
     for attrib_key, attrib_value in gvf_attribute_dictionary.items():
         if attrib_key in mapping_attribute_dict:

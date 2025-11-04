@@ -207,7 +207,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
     # (1:many; key=chrom_pos; 1 key: many vcf objects)
     for gvf_featureline in gvf_lines_obj_list:
         vcf_object = VcfLine(gvf_featureline,
-                             # info_attribute_dict,
+                             mapping_attribute_dict,
                              symbolic_allele_dictionary,
                              assembly_file,
                              header_standard_lines_dictionary,
