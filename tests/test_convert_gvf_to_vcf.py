@@ -4,7 +4,7 @@ import unittest
 #from convert_gvf_to_vcf.utils import read_file
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_meta_line, read_in_gvf_file, \
     gvf_features_to_vcf_objects, format_vcf_datalines, \
-    generate_vcf_metainformation, generate_vcf_header_structured_lines,  \
+    generate_vcf_metainfo, generate_vcf_header_structured_lines,  \
     generate_vcf_header_line,  \
     format_sample_values, read_yaml, read_pragma_mapper, read_mapping_dictionary
 
@@ -377,7 +377,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         print("standard lines", header_standard_lines_dictionary)
         (unique_pragmas_to_add, sample_names,
          unique_alt_lines_to_add, unique_info_lines_to_add,
-         unique_filter_lines_to_add, unique_format_lines_to_add) = generate_vcf_metainformation(
+         unique_filter_lines_to_add, unique_format_lines_to_add) = generate_vcf_metainfo(
             gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary
         )
         print(unique_pragmas_to_add)
@@ -406,8 +406,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         (
             unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add,
             unique_filter_lines_to_add, unique_format_lines_to_add
-        ) = generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
-                                         header_standard_lines_dictionary)
+        ) = generate_vcf_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
+                                  header_standard_lines_dictionary)
         for vcf_obj in list_of_vcf_objects:
             sample_name_dict_format_kv = vcf_obj.format_dict
             sample_format_values_string = format_sample_values(sample_name_dict_format_kv, samples)
@@ -419,7 +419,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         (
             unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add,
             unique_filter_lines_to_add, unique_format_lines_to_add
-         ) = generate_vcf_metainformation(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
+         ) = generate_vcf_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
         print(formatted_vcf_datalines)
         assert formatted_vcf_datalines == ['chromosome1\t1\t1\tAC\t<DEL>\t.\t.\tID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.;END=1;SVLEN=1\t.\t.\t.\t.\t.\t', 'chromosome1\t76\t1\tTAA\t<DEL>\t.\t.\tID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.;END=78;SVLEN=1;IMPRECISE;CIPOS=776537,776837;CIEND=776537,776837\t.\t.\t.\t.\t.\t', 'chromosome1\t126\t12\tCGTACGGTACG\t<DEL>\t.\t.\tID=12;NAME=nssv1406143;ALIAS=CNV22899;VARCALLSOID=SO:0001743;SVCID=CNV22899;REMAP=.87402;VARSEQ=.;END=131;SVLEN=5\t.\t.\t.\t.\t.\t', 'chromosome1\t127\t13\tGTACGTACG\t<DUP>\t.\t.\tID=13;NAME=nssv1389474;ALIAS=CNV6230;VARCALLSOID=SO:0001742;SVCID=CNV6230;REMAP=.69625;VARSEQ=.;END=131;SVLEN=4\t.\t.\t.\t.\t.\t', 'chromosome1\t127\t14\tGTACGTACG\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;END=131;SVLEN=4\t.\t.\t.\t.\t.\t', 'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;DBXREF=mydata;AD=3;END=128;SVLEN=1\tAD\t3\t.\t.\t.\t', 'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;DBXREF=mydata;AD=3;END=128;SVLEN=1\tAD:GT\t.\t.\t.\t3:0:1\t']
