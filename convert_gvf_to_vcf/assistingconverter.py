@@ -73,28 +73,27 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     for attrib_key, attrib_value in gvf_attribute_dictionary.items():
         if attrib_key in mapping_attribute_dict:
             field_values = mapping_attribute_dict[attrib_key]
-            # INFO: create and store header line then store value
-            field = "INFO"
-            if field in field_values:
-                header = generate_custom_structured_meta_line(
-                    field=field,
-                    id=field_values[field]["FieldKey"],
-                    number=field_values[field]["Number"],
-                    data_type=field_values[field]["Type"],
-                    description=field_values[field]["Description"],
-                    optional_data=None
-                )
-                field_lines_dictionary[field].append(header)
-                vcf_info_values[field_values[field]["FieldKey"]] = gvf_attribute_dictionary[attrib_key]
-            # FORMAT: create and store header line then store value
-            field = "FORMAT"
-            if field in field_values:
-                field_lines_dictionary[field].append(all_possible_lines_dictionary[field][field_values[field]["FieldKey"]])
-                sample_name = gvf_attribute_dictionary.get("sample_name")
-                if sample_name in vcf_format_values:
-                    vcf_format_values[sample_name].update({field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]})
+            for field in field_values:
+                if field == "INFO":
+                    header = generate_custom_structured_meta_line(
+                        field=field,
+                        id=field_values[field]["FieldKey"],
+                        number=field_values[field]["Number"],
+                        data_type=field_values[field]["Type"],
+                        description=field_values[field]["Description"],
+                        optional_data=None
+                    )
+                    field_lines_dictionary[field].append(header)
+                    vcf_info_values[field_values[field]["FieldKey"]] = gvf_attribute_dictionary[attrib_key]
+                elif field == "FORMAT":
+                    field_lines_dictionary[field].append(all_possible_lines_dictionary[field][field_values[field]["FieldKey"]])
+                    sample_name = gvf_attribute_dictionary.get("sample_name")
+                    if sample_name in vcf_format_values:
+                        vcf_format_values[sample_name].update({field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]})
+                    else:
+                        vcf_format_values[sample_name] = {field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]}
                 else:
-                    vcf_format_values[sample_name] = {field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]}
+                    logger.warning(f"Unsupported Field: {field}")
         else:
             logger.info(f"catching attribute keys for review at a later date {attrib_key} {attrib_value}")
             catching_for_review.append(attrib_key)
