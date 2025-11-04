@@ -98,7 +98,6 @@ def get_pragma_tokens(pragma_value, first_delimiter, second_delimiter):
         pragma_tokens = element.split(second_delimiter)
     return pragma_tokens
 
-#step 9 using custom unstructured meta-information line = generate_custom_unstructured_metainfomation_line
 def generate_vcf_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
                           standard_lines_dictionary):
     """ Generates a list of metainformation lines for the VCF header
@@ -124,7 +123,6 @@ def generate_vcf_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
     for pragma in gvf_pragmas:
         vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma, " ", list_of_pragma, pragma_to_vcf_map)
         pragmas_to_add.append(generate_custom_unstructured_meta_line(vcf_header_key, pragma_value))
-        # adding in source
         for vcf_obj in list_of_vcf_objects:
             pragmas_to_add.append(generate_custom_unstructured_meta_line("source", vcf_obj.source))
     # Go through non-essential pragmas
