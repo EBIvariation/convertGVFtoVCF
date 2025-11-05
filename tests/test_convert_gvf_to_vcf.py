@@ -6,7 +6,7 @@ from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_meta
     gvf_features_to_vcf_objects, format_vcf_datalines, \
     generate_vcf_metainfo, generate_vcf_header_structured_lines,  \
     generate_vcf_header_line,  \
-    format_sample_values, read_yaml, read_pragma_mapper, read_mapping_dictionary
+    format_sample_values, read_yaml, read_pragma_mapper, generate_symbolic_allele_dict
 
 from convert_gvf_to_vcf.vcfline import VcfLine
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
@@ -21,7 +21,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.mapping_attribute_dict = read_yaml(
             os.path.join(self.etc_folder, 'attribute_mapper.yaml'))  # formerly attributes_mapper and INFOattributes
         self.etc_folder =  os.path.join(self.input_folder_parent, "etc")
-        self.symbolic_allele_dictionary = read_mapping_dictionary(self.mapping_attribute_dict)
+        self.symbolic_allele_dictionary = generate_symbolic_allele_dict(self.mapping_attribute_dict)
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
 
@@ -34,7 +34,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert len(pragma_to_vcf_header) > 0
 
     def test_read_mapping_dictionary(self):
-        symbolic_allele_dictionary = read_mapping_dictionary(self.mapping_attribute_dict)
+        symbolic_allele_dictionary = generate_symbolic_allele_dict(self.mapping_attribute_dict)
         assert len(symbolic_allele_dictionary) > 0
 
     def test_read_in_gvf_file(self):
@@ -94,7 +94,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         }
 
         v = VcfLine(line_object,
-                    # info_attribute_dict,
+                    mapping_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -114,6 +114,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6],
                                      f_list[7], f_list[8])
 
+        mapping_attribute_dict = self.mapping_attribute_dict
         symbolic_allele_dictionary = self.symbolic_allele_dictionary
         assembly_file = self.assembly
 
@@ -143,6 +144,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
+                    mapping_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -157,6 +159,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6],
                                      f_list[7], f_list[8])
 
+        mapping_attribute_dict = self.mapping_attribute_dict
         symbolic_allele_dictionary = self.symbolic_allele_dictionary
         assembly_file = self.assembly
 
@@ -185,6 +188,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
+                    mapping_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -230,6 +234,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
+                    self.mapping_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -273,6 +278,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
+                    self.mapping_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -313,6 +319,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
+                    self.mapping_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -362,6 +369,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         v = VcfLine(line_object,
+                    self.mapping_attribute_dict,
                     symbolic_allele_dictionary,
                     assembly_file,
                     standard_lines_dictionary,
@@ -422,8 +430,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
          ) = generate_vcf_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
         print(formatted_vcf_datalines)
-        assert formatted_vcf_datalines == ['chromosome1\t1\t1\tAC\t<DEL>\t.\t.\tID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.;END=1;SVLEN=1\t.\t.\t.\t.\t.\t', 'chromosome1\t76\t1\tTAA\t<DEL>\t.\t.\tID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.;END=78;SVLEN=1;IMPRECISE;CIPOS=776537,776837;CIEND=776537,776837\t.\t.\t.\t.\t.\t', 'chromosome1\t126\t12\tCGTACGGTACG\t<DEL>\t.\t.\tID=12;NAME=nssv1406143;ALIAS=CNV22899;VARCALLSOID=SO:0001743;SVCID=CNV22899;REMAP=.87402;VARSEQ=.;END=131;SVLEN=5\t.\t.\t.\t.\t.\t', 'chromosome1\t127\t13\tGTACGTACG\t<DUP>\t.\t.\tID=13;NAME=nssv1389474;ALIAS=CNV6230;VARCALLSOID=SO:0001742;SVCID=CNV6230;REMAP=.69625;VARSEQ=.;END=131;SVLEN=4\t.\t.\t.\t.\t.\t', 'chromosome1\t127\t14\tGTACGTACG\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;END=131;SVLEN=4\t.\t.\t.\t.\t.\t', 'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;DBXREF=mydata;AD=3;END=128;SVLEN=1\tAD\t3\t.\t.\t.\t', 'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;DBXREF=mydata;AD=3;END=128;SVLEN=1\tAD:GT\t.\t.\t.\t3:0:1\t']
-
+        assert formatted_vcf_datalines == ['chromosome1\t1\t1\tAC\t<DEL>\t.\t.\tID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.;END=1;SVLEN=1\t.\t.\t.\t.\t.', 'chromosome1\t76\t1\tTAA\t<DEL>\t.\t.\tID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.;END=78;SVLEN=1;IMPRECISE;CIPOS=776537,776837;CIEND=776537,776837\t.\t.\t.\t.\t.', 'chromosome1\t126\t12\tCGTACGGTACG\t<DEL>\t.\t.\tID=12;NAME=nssv1406143;ALIAS=CNV22899;VARCALLSOID=SO:0001743;SVCID=CNV22899;REMAP=.87402;VARSEQ=.;END=131;SVLEN=5\t.\t.\t.\t.\t.', 'chromosome1\t127\t13\tGTACGTACG\t<DUP>\t.\t.\tID=13;NAME=nssv1389474;ALIAS=CNV6230;VARCALLSOID=SO:0001742;SVCID=CNV6230;REMAP=.69625;VARSEQ=.;END=131;SVLEN=4\t.\t.\t.\t.\t.', 'chromosome1\t127\t14\tGTACGTACG\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;END=131;SVLEN=4\t.\t.\t.\t.\t.', 'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;DBXREF=mydata;AD=3;END=128;SVLEN=1\tAD\t3\t.\t.\t.', 'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;DBXREF=mydata;AD=3;END=128;SVLEN=1\tAD:GT\t.\t.\t.\t3:0:1']
 
     def test_generate_custom_unstructured_metainfomation_line(self):
         formatted_string = generate_custom_unstructured_meta_line("test_string_key", "test_string_value")
