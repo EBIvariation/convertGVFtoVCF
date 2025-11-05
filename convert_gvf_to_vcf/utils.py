@@ -1,4 +1,4 @@
-# this file contains readers only
+# this file contains readers
 import os
 import yaml
 
@@ -34,7 +34,7 @@ def read_pragma_mapper(pragma_mapper_file):
             pragma_to_vcf_header[pragma] = vcf_header
     return pragma_to_vcf_header
 
-def read_mapping_dictionary(mapping_dictionary):
+def generate_symbolic_allele_dict(mapping_dictionary):
     """Reads in mapping dictionary and returns a symbolic allele dictionary.
     :param mapping_dictionary: mapping dictionary
     :return symbolic_allele_dict: stores information for a symbolic allele

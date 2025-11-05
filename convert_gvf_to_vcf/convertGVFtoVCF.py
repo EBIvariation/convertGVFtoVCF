@@ -1,11 +1,10 @@
 import argparse
-import logging
 import os
 
 
 from convert_gvf_to_vcf.utils import read_pragma_mapper, \
     read_in_gvf_file, \
-    read_yaml, read_mapping_dictionary
+    read_yaml, generate_symbolic_allele_dict
 from convert_gvf_to_vcf.vcfline import VcfLine
 from convert_gvf_to_vcf.logger import set_up_logging, logger
 
@@ -174,7 +173,9 @@ def generate_vcf_header_line(samples):
     return vcf_header
 
 def gvf_features_to_vcf_objects(gvf_lines_obj_list,
-                                assembly_file, mapping_attribute_dict, symbolic_allele_dictionary):
+                                assembly_file, mapping_attribute_dict,
+                                symbolic_allele_dictionary
+                                ):
     """ Creates VCF objects from GVF feature lines and stores the VCF objects.
     :param gvf_lines_obj_list: list of GVF feature line objects
     :param assembly_file: FASTA file to assembly
@@ -205,6 +206,7 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
                              assembly_file,
                              standard_header_lines,
                              all_header_lines_per_type_dict)
+
 
         list_of_vcf_objects.append(vcf_object)
         if vcf_object.key in vcf_data_lines:
@@ -290,13 +292,18 @@ def main():
     # store attributes and symbolic alleles
     mapping_attribute_dict = read_yaml(os.path.join(etc_folder, "attribute_mapper.yaml"))
     logger.info("Reading in the attributes file: " + "attribute_mapper.yaml")
-    symbolic_allele_dictionary = read_mapping_dictionary(mapping_attribute_dict)
+    symbolic_allele_dictionary = generate_symbolic_allele_dict(mapping_attribute_dict)
 
     (
         header_lines,
         vcf_data_lines,
         list_of_vcf_objects
-    ) = gvf_features_to_vcf_objects(gvf_lines_obj_list, assembly_file, mapping_attribute_dict, symbolic_allele_dictionary)
+    ) = gvf_features_to_vcf_objects(gvf_lines_obj_list,
+                                    assembly_file,
+                                    mapping_attribute_dict,
+                                    symbolic_allele_dictionary
+                                    )
+
 
 
     logger.info(f"Writing to the following VCF output: {args.vcf_output}")

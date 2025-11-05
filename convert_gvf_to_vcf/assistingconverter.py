@@ -2,18 +2,17 @@
 This is an assistant converter to help convert gvf attributes
 """
 import os
-from convert_gvf_to_vcf.utils import read_yaml
 from convert_gvf_to_vcf.logger import logger
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
-def generate_custom_structured_meta_line(field, id, number,
+def generate_custom_structured_meta_line(field, idkey, number,
                                          data_type, description,
                                          optional_data=None):
     """ Generates a custom structured meta-information line for INFO/FILTER/FORMAT/ALT
     :param field: required field INFO, FILTER, FORMAT, ALT
-    :param id: required field for structured lines ID
+    :param idkey: required field for structured lines ID
     :param number: Number of values included or special character: A or R or G or .
     :param data_type: Values are Integer, Float, Character, String
     :param description: Description
@@ -27,7 +26,7 @@ def generate_custom_structured_meta_line(field, id, number,
             extra_keys_kv_lines.append(kv_line)
     vcf_extra_keys = ''.join(extra_keys_kv_lines)
     custom_structured_string = (f'##{field}=<'
-                                f'ID={id},'
+                                f'ID={idkey},'
                                 f'Number={number},'
                                 f'Type={data_type},'
                                 f'Description="{description}"'
@@ -69,7 +68,6 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     vcf_info_values = {} # key is info field value; value is value
     vcf_format_values = {} # key is format field value; value is value
     catching_for_review = []
-
     for attrib_key, attrib_value in gvf_attribute_dictionary.items():
         if attrib_key in mapping_attribute_dict:
             field_values = mapping_attribute_dict[attrib_key]
@@ -77,7 +75,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
                 if field == "INFO":
                     header = generate_custom_structured_meta_line(
                         field=field,
-                        id=field_values[field]["FieldKey"],
+                        idkey=field_values[field]["FieldKey"],
                         number=field_values[field]["Number"],
                         data_type=field_values[field]["Type"],
                         description=field_values[field]["Description"],
@@ -98,5 +96,4 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
             logger.info(f"catching attribute keys for review at a later date {attrib_key} {attrib_value}")
             catching_for_review.append(attrib_key)
     info_string = ''.join(f'{key}={value};' for key, value in vcf_info_values.items()).rstrip(';')
-
     return gvf_attribute_dictionary, info_string, vcf_format_values
