@@ -261,6 +261,87 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
         formatted_vcf_datalines.append(vcf_line)
     return formatted_vcf_datalines
 
+def get_bigger_dictionary(dict1, dict2):
+    if len(dict1) > len(dict2):
+        biggest_dict = dict1
+        smallest_dict = dict2
+    elif len(dict1) < len(dict2):
+        biggest_dict = dict2
+        smallest_dict = dict1
+    else:
+        biggest_dict = dict1
+        smallest_dict = dict2
+    return smallest_dict, biggest_dict
+
+def merge_and_add(previous_element, current_element, delimiter):
+    if previous_element == current_element:
+        merged_element = current_element
+    else:
+        merged_element = delimiter.join((previous_element, current_element))
+    return merged_element
+
+def compare_and_merge_lines(list_of_formatted_vcf_datalines, headerline):
+    for previous, current in zip(list_of_formatted_vcf_datalines, list_of_formatted_vcf_datalines[1:]):
+        # print(f"previous line:\n{previous}\ncurrent line:\n{current}\n")
+        previous_tokens = previous.split("\t")
+        current_tokens = current.split("\t")
+        header_fields = headerline.split("\t")
+
+        previous_data = dict(zip(header_fields, previous_tokens))
+        current_data = dict(zip(header_fields, current_tokens))
+        merged_data = {}
+        if (
+                previous_data["#CHROM"] == current_data["#CHROM"]
+                and previous_data["POS"] == current_data["POS"]
+                and previous_data["REF"] == current_data["REF"]
+        ):
+            print("True - merge")
+            merged_data["#CHROM"] = current_data["#CHROM"]
+            merged_data["POS"] = current_data["POS"]
+            merged_data["ID"] = merge_and_add(previous_data["ID"], current_data["ID"], ";")
+            merged_data["REF"] = current_data["REF"]
+            merged_data["ALT"] = merge_and_add(previous_data["ALT"], current_data["ALT"], ",")
+            merged_data["QUAL"] = current_data["QUAL"]
+            merged_data["FILTER"] = merge_and_add(previous_data["FILTER"], current_data["FILTER"], ";")
+            # INFO
+            previous_info_tokens = previous_data["INFO"].split(";")
+            current_info_tokens = current_data["INFO"].split(";")
+            previous_info_dict = {}
+            current_info_dict = {}
+            for p in previous_info_tokens:
+                p_key, p_value = p.split("=")
+                previous_info_dict[p_key] = p_value
+            for c in current_info_tokens:
+                c_key, c_value = c.split("=")
+                current_info_dict[c_key] = c_value
+
+            smallest_info_dict, biggest_info_dict = get_bigger_dictionary(previous_info_dict, current_info_dict)
+
+            merged_dictionary = {}
+
+            for key, value in biggest_info_dict.items():
+                merged_dictionary.setdefault(key, []).append(value)
+                if smallest_info_dict.get(key) != value:
+                    merged_dictionary.setdefault(key, []).append(smallest_info_dict.get(key))
+
+            for merge_key, merge_value in merged_dictionary.items():
+                cleaned_merge_value = [value for value in merge_value if value is not None]
+                conjoined_merge_value = ",".join(cleaned_merge_value)
+                print(merge_key, "=", conjoined_merge_value)
+            print(merged_dictionary)
+            print(previous_data)
+            print(current_data)
+            print("---")
+
+        else:
+            print("False - keep previous")
+            # print(previous_data)
+            print("---")
+
+
+
+
+
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
@@ -330,6 +411,7 @@ def main():
         vcf_output.write(f"{header_fields}\n")
         logger.info("Generating the VCF datalines")
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
+        compare_and_merge_lines(formatted_vcf_datalines, header_fields)
         for line in formatted_vcf_datalines:
             vcf_output.write(f"{line}\n")
     vcf_output.close()
