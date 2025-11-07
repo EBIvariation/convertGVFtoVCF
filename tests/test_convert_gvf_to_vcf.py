@@ -420,6 +420,13 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             sample_name_dict_format_kv = vcf_obj.format_dict
             sample_format_values_string = format_sample_values(sample_name_dict_format_kv, samples)
             assert isinstance(sample_format_values_string, str)
+        number_of_tokens_should_have = len(samples)
+        tokens= sample_format_values_string.split("\t")
+        actual_number_of_tokens = len(tokens)
+        assert actual_number_of_tokens == number_of_tokens_should_have, f"must have {number_of_tokens_should_have}"
+        assert sample_format_values_string == ".:.\t.:.\t.:.\t3:0:1", "String must match expected value"
+
+
 
     def test_format_vcf_datalines(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)

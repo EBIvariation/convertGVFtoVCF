@@ -227,11 +227,35 @@ def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     sample_format_value_tokens = []
     for sample in list_of_sample_names:
         if sample in sample_name_dict_format_kv:
+            # only one format value
             format_value = sample_name_dict_format_kv[sample]
-            sample_format_value_tokens.append(':'.join(format_value.values()))
+            if len(format_value) == 1:
+                for onesample in list_of_sample_names:
+                    if onesample != sample:
+                        sample_format_value_tokens.append(".")
+                    else:
+                        sample_format_value_tokens.append(':'.join(format_value.values()))
+            elif len(format_value) > 1:  # more than one format value
+                # if the sample is found, go through all other sample names, and add the key with value '.'
+                keys_to_populate = format_value.keys()
+                for sam in list_of_sample_names:
+                    if sam != sample:
+                        sample_name_dict_format_kv[sam] = {}
+                        for key_to_populate in keys_to_populate:
+                            sample_name_dict_format_kv[sam][key_to_populate] = "."
+                    multi_format_value = sample_name_dict_format_kv[sam]
+                    sample_format_value_tokens.append(':'.join(multi_format_value.values()))
+            else: # in the event of an empty format column
+                format_value = "." # set to missing value
+                sample_format_value_tokens.append(format_value)
         else:
-            format_value = "." # set to missing value
+            all_missing = all(sample not in sample_name_dict_format_kv for sample in list_of_sample_names)
+    # deal with empty format tag
+    if all_missing:
+        format_value = "."
+        for s in list_of_sample_names:
             sample_format_value_tokens.append(format_value)
+
     sample_format_values_string = '\t'.join(sample_format_value_tokens)
     return sample_format_values_string
 
@@ -324,13 +348,19 @@ def compare_and_merge_lines(list_of_formatted_vcf_datalines, headerline):
                 if smallest_info_dict.get(key) != value:
                     merged_dictionary.setdefault(key, []).append(smallest_info_dict.get(key))
 
+            parts_of_info_string = []
             for merge_key, merge_value in merged_dictionary.items():
                 cleaned_merge_value = [value for value in merge_value if value is not None]
                 conjoined_merge_value = ",".join(cleaned_merge_value)
-                print(merge_key, "=", conjoined_merge_value)
-            print(merged_dictionary)
+                part_string = f"{merge_key}={conjoined_merge_value}"
+                parts_of_info_string.append(part_string)
+            merged_info_string = ';'.join(parts_of_info_string)
+            merged_data["INFO"] = merged_info_string
+
+
             print(previous_data)
             print(current_data)
+            print(merged_data)
             print("---")
 
         else:
