@@ -62,7 +62,6 @@ class VcfLine:
 
         self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
-        self.format = ""
         if self.format_dict:
             list_of_format_keys = [format_key for format_value in self.format_dict.values() for format_key in format_value.keys()]
             self.format = ":".join(list_of_format_keys)
