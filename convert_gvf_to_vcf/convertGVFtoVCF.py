@@ -435,9 +435,6 @@ def compare_and_merge_lines(list_of_formatted_vcf_datalines, headerline):
     return merged_lines
 
 
-
-
-
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
