@@ -319,7 +319,7 @@ def compare_and_merge_lines(list_of_formatted_vcf_datalines, headerline):
                 and previous_data["POS"] == current_data["POS"]
                 and previous_data["REF"] == current_data["REF"]
         ):
-            print("True - merge")
+            # print("True - merge")
             merged_data["#CHROM"] = current_data["#CHROM"]
             merged_data["POS"] = current_data["POS"]
             merged_data["ID"] = merge_and_add(previous_data["ID"], current_data["ID"], ";")
@@ -356,17 +356,54 @@ def compare_and_merge_lines(list_of_formatted_vcf_datalines, headerline):
                 parts_of_info_string.append(part_string)
             merged_info_string = ';'.join(parts_of_info_string)
             merged_data["INFO"] = merged_info_string
+            # FORMAT
+            previous_format_key_tokens = previous_data["FORMAT"].split(":")
+            current_format_key_tokens = current_data["FORMAT"].split(":")
+            merged_format_key_tokens = []
+            for format_key in previous_format_key_tokens + current_format_key_tokens:
+                if format_key not in merged_format_key_tokens:
+                    merged_format_key_tokens.append(format_key)
+
+            merged_format_key_string = ':'.join(merged_format_key_tokens)
+            merged_data["FORMAT"] = merged_format_key_string
+            # sample values.
+            sample_names = header_fields[9:]
+            merged_sample_format = {}
+            for sample_name in sample_names:
+                previous_sample_format_value = dict(zip(previous_data["FORMAT"].split(":"),previous_data[sample_name].split(":")))
+                current_sample_format_value = dict(zip(current_data["FORMAT"].split(":"),current_data[sample_name].split(":")))
+                smallest_format_dict, biggest_format_dict = get_bigger_dictionary(previous_sample_format_value, current_sample_format_value)
+                for k in biggest_format_dict:
+                    biggest_value = biggest_format_dict.get(k)
+                    smallest_value = smallest_format_dict.get(k)
+
+                    if biggest_value is None or biggest_value == ".":
+                        biggest_value = ""
+                    if smallest_value is None or smallest_value == ".":
+                        smallest_value = ""
+                    element = merge_and_add(biggest_value, smallest_value, "")
+                    if element == "":
+                        element = "."
+
+                    # merged_sample_format[sample_name] = {k: element}
+                    if sample_name not in merged_sample_format:
+                        merged_sample_format[sample_name] = {}
+                        merged_sample_format[sample_name].setdefault(k, []).append(element)
+                    else:
+                        merged_sample_format[sample_name].setdefault(k, []).append(element)
 
 
-            print(previous_data)
-            print(current_data)
-            print(merged_data)
-            print("---")
+            values = []
+            for sample_name in sample_names:
+                for key in merged_sample_format[sample_name]:
+                    values.append(merged_sample_format[sample_name][key])
+                flat_values = [v2 for v1 in values for v2 in v1 ]
+                sample_format_string =':'.join(flat_values)
 
-        else:
-            print("False - keep previous")
-            # print(previous_data)
-            print("---")
+                merged_data[sample_name] = sample_format_string
+        # else:
+        #     print("False - keep previous")
+        #     print("---")
 
 
 
