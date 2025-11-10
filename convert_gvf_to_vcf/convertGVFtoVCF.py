@@ -479,8 +479,6 @@ def main():
                                     symbolic_allele_dictionary
                                     )
 
-
-
     logger.info(f"Writing to the following VCF output: {args.vcf_output}")
     logger.info("Generating the VCF header and the meta-information lines")
     with open(args.vcf_output, "w") as vcf_output:
