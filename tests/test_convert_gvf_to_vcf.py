@@ -4,10 +4,9 @@ import unittest
 #from convert_gvf_to_vcf.utils import read_file
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_meta_line, read_in_gvf_file, \
     gvf_features_to_vcf_objects, format_vcf_datalines, \
-    generate_vcf_metainfo, generate_vcf_header_structured_lines,  \
-    generate_vcf_header_line,  \
-    format_sample_values, read_yaml, read_pragma_mapper, generate_symbolic_allele_dict
-
+    generate_vcf_metainfo, generate_vcf_header_structured_lines, \
+    generate_vcf_header_line, \
+    format_sample_values, read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, get_bigger_dictionary, merge_and_add, compare_and_merge_lines
 from convert_gvf_to_vcf.vcfline import VcfLine
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
 
@@ -426,7 +425,21 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert actual_number_of_tokens == number_of_tokens_should_have, f"must have {number_of_tokens_should_have}"
         assert sample_format_values_string == ".:.\t.:.\t.:.\t3:0:1", "String must match expected value"
 
+    def test_get_bigger_dictionary(self):
+        dictionary1 = {"key1": "value1"}
+        dictionary2 = {"key1": "value1", "key2": "value2"}
+        small, large = get_bigger_dictionary(dictionary1, dictionary2)
+        assert len(large) > len(small)
 
+    def merge_and_add(self):
+        previous="1"
+        current ="2"
+        delimiter =";"
+        merged_string = merge_and_add(previous, current, delimiter)
+        assert len(merged_string) > 1
+
+    def compare_and_merge_lines(self):
+        pass
 
     def test_format_vcf_datalines(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)

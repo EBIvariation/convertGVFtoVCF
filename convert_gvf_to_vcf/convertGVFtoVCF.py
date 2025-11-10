@@ -286,6 +286,11 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
     return formatted_vcf_datalines
 
 def get_bigger_dictionary(dict1, dict2):
+    """Determines the biggest of two dictionaries
+    :param: dictionary1
+    :param: dictinary2
+    :return: smallest, largest
+    """
     if len(dict1) > len(dict2):
         biggest_dict = dict1
         smallest_dict = dict2
@@ -298,6 +303,12 @@ def get_bigger_dictionary(dict1, dict2):
     return smallest_dict, biggest_dict
 
 def merge_and_add(previous_element, current_element, delimiter):
+    """ If same, use current element. If different, merge with delimiter.
+    :param: previous_element
+    :param: current_element
+    :param: delimiter
+    :return: merged element
+    """
     if previous_element == current_element:
         merged_element = current_element
     else:
@@ -305,6 +316,7 @@ def merge_and_add(previous_element, current_element, delimiter):
     return merged_element
 
 def compare_and_merge_lines(list_of_formatted_vcf_datalines, headerline):
+    merged_lines = []
     for previous, current in zip(list_of_formatted_vcf_datalines, list_of_formatted_vcf_datalines[1:]):
         # print(f"previous line:\n{previous}\ncurrent line:\n{current}\n")
         previous_tokens = previous.split("\t")
@@ -319,7 +331,7 @@ def compare_and_merge_lines(list_of_formatted_vcf_datalines, headerline):
                 and previous_data["POS"] == current_data["POS"]
                 and previous_data["REF"] == current_data["REF"]
         ):
-            # print("True - merge")
+            print("True - merge")
             merged_data["#CHROM"] = current_data["#CHROM"]
             merged_data["POS"] = current_data["POS"]
             merged_data["ID"] = merge_and_add(previous_data["ID"], current_data["ID"], ";")
@@ -401,9 +413,26 @@ def compare_and_merge_lines(list_of_formatted_vcf_datalines, headerline):
                 sample_format_string =':'.join(flat_values)
 
                 merged_data[sample_name] = sample_format_string
-        # else:
-        #     print("False - keep previous")
-        #     print("---")
+            merged_lines.append(merged_data)
+            print("---")
+        else:
+            print("False - keep previous")
+            merged_data["#CHROM"] = previous_data["#CHROM"]
+            merged_data["POS"] = previous_data["POS"]
+            merged_data["ID"] = previous_data["ID"]
+            merged_data["REF"] = previous_data["REF"]
+            merged_data["ALT"] = previous_data["ALT"]
+            merged_data["QUAL"] = previous_data["QUAL"]
+            merged_data["FILTER"] = previous_data["FILTER"]
+            merged_data["INFO"] = previous_data["INFO"]
+            merged_data["FORMAT"] = previous_data["FORMAT"]
+            sample_names = header_fields[9:]
+            for sample in sample_names:
+                merged_data[sample] = previous_data[sample]
+
+            merged_lines.append(merged_data)
+            print("---")
+    return merged_lines
 
 
 
@@ -478,9 +507,9 @@ def main():
         vcf_output.write(f"{header_fields}\n")
         logger.info("Generating the VCF datalines")
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
-        compare_and_merge_lines(formatted_vcf_datalines, header_fields)
-        for line in formatted_vcf_datalines:
-            vcf_output.write(f"{line}\n")
+        merged_lines = compare_and_merge_lines(formatted_vcf_datalines, header_fields)
+        for line in merged_lines:
+            vcf_output.write("\t".join(str(val) for val in line.values()) + "\n")
     vcf_output.close()
     logger.info("GVF to VCF conversion complete")
 
