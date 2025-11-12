@@ -404,15 +404,13 @@ def compare_and_merge_lines(list_of_formatted_vcf_datalines, headerline):
                     else:
                         merged_sample_format[sample_name].setdefault(k, []).append(element)
 
+            for sample_key, sample_format in merged_sample_format.items():
+                sample_values = []
+                for sf in sample_format:
+                    sample_values.append(sample_format.get(sf)[0])
+                sample_value_string = ':'.join(sample_values)
+                merged_data[sample_key] = sample_value_string
 
-            values = []
-            for sample_name in sample_names:
-                for key in merged_sample_format[sample_name]:
-                    values.append(merged_sample_format[sample_name][key])
-                flat_values = [v2 for v1 in values for v2 in v1 ]
-                sample_format_string =':'.join(flat_values)
-
-                merged_data[sample_name] = sample_format_string
             merged_lines.append(merged_data)
             print("---")
         else:
