@@ -4,10 +4,10 @@ import unittest
 #from convert_gvf_to_vcf.utils import read_file
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_meta_line, read_in_gvf_file, \
     gvf_features_to_vcf_objects, format_vcf_datalines, \
-    generate_vcf_metainfo, generate_vcf_header_structured_lines,  \
-    generate_vcf_header_line,  \
-    format_sample_values, read_yaml, read_pragma_mapper, generate_symbolic_allele_dict
-
+    generate_vcf_metainfo, generate_vcf_header_structured_lines, \
+    generate_vcf_header_line, \
+    format_sample_values, read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, get_bigger_dictionary, \
+    merge_and_add, compare_and_merge_lines
 from convert_gvf_to_vcf.vcfline import VcfLine
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
 
@@ -333,8 +333,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         print(output_lines_standard_info)
         assert output_lines_standard_info == ['##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">']
 
-
-
     def test_get_alt(self):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	81	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=77,78;End_range=80,81;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
@@ -420,6 +418,27 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             sample_name_dict_format_kv = vcf_obj.format_dict
             sample_format_values_string = format_sample_values(sample_name_dict_format_kv, samples)
             assert isinstance(sample_format_values_string, str)
+        number_of_tokens_should_have = len(samples)
+        tokens= sample_format_values_string.split("\t")
+        actual_number_of_tokens = len(tokens)
+        assert actual_number_of_tokens == number_of_tokens_should_have, f"must have {number_of_tokens_should_have}"
+        assert sample_format_values_string == ".:.\t.:.\t.:.\t3:0:1", "String must match expected value"
+
+    def test_get_bigger_dictionary(self):
+        dictionary1 = {"key1": "value1"}
+        dictionary2 = {"key1": "value1", "key2": "value2"}
+        small, large = get_bigger_dictionary(dictionary1, dictionary2)
+        assert len(large) > len(small)
+
+    def test_merge_and_add(self):
+        previous="1"
+        current ="2"
+        delimiter =";"
+        merged_string = merge_and_add(previous, current, delimiter)
+        assert len(merged_string) > 1
+
+    def test_compare_and_merge_lines(self):
+        pass
 
     def test_format_vcf_datalines(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
@@ -430,7 +449,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
          ) = generate_vcf_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary)
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
         print(formatted_vcf_datalines)
-        assert formatted_vcf_datalines == ['chromosome1\t1\t1\tAC\t<DEL>\t.\t.\tID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.;END=1;SVLEN=1\t.\t.\t.\t.\t.', 'chromosome1\t76\t1\tTAA\t<DEL>\t.\t.\tID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.;END=78;SVLEN=1;IMPRECISE;CIPOS=776537,776837;CIEND=776537,776837\t.\t.\t.\t.\t.', 'chromosome1\t126\t12\tCGTACGGTACG\t<DEL>\t.\t.\tID=12;NAME=nssv1406143;ALIAS=CNV22899;VARCALLSOID=SO:0001743;SVCID=CNV22899;REMAP=.87402;VARSEQ=.;END=131;SVLEN=5\t.\t.\t.\t.\t.', 'chromosome1\t127\t13\tGTACGTACG\t<DUP>\t.\t.\tID=13;NAME=nssv1389474;ALIAS=CNV6230;VARCALLSOID=SO:0001742;SVCID=CNV6230;REMAP=.69625;VARSEQ=.;END=131;SVLEN=4\t.\t.\t.\t.\t.', 'chromosome1\t127\t14\tGTACGTACG\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;END=131;SVLEN=4\t.\t.\t.\t.\t.', 'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;DBXREF=mydata;AD=3;END=128;SVLEN=1\tAD\t3\t.\t.\t.', 'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;DBXREF=mydata;AD=3;END=128;SVLEN=1\tAD:GT\t.\t.\t.\t3:0:1']
+        assert formatted_vcf_datalines == ['chromosome1\t1\t1\tAC\t<DEL>\t.\t.\tID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.;END=1;SVLEN=1\t.\t.\t.\t.\t.', 'chromosome1\t76\t1\tTAA\t<DEL>\t.\t.\tID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.;END=78;SVLEN=1;IMPRECISE;CIPOS=776537,776837;CIEND=776537,776837\t.\t.\t.\t.\t.', 'chromosome1\t126\t12\tCGTACGGTACG\t<DEL>\t.\t.\tID=12;NAME=nssv1406143;ALIAS=CNV22899;VARCALLSOID=SO:0001743;SVCID=CNV22899;REMAP=.87402;VARSEQ=.;END=131;SVLEN=5\t.\t.\t.\t.\t.', 'chromosome1\t127\t13\tGTACGTACG\t<DUP>\t.\t.\tID=13;NAME=nssv1389474;ALIAS=CNV6230;VARCALLSOID=SO:0001742;SVCID=CNV6230;REMAP=.69625;VARSEQ=.;END=131;SVLEN=4\t.\t.\t.\t.\t.', 'chromosome1\t127\t14\tGTACGTACG\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;END=131;SVLEN=4\t.\t.\t.\t.\t.', 'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;DBXREF=mydata;AD=3;END=128;SVLEN=1\tAD\t3\t.\t.\t.', 'chromosome1\t127\t14\tGTT\t<DUP>\t.\t.\tID=14;NAME=nssv1388955;ALIAS=CNV5711;VARCALLSOID=SO:0001742;SVCID=CNV5711;REMAP=.85344;VARSEQ=.;AC=3;DBXREF=mydata;AD=3;END=128;SVLEN=1\tAD:GT\t.:.\t.:.\t.:.\t3:0:1']
 
     def test_generate_custom_unstructured_metainfomation_line(self):
         formatted_string = generate_custom_unstructured_meta_line("test_string_key", "test_string_value")

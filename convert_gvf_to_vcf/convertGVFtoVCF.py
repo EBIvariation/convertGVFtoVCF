@@ -227,11 +227,35 @@ def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
     sample_format_value_tokens = []
     for sample in list_of_sample_names:
         if sample in sample_name_dict_format_kv:
+            # only one format value
             format_value = sample_name_dict_format_kv[sample]
-            sample_format_value_tokens.append(':'.join(format_value.values()))
+            if len(format_value) == 1:
+                for onesample in list_of_sample_names:
+                    if onesample != sample:
+                        sample_format_value_tokens.append(".")
+                    else:
+                        sample_format_value_tokens.append(':'.join(format_value.values()))
+            elif len(format_value) > 1:  # more than one format value
+                # if the sample is found, go through all other sample names, and add the key with value '.'
+                keys_to_populate = format_value.keys()
+                for sam in list_of_sample_names:
+                    if sam != sample:
+                        sample_name_dict_format_kv[sam] = {}
+                        for key_to_populate in keys_to_populate:
+                            sample_name_dict_format_kv[sam][key_to_populate] = "."
+                    multi_format_value = sample_name_dict_format_kv[sam]
+                    sample_format_value_tokens.append(':'.join(multi_format_value.values()))
+            else: # in the event of an empty format column
+                format_value = "." # set to missing value
+                sample_format_value_tokens.append(format_value)
         else:
-            format_value = "." # set to missing value
+            all_missing = all(sample not in sample_name_dict_format_kv for sample in list_of_sample_names)
+    # deal with empty format tag
+    if all_missing:
+        format_value = "."
+        for s in list_of_sample_names:
             sample_format_value_tokens.append(format_value)
+
     sample_format_values_string = '\t'.join(sample_format_value_tokens)
     return sample_format_values_string
 
@@ -260,6 +284,154 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
                         )
         formatted_vcf_datalines.append(vcf_line)
     return formatted_vcf_datalines
+
+def get_bigger_dictionary(dict1, dict2):
+    """Determines the biggest of two dictionaries
+    :param: dictionary1
+    :param: dictinary2
+    :return: smallest, largest
+    """
+    if len(dict1) > len(dict2):
+        biggest_dict = dict1
+        smallest_dict = dict2
+    elif len(dict1) < len(dict2):
+        biggest_dict = dict2
+        smallest_dict = dict1
+    else:
+        biggest_dict = dict1
+        smallest_dict = dict2
+    return smallest_dict, biggest_dict
+
+def merge_and_add(previous_element, current_element, delimiter):
+    """ If same, use current element. If different, merge with delimiter.
+    :param: previous_element
+    :param: current_element
+    :param: delimiter
+    :return: merged element
+    """
+    if previous_element == current_element:
+        merged_element = current_element
+    else:
+        merged_element = delimiter.join((previous_element, current_element))
+    return merged_element
+
+def compare_and_merge_lines(list_of_formatted_vcf_datalines, headerline):
+    merged_lines = []
+    for previous, current in zip(list_of_formatted_vcf_datalines, list_of_formatted_vcf_datalines[1:]):
+        # print(f"previous line:\n{previous}\ncurrent line:\n{current}\n")
+        previous_tokens = previous.split("\t")
+        current_tokens = current.split("\t")
+        header_fields = headerline.split("\t")
+
+        previous_data = dict(zip(header_fields, previous_tokens))
+        current_data = dict(zip(header_fields, current_tokens))
+        merged_data = {}
+        if (
+                previous_data["#CHROM"] == current_data["#CHROM"]
+                and previous_data["POS"] == current_data["POS"]
+                and previous_data["REF"] == current_data["REF"]
+        ):
+            print("True - merge")
+            merged_data["#CHROM"] = current_data["#CHROM"]
+            merged_data["POS"] = current_data["POS"]
+            merged_data["ID"] = merge_and_add(previous_data["ID"], current_data["ID"], ";")
+            merged_data["REF"] = current_data["REF"]
+            merged_data["ALT"] = merge_and_add(previous_data["ALT"], current_data["ALT"], ",")
+            merged_data["QUAL"] = current_data["QUAL"]
+            merged_data["FILTER"] = merge_and_add(previous_data["FILTER"], current_data["FILTER"], ";")
+            # INFO
+            previous_info_tokens = previous_data["INFO"].split(";")
+            current_info_tokens = current_data["INFO"].split(";")
+            previous_info_dict = {}
+            current_info_dict = {}
+            for p in previous_info_tokens:
+                p_key, p_value = p.split("=")
+                previous_info_dict[p_key] = p_value
+            for c in current_info_tokens:
+                c_key, c_value = c.split("=")
+                current_info_dict[c_key] = c_value
+
+            smallest_info_dict, biggest_info_dict = get_bigger_dictionary(previous_info_dict, current_info_dict)
+
+            merged_dictionary = {}
+
+            for key, value in biggest_info_dict.items():
+                merged_dictionary.setdefault(key, []).append(value)
+                if smallest_info_dict.get(key) != value:
+                    merged_dictionary.setdefault(key, []).append(smallest_info_dict.get(key))
+
+            parts_of_info_string = []
+            for merge_key, merge_value in merged_dictionary.items():
+                cleaned_merge_value = [value for value in merge_value if value is not None]
+                conjoined_merge_value = ",".join(cleaned_merge_value)
+                part_string = f"{merge_key}={conjoined_merge_value}"
+                parts_of_info_string.append(part_string)
+            merged_info_string = ';'.join(parts_of_info_string)
+            merged_data["INFO"] = merged_info_string
+            # FORMAT
+            previous_format_key_tokens = previous_data["FORMAT"].split(":")
+            current_format_key_tokens = current_data["FORMAT"].split(":")
+            merged_format_key_tokens = []
+            for format_key in previous_format_key_tokens + current_format_key_tokens:
+                if format_key not in merged_format_key_tokens:
+                    merged_format_key_tokens.append(format_key)
+
+            merged_format_key_string = ':'.join(merged_format_key_tokens)
+            merged_data["FORMAT"] = merged_format_key_string
+            # sample values.
+            sample_names = header_fields[9:]
+            merged_sample_format = {}
+            for sample_name in sample_names:
+                previous_sample_format_value = dict(zip(previous_data["FORMAT"].split(":"),previous_data[sample_name].split(":")))
+                current_sample_format_value = dict(zip(current_data["FORMAT"].split(":"),current_data[sample_name].split(":")))
+                smallest_format_dict, biggest_format_dict = get_bigger_dictionary(previous_sample_format_value, current_sample_format_value)
+                for k in biggest_format_dict:
+                    biggest_value = biggest_format_dict.get(k)
+                    smallest_value = smallest_format_dict.get(k)
+
+                    if biggest_value is None or biggest_value == ".":
+                        biggest_value = ""
+                    if smallest_value is None or smallest_value == ".":
+                        smallest_value = ""
+                    element = merge_and_add(biggest_value, smallest_value, "")
+                    if element == "":
+                        element = "."
+
+                    # merged_sample_format[sample_name] = {k: element}
+                    if sample_name not in merged_sample_format:
+                        merged_sample_format[sample_name] = {}
+                        merged_sample_format[sample_name].setdefault(k, []).append(element)
+                    else:
+                        merged_sample_format[sample_name].setdefault(k, []).append(element)
+
+            for sample_key, sample_format in merged_sample_format.items():
+                sample_values = []
+                for sf in sample_format:
+                    sample_values.append(sample_format.get(sf)[0])
+                sample_value_string = ':'.join(sample_values)
+                merged_data[sample_key] = sample_value_string
+
+            merged_lines.append(merged_data)
+            print("---")
+        else:
+            print("False - keep previous")
+            merged_data["#CHROM"] = previous_data["#CHROM"]
+            merged_data["POS"] = previous_data["POS"]
+            merged_data["ID"] = previous_data["ID"]
+            merged_data["REF"] = previous_data["REF"]
+            merged_data["ALT"] = previous_data["ALT"]
+            merged_data["QUAL"] = previous_data["QUAL"]
+            merged_data["FILTER"] = previous_data["FILTER"]
+            merged_data["INFO"] = previous_data["INFO"]
+            merged_data["FORMAT"] = previous_data["FORMAT"]
+            sample_names = header_fields[9:]
+            for sample in sample_names:
+                merged_data[sample] = previous_data[sample]
+
+            merged_lines.append(merged_data)
+            print("---")
+    return merged_lines
+
 
 def main():
     # Parse command line arguments
@@ -302,8 +474,6 @@ def main():
                                     symbolic_allele_dictionary
                                     )
 
-
-
     logger.info(f"Writing to the following VCF output: {args.vcf_output}")
     logger.info("Generating the VCF header and the meta-information lines")
     with open(args.vcf_output, "w") as vcf_output:
@@ -330,8 +500,9 @@ def main():
         vcf_output.write(f"{header_fields}\n")
         logger.info("Generating the VCF datalines")
         formatted_vcf_datalines = format_vcf_datalines(list_of_vcf_objects, samples)
-        for line in formatted_vcf_datalines:
-            vcf_output.write(f"{line}\n")
+        merged_lines = compare_and_merge_lines(formatted_vcf_datalines, header_fields)
+        for line in merged_lines:
+            vcf_output.write("\t".join(str(val) for val in line.values()) + "\n")
     vcf_output.close()
     logger.info("GVF to VCF conversion complete")
 
