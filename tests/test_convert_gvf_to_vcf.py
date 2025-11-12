@@ -6,7 +6,8 @@ from convert_gvf_to_vcf.convertGVFtoVCF import generate_custom_unstructured_meta
     gvf_features_to_vcf_objects, format_vcf_datalines, \
     generate_vcf_metainfo, generate_vcf_header_structured_lines, \
     generate_vcf_header_line, \
-    format_sample_values, read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, get_bigger_dictionary, merge_and_add, compare_and_merge_lines
+    format_sample_values, read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, get_bigger_dictionary, \
+    merge_and_add, compare_and_merge_lines
 from convert_gvf_to_vcf.vcfline import VcfLine
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
 
@@ -431,7 +432,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         small, large = get_bigger_dictionary(dictionary1, dictionary2)
         assert len(large) > len(small)
 
-    def merge_and_add(self):
+    def test_merge_and_add(self):
         previous="1"
         current ="2"
         delimiter =";"
