@@ -439,7 +439,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         merged_string = merge_and_add(previous, current, delimiter)
         assert len(merged_string) > 1
 
-    def compare_and_merge_lines(self):
+    def test_compare_and_merge_lines(self):
         pass
 
     def test_format_vcf_datalines(self):
