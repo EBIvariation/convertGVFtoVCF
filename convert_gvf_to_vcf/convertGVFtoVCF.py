@@ -218,44 +218,30 @@ def gvf_features_to_vcf_objects(gvf_lines_obj_list,
         #     print("for", key, " the number of vcf objects is: ", len(vcf_obj_list))
     return standard_header_lines, vcf_data_lines, list_of_vcf_objects
 
-def format_sample_values(sample_name_dict_format_kv, list_of_sample_names):
+def format_sample_values(format_tagandvalues_by_sample, list_of_sample_names):
     """ Creates a partial vcf data line of sample format values.
-    :param sample_name_dict_format_kv: dictionary of sample names => sample format value
+    :param format_tagandvalues_by_sample: nested dictionary {sample_name: {format_tag:formatvalue}}.
     :param list_of_sample_names: list of sample names
-    :return: sample_format_values_string: formatted string
+    :return: sample_format_values_string: formatted string (in the VCF file, this would be the tab-separated values under the sample name)
     """
     sample_format_value_tokens = []
-    for sample in list_of_sample_names:
-        if sample in sample_name_dict_format_kv:
-            # only one format value
-            format_value = sample_name_dict_format_kv[sample]
-            if len(format_value) == 1:
-                for onesample in list_of_sample_names:
-                    if onesample != sample:
-                        sample_format_value_tokens.append(".")
-                    else:
-                        sample_format_value_tokens.append(':'.join(format_value.values()))
-            elif len(format_value) > 1:  # more than one format value
-                # if the sample is found, go through all other sample names, and add the key with value '.'
-                keys_to_populate = format_value.keys()
-                for sam in list_of_sample_names:
-                    if sam != sample:
-                        sample_name_dict_format_kv[sam] = {}
-                        for key_to_populate in keys_to_populate:
-                            sample_name_dict_format_kv[sam][key_to_populate] = "."
-                    multi_format_value = sample_name_dict_format_kv[sam]
-                    sample_format_value_tokens.append(':'.join(multi_format_value.values()))
-            else: # in the event of an empty format column
-                format_value = "." # set to missing value
-                sample_format_value_tokens.append(format_value)
-        else:
-            all_missing = all(sample not in sample_name_dict_format_kv for sample in list_of_sample_names)
-    # deal with empty format tag
-    if all_missing:
-        format_value = "."
-        for s in list_of_sample_names:
-            sample_format_value_tokens.append(format_value)
+    # Creates the list of FORMAT keys so we can get its corresponding value later
+    set_of_format_keys = {key for sample in format_tagandvalues_by_sample for key in format_tagandvalues_by_sample[sample]}
+    list_of_format_key = []
+    if 'GT' in set_of_format_keys:
+        list_of_format_key.append("GT")
+        set_of_format_keys.discard('GT')
+    list_of_format_key.extend(set_of_format_keys)
 
+    # Generate string. For present samples, get its format value. For missing samples, populate with a missing value.
+    for sample in list_of_sample_names:
+        if sample in format_tagandvalues_by_sample:
+            format_value_list = []
+            for key in list_of_format_key:
+                format_value_list.append(format_tagandvalues_by_sample.get(sample, '.').get(key, '.')) # adds missing values if not found
+            sample_format_value_tokens.append(":".join(format_value_list))
+        else:
+            sample_format_value_tokens.append(':'.join(['.' for key in list_of_format_key] or ['.']))
     sample_format_values_string = '\t'.join(sample_format_value_tokens)
     return sample_format_values_string
 
@@ -267,8 +253,8 @@ def format_vcf_datalines(list_of_vcf_objects, list_of_sample_names):
     """
     formatted_vcf_datalines = []
     for vcf_obj in list_of_vcf_objects:
-        sample_name_dict_format_kv = vcf_obj.format_dict
-        sample_format_values_string = format_sample_values(sample_name_dict_format_kv, list_of_sample_names)
+        format_tagsandvalues_by_sample = vcf_obj.format_dict
+        sample_format_values_string = format_sample_values(format_tagsandvalues_by_sample, list_of_sample_names)
         vcf_info_string = ";".join([inf for inf in vcf_obj.info if inf is not None])
         vcf_line = (f"{vcf_obj.chrom}\t"
                         f"{vcf_obj.pos}\t"
