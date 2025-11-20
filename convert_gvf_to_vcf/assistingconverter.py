@@ -1,5 +1,5 @@
 """
-This is an assistant converter to help convert gvf attributes
+This is contains functions to assist the conversion of gvf attributes
 """
 import os
 from convert_gvf_to_vcf.logger import logger
