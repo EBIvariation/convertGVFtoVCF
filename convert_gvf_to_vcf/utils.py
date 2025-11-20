@@ -1,4 +1,4 @@
-# this file contains readers
+"""This contains readers and utilities"""
 import os
 import yaml
 
@@ -34,6 +34,30 @@ def read_pragma_mapper(pragma_mapper_file):
             pragma_to_vcf_header[pragma] = vcf_header
     return pragma_to_vcf_header
 
+def read_in_gvf_file(gvf_input):
+    """ Reads in the user provided GVF file.
+    :param gvf_input: arguments.gvf_input : The input GVF file
+    :return:
+        - gvf_pragmas: list of pragma lines (start with ## at the top of GVF file)
+        - gvf_non_essential: list of non essential pragma (start with # near the top of GVF file)
+        - gvf_lines_obj_list: list of objects where each object represents a GVF feature line
+    """
+    gvf_pragmas = []  # list of pragma lines starting with: ##
+    gvf_non_essential = []  # list of non-essential lines starting with: #
+    gvf_lines_obj_list = []  # list of objects when reading in gvf files, one object represents a gvf line
+
+    with open(gvf_input) as gvf_file:
+        for line in gvf_file:
+            if line.startswith("##"):
+                gvf_pragmas.append(line.rstrip())
+            elif line.startswith("#"):
+                gvf_non_essential.append(line.rstrip())
+            else:
+                f_list = line.rstrip().split("\t")
+                line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
+                gvf_lines_obj_list.append(line_object)
+    return gvf_pragmas, gvf_non_essential, gvf_lines_obj_list
+
 def generate_symbolic_allele_dict(mapping_dictionary):
     """Reads in mapping dictionary and returns a symbolic allele dictionary.
     :param mapping_dictionary: mapping dictionary
@@ -41,7 +65,8 @@ def generate_symbolic_allele_dict(mapping_dictionary):
     """
     symbolic_allele_dict = {}
     for attribute in mapping_dictionary:
-        header_type= "ALT"
+        # Symbolic alleles refer only to the header type "ALT".
+        header_type = "ALT"
         if mapping_dictionary[attribute].get(header_type) is not None:
             if mapping_dictionary[attribute].get(header_type).get("FieldKey") is not None:
                 name = attribute
@@ -54,27 +79,23 @@ def generate_symbolic_allele_dict(mapping_dictionary):
                 symbolic_allele_dict.setdefault(name, []).append(description)
     return symbolic_allele_dict
 
-
-def read_in_gvf_file(gvf_input):
-    """ Reads in the user provided GVF file.
-    :param gvf_input: arguments.gvf_input
-    :return: gvf_pragmas, gvf_non_essential, gvf_lines_obj_list
+def build_iupac_ambiguity_code():
+    """ Builds dictionary for the iupac ambiguity code.
+    :return: iupac_ambiguity_dictionary: iupac code as key, list of values as value
     """
-    gvf_pragmas = []  # list of pragma lines starting with: ##
-    gvf_non_essential = []  # list of non-essential lines starting with: #
-    features = []
-    gvf_lines_obj_list = []  # list of objects when reading in gvf files, one object represents a gvf line
-
-    with open(gvf_input) as gvf_file:
-        for line in gvf_file:
-            if line.startswith("##"):
-                gvf_pragmas.append(line.rstrip())
-            elif line.startswith("#"):
-                gvf_non_essential.append(line.rstrip())
-            else:
-                features.append(line.rstrip())
-    for feature in features:
-        f_list = feature.split("\t")
-        line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
-        gvf_lines_obj_list.append(line_object)
-    return gvf_pragmas, gvf_non_essential, gvf_lines_obj_list
+    # see PMID: 20202974 (Table 1) for the official list
+    iupac_codes = ["R", "Y", "M", "K", "S", "D", "W", "H", "B", "V", "D", "N"]
+    R = ["A", "G"]
+    Y = ["C", "T"]
+    M = ["A", "C"]
+    K = ["G", "T"]
+    S = ["C", "G"]
+    W = ["A", "T"]
+    H = ["A", "C", "T"]
+    B = ["C", "G", "T"]
+    V = ["A", "C", "G"]
+    D = ["A", "G", "T"]
+    N = ["A", "C", "G", "T"]
+    iupac_values = [R, Y, M, K, S, D, W, H, B, V, D, N]
+    iupac_ambiguity_dictionary = dict(zip(iupac_codes, iupac_values))
+    return iupac_ambiguity_dictionary
