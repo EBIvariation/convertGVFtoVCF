@@ -67,8 +67,6 @@ class TestVcfline(unittest.TestCase):
         assert ref is not None
         assert alt is not None
 
-
-
     def test_convert_iupac_ambiguity_code(self):
         ref_to_convert = "TAGD"
         converted_ref_allele = self.v.convert_iupac_ambiguity_code(self.reference_lookup.iupac_ambiguity_dictionary, ref_to_convert)
