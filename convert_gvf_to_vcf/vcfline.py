@@ -353,18 +353,6 @@ class VcfLine:
         self.format_values_by_sample_string = '\t'.join(sample_format_value_tokens)
         return self.format_values_by_sample_string
     # functions responsible for INFO are below
-    # def convert_info_list_to_dict(self):
-    #     """ This converts list of INFO fields in a VCF line to a dictionary. This will be useful when merging fields of a VCF line.
-    #     :return: info_dict: converted dictionary of INFO fileds
-    #     """
-    #     info_dict = {}
-    #     for i in self.info:
-    #         tokens = i.split(";")
-    #         for token in tokens:
-    #             info_key, info_value = token.split("=")
-    #             info_dict[info_key] = info_value
-    #     # NOTE: info_dict is a contains same info as vcf_value except the keys are converted
-    #     return info_dict
 
     def merge_info_dicts(self, other_vcf_line):
         """ Merges and stores the INFO dictionaries for the INFO field of a VCF line.
