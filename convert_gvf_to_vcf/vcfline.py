@@ -406,7 +406,7 @@ class VcfLine:
         if "CIEND" in self.info_dict and self.info_dict.get('CIEND') is None:
             del self.info_dict["CIEND"]
         # Format the string
-        self.info_string = ";".join(f"{key}={value}" for key,value in self.info_dict.items())
+        self.info_string = ";".join(f"{key}={value}" if key != "IMPRECISE" else f"{value}" for key,value in self.info_dict.items())
         return self.info_string
 
     # MERGE OR KEEP below
