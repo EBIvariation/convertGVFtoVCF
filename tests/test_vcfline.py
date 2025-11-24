@@ -28,13 +28,12 @@ class TestVcfline(unittest.TestCase):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
         gvf_line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
-
-        # standard structured meta-information lines for this VCF file
+        # Set up of data structures
+        # Dictionary of standard structured meta-information lines for this VCF file
         lines_standard_alt = []
         lines_standard_info = []
         lines_standard_filter = []
         lines_standard_format = []
-        # merging
         self.standard_lines_dictionary = {
             "ALT": lines_standard_alt,
             "INFO": lines_standard_info,
@@ -47,7 +46,6 @@ class TestVcfline(unittest.TestCase):
         all_possible_alt_lines = generate_vcf_header_structured_lines("ALT", self.reference_lookup.mapping_attribute_dict)
         all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER", self.reference_lookup.mapping_attribute_dict)
         all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT", self.reference_lookup.mapping_attribute_dict)
-
         self.all_possible_lines_dictionary = {
             "ALT": all_possible_alt_lines,
             "INFO": all_possible_info_lines,
