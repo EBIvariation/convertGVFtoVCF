@@ -365,8 +365,9 @@ def main():
         comparison_flags = compare_vcf_objects(list_of_vcf_objects) # Identifies which VCF objects to merge
         merge_or_kept_vcf_objects = determine_merge_or_keep_vcf_objects(list_of_vcf_objects, comparison_flags, samples)
         # Write the VCF objects as data lines in the VCF file.
-        for line in merge_or_kept_vcf_objects:
-            vcf_output.write("\t".join(str(val) for val in line) + "\n")
+        for vcf_line_object in merge_or_kept_vcf_objects:
+            vcf_output.write(str(vcf_line_object) + "\n")
+            # vcf_output.write("\t".join(str(val) for val in line) + "\n")
     vcf_output.close()
     logger.info("GVF to VCF conversion complete")
 

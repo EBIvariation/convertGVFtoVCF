@@ -92,7 +92,8 @@ class TestVcfline(unittest.TestCase):
                                                                        self.all_possible_lines_dictionary,
                                                                        self.reference_lookup.symbolic_allele_dictionary)
         assert output_symbolic_allele == '<DEL>'
-        assert info_field == ['ID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;SVCID=CNV28955;REMAP=.98857;VARSEQ=.', 'END=77', 'SVLEN=1', 'END=78', 'SVLEN=1']
+        print(info_field)
+        assert info_field == {'END': '78', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
         assert output_lines_standard_alt == ['##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DEL,Description="Deletion">']
         assert output_lines_standard_info == ['##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">']
 
@@ -126,7 +127,7 @@ class TestVcfline(unittest.TestCase):
         ) = generate_vcf_header_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
                                          header_standard_lines_dictionary)
         for vcf_obj in list_of_vcf_objects:
-            sample_name_dict_format_kv = vcf_obj.format_dict
+            sample_name_dict_format_kv = vcf_obj.vcf_values_for_format
             # sample_format_values_string = format_sample_values(sample_name_dict_format_kv, samples)
             sample_format_values_string = vcf_obj.combine_format_values_by_sample(sample_name_dict_format_kv, samples)
             assert isinstance(sample_format_values_string, str)

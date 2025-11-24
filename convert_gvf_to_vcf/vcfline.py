@@ -40,9 +40,9 @@ class VcfLine:
                  reference_lookup
                  ):
 
-        (self.vcf_value, # used to populate the VCF fields. This is a dict of non-converted GVF attribute keys and their values.
-         self.info_string, # a formatted INFO string to form VCF line
-         self.format_dict # a dict of format tag and values for each sample to form VCF line
+        (self.vcf_value_from_gvf_attribute,  # used to populate the VCF fields. This is a dict of non-converted GVF attribute keys and their values.
+         self.vcf_values_for_info,  # a dict that stores INFO key-values to form VCF line. This includes converted GVF attribute keys (+ other SV INFO).
+         self.vcf_values_for_format  # a dict of format tag and values for each sample to form VCF line
          ) = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, reference_lookup.mapping_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
 
         # These might form useful parts of INFO field in VCF lines (useful information from GVF)
@@ -54,23 +54,23 @@ class VcfLine:
         # VCF DATALINE
         self.chrom = gvf_feature_line_object.seqid
         self.pos = int(gvf_feature_line_object.start)
-        self.id = self.vcf_value["ID"]  # attributes: ID
+        self.id = self.vcf_value_from_gvf_attribute["ID"]  # attributes: ID
         self.length = self.end - self.pos
         self.qual = gvf_feature_line_object.score # see EVA-3879: this is always '.'
         self.filter = "." # this is always a placeholder '.'; perhaps could add s50.
 
         # INFO
         self.key = self.chrom + "_" + str(self.pos)
-        self.info = []
-        self.info.append(self.info_string)
+        self.info_dict = {}  # dict that stores INFO key-values (including INFO from merged lines).
+
         # calculated last
         self.ref = self.get_ref(reference_lookup)
         self.alt = self.get_alt(field_lines_dictionary, all_possible_lines_dictionary, reference_lookup)
 
-        self.sample_name = self.vcf_value["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
+        self.sample_name = self.vcf_value_from_gvf_attribute["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
         # # higher priority
-        if self.format_dict:
-            list_of_format_keys = [format_key for format_value in self.format_dict.values() for format_key in format_value.keys()]
+        if self.vcf_values_for_format:
+            list_of_format_keys = [format_key for format_value in self.vcf_values_for_format.values() for format_key in format_value.keys()]
             self.format = ":".join(list_of_format_keys)
         else:
             self.format = "." #TODO: this is temporary, when the multiple VCF lines are merged this will be filled in
@@ -143,8 +143,8 @@ class VcfLine:
         :return: reference allele
         """
         assembly_file = reference_lookup.assembly_file
-        if "Reference_seq" in self.vcf_value.keys():
-            reference_allele = self.vcf_value["Reference_seq"]
+        if "Reference_seq" in self.vcf_value_from_gvf_attribute.keys():
+            reference_allele = self.vcf_value_from_gvf_attribute["Reference_seq"]
         else:
             if assembly_file:
                 reference_allele = extract_reference_allele(assembly_file, self.chrom, self.pos, self.end)
@@ -172,61 +172,67 @@ class VcfLine:
 
         if symbolic_allele_id in all_possible_alt_lines:
             lines_standard_alt.append(all_possible_alt_lines[symbolic_allele_id])
-
-        info_svlen = None
+        info_svlen_key = "SVLEN"
+        info_svlen_value = None
         if self.length:
-            info_svlen = "SVLEN=" + str(self.length)
+            info_svlen_value = str(self.length)
 
-        start_range_lower_bound = self.vcf_value["Start_range"][0]
-        start_range_upper_bound = self.vcf_value["Start_range"][1]
-        end_range_lower_bound = self.vcf_value["End_range"][0]
-        end_range_upper_bound = self.vcf_value["End_range"][1]
+        start_range_lower_bound = self.vcf_value_from_gvf_attribute["Start_range"][0]
+        start_range_upper_bound = self.vcf_value_from_gvf_attribute["Start_range"][1]
+        end_range_lower_bound = self.vcf_value_from_gvf_attribute["End_range"][0]
+        end_range_upper_bound = self.vcf_value_from_gvf_attribute["End_range"][1]
 
         # setting up fields to be inserted into INFO
-        info_end = None
-        info_imprecise = None
-        info_cipos = None
-        info_ciend = None
+        info_end_key = "END"
+        info_end_value = None
+        info_imprecise_key = "IMPRECISE"
+        info_imprecise_value = None
+        info_cipos_key = "CIPOS"
+        info_cipos_value = None
+        info_ciend_key = "CIEND"
+        info_ciend_value = None
 
         if start_range_lower_bound == "." or start_range_upper_bound == "." or end_range_lower_bound == "." or end_range_upper_bound == ".":
             is_imprecise = False
-            info_end = "END=" + str(self.pos + len(self.ref) - 1)
+            info_end_value = str(self.pos + len(self.ref) - 1)
         else:
             is_imprecise = True
-            info_imprecise = "IMPRECISE"
+            info_imprecise_value = "IMPRECISE"
 
             cipos_lower_bound = int(start_range_lower_bound) - self.pos
             cipos_upper_bound = int(start_range_upper_bound) - self.pos
-            info_cipos = "CIPOS=" + str(cipos_lower_bound) + "," + str(cipos_upper_bound)
+            info_cipos_value = str(cipos_lower_bound) + "," + str(cipos_upper_bound)
 
             ciend_lower_bound = int(start_range_lower_bound) - self.pos
             ciend_upper_bound = int(start_range_upper_bound) - self.pos
-            info_ciend = "CIEND=" + str(ciend_lower_bound) + "," + str(ciend_upper_bound)
+            info_ciend_value = str(ciend_lower_bound) + "," + str(ciend_upper_bound)
 
             if symbolic_allele == "<INS>":
-                info_end ="END=" + str( self.pos + len(self.ref) - 1 )
+                info_end_value = str( self.pos + len(self.ref) - 1 )
             elif symbolic_allele in {"<DEL>", "<DUP>", "<INV>", "<CNV>"}:
-                info_end = "END=" + str(self.pos + self.length)
+                info_end_value = str(self.pos + self.length)
             elif symbolic_allele == "<*>":
-                info_end = "END=" + str(self.pos + len(self.ref))
+                info_end_value = str(self.pos + len(self.ref))
             else:
                 print("Cannot identify symbolic allele")
 
-        # for all variants (precise and imprecise)
-        self.info.append(info_end)
+        # Set up INFO values for structural variants and store in the info_dict
+        self.info_dict[info_end_key] = info_end_value
+        self.info_dict[info_imprecise_key] = info_imprecise_value
+        self.info_dict[info_cipos_key] = info_cipos_value
+        self.info_dict[info_ciend_key] = info_ciend_value
+        self.info_dict[info_svlen_key] = info_svlen_value
+
+        # for all variants (precise and imprecise) store INFO lines for the header
         lines_standard_info.append(all_possible_info_lines["END"])
-        self.info.append(info_svlen)
         lines_standard_info.append(all_possible_info_lines["SVLEN"])
 
         # for imprecise variants only
         if is_imprecise:
-            self.info.append(info_imprecise)
             lines_standard_info.append(all_possible_info_lines["IMPRECISE"])
-            self.info.append(info_cipos)
             lines_standard_info.append(all_possible_info_lines["CIPOS"])
-            self.info.append(info_ciend)
             lines_standard_info.append(all_possible_info_lines["CIEND"])
-        return symbolic_allele, self.info, lines_standard_alt, lines_standard_info
+        return symbolic_allele, self.info_dict, lines_standard_alt, lines_standard_info
 
     def get_alt(self, field_lines_dictionary, all_possible_lines_dictionary, reference_lookup):
         """ Gets the ALT allele for the VCF file
@@ -234,13 +240,13 @@ class VcfLine:
         :param all_possible_lines_dictionary: dictionary of all possible ALT, INFO, FORMAT, FILTER lines
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
-        if any(base in self.vcf_value["Variant_seq"] for base in ["A", "C", "G", "T", "N"]):
-            alterative_allele = self.vcf_value["Variant_seq"]
-        elif self.vcf_value["Variant_seq"] == '.':
-            symbolic_allele, self.info, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(field_lines_dictionary, all_possible_lines_dictionary, reference_lookup.symbolic_allele_dictionary)
+        if any(base in self.vcf_value_from_gvf_attribute["Variant_seq"] for base in ["A", "C", "G", "T", "N"]):
+            alterative_allele = self.vcf_value_from_gvf_attribute["Variant_seq"]
+        elif self.vcf_value_from_gvf_attribute["Variant_seq"] == '.':
+            symbolic_allele, self.info_dict, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(field_lines_dictionary, all_possible_lines_dictionary, reference_lookup.symbolic_allele_dictionary)
             if symbolic_allele is None:
                 alterative_allele = "."
-            elif (self.vcf_value["Variant_seq"] == "." or self.vcf_value["Variant_seq"] == "-") and symbolic_allele is not None:
+            elif (self.vcf_value_from_gvf_attribute["Variant_seq"] == "." or self.vcf_value_from_gvf_attribute["Variant_seq"] == "-") and symbolic_allele is not None:
                 alterative_allele = symbolic_allele
                 # add padded bases
                 if self.pos == 1:
@@ -263,7 +269,7 @@ class VcfLine:
         # string_to_return = '\t'.join((self.chrom, self.pos, self.key, self.qual, self.filter, self.info, self.source, self.phase, self.end, self.so_type, self.sample_name, self.format))
         self.info_string = self.format_info_string()
         string_to_return = '\t'.join((self.chrom,
-                self.pos,
+                str(self.pos),
                 self.id,
                 self.ref,
                 self.alt,
@@ -347,27 +353,27 @@ class VcfLine:
         self.format_values_by_sample_string = '\t'.join(sample_format_value_tokens)
         return self.format_values_by_sample_string
     # functions responsible for INFO are below
-    def convert_info_list_to_dict(self):
-        """ This converts list of INFO fields in a VCF line to a dictionary. This will be useful when merging fields of a VCF line.
-        :return: info_dict: converted dictionary of INFO fileds
-        """
-        info_dict = {}
-        for i in self.info:
-            tokens = i.split(";")
-            for token in tokens:
-                info_key, info_value = token.split("=")
-                info_dict[info_key] = info_value
-        # NOTE: info_dict is a contains same info as vcf_value except the keys are converted
-        return info_dict
+    # def convert_info_list_to_dict(self):
+    #     """ This converts list of INFO fields in a VCF line to a dictionary. This will be useful when merging fields of a VCF line.
+    #     :return: info_dict: converted dictionary of INFO fileds
+    #     """
+    #     info_dict = {}
+    #     for i in self.info:
+    #         tokens = i.split(";")
+    #         for token in tokens:
+    #             info_key, info_value = token.split("=")
+    #             info_dict[info_key] = info_value
+    #     # NOTE: info_dict is a contains same info as vcf_value except the keys are converted
+    #     return info_dict
 
     def merge_info_dicts(self, other_vcf_line):
         """ Merges and stores the INFO dictionaries for the INFO field of a VCF line.
         :param: other_vcf_line
         """
         merged_info_dict = {}
-        for key in self.info_dict.keys() | other_vcf_line.info_dict.keys():
-            self.value_info_dict = self.info_dict.get(key)
-            other_vcf_line.value_info_dict = other_vcf_line.info_dict.get(key)
+        for key in self.vcf_values_for_info.keys() | other_vcf_line.vcf_values_for_info.keys():
+            self.value_info_dict = self.vcf_values_for_info.get(key)
+            other_vcf_line.value_info_dict = other_vcf_line.vcf_values_for_info.get(key)
             if self.value_info_dict == other_vcf_line.value_info_dict:
                 merged_info_dict[key] = self.value_info_dict
             else:
@@ -377,6 +383,9 @@ class VcfLine:
                     merged_info_dict[key] = self.value_info_dict
                 else:
                     merged_info_dict[key] = f"{self.value_info_dict},{other_vcf_line.value_info_dict}"
+        # Anchors the key called ID so it is always the first
+        anchored_key = "ID"
+        merged_info_dict = {anchored_key: merged_info_dict.pop(anchored_key), **merged_info_dict}
         # Store merged info dict for this VCF line and the other VCF line.
         self.info_dict = merged_info_dict
         other_vcf_line.info_dict = merged_info_dict
@@ -385,13 +394,19 @@ class VcfLine:
         """ Creates a formatted INFO string using the INFO dictionary. Anchors ID to start of the string.
         :return: info_string: formatted INFO string for use in VCF line
         """
-        info_parts = []
-        if "ID" in self.info_dict:
-            info_parts.append(f"ID={self.info_dict["ID"]}")
-        for key, value in self.info_dict.items():
-            if key != "ID":
-                info_parts.append(f"{key}={value}")
-        self.info_string = ";".join(info_parts)
+        # Ensure ID is the first key
+        anchored_key = "ID"
+        if anchored_key in self.info_dict:
+            self.info_dict = {anchored_key:self.info_dict.pop(anchored_key), **self.info_dict}
+        # Remove None values
+        if self.info_dict.get('IMPRECISE') is None:
+            del self.info_dict["IMPRECISE"]
+        if self.info_dict.get('CIPOS') is None:
+            del self.info_dict["CIPOS"]
+        if self.info_dict.get('CIEND') is None:
+            del self.info_dict["CIEND"]
+        # Format the string
+        self.info_string = ";".join(f"{key}={value}" for key,value in self.info_dict.items())
         return self.info_string
 
     # MERGE OR KEEP below
@@ -400,41 +415,29 @@ class VcfLine:
         :param: other_vcf_line : other VCF line to merge with
         :param: list_of_sample_names: list of sample names to help with creating format values by sample
         """
-        # Merging INFO fields
-        self.info_dict =  self.convert_info_list_to_dict()
-        other_vcf_line.info_dict = other_vcf_line.convert_info_list_to_dict()
+        # Merging ID, ALT and FILTER first
+        merged_id = self.merge_and_add(self.id, other_vcf_line.id, ";")
+        merged_alt = self.merge_and_add(self.alt, other_vcf_line.alt, ",")
+        merged_filter = self.merge_and_add(self.filter, other_vcf_line.filter, ";")
+
+        self.id = other_vcf_line.id = merged_id
+        self.alt = other_vcf_line.alt = merged_alt
+        self.filter = other_vcf_line.filter = merged_filter
+
+        # Merging INFO using info_dict
         self.merge_info_dicts(other_vcf_line)
-        self.info_string  = self.format_info_string().rstrip(";")
-        # merging FORMAT keys
+        # Merging FORMAT keys - these go under FORMAT
         self.merge_format_keys(other_vcf_line)
-        # merging FORMAT values
-        merged_format_dict = self.format_dict | other_vcf_line.format_dict
-        self.format_dict = merged_format_dict
-        other_vcf_line.format_dict = merged_format_dict
-        self.format_values_by_sample_string = self.combine_format_values_by_sample(self.format_dict, list_of_sample_names)
-        other_vcf_line.format_values_by_sample_string = other_vcf_line.combine_format_values_by_sample(other_vcf_line.format_dict, list_of_sample_names)
-        return (self.chrom,
-                self.pos,
-                self.merge_and_add(self.id, other_vcf_line.id, ";"),
-                self.ref,
-                self.merge_and_add(self.alt, other_vcf_line.alt, ","),
-                self.qual,
-                self.merge_and_add(self.filter, other_vcf_line.filter, ";"),
-                self.info_string,
-                self.format,
-                self.format_values_by_sample_string
-                )
+        # Merging FORMAT values - these go under the Sample
+        merged_format_dict = self.vcf_values_for_format | other_vcf_line.vcf_values_for_format
+        self.vcf_values_for_format = merged_format_dict
+        other_vcf_line.vcf_values_for_format = merged_format_dict
+
+        self.format_values_by_sample_string = self.combine_format_values_by_sample(self.vcf_values_for_format, list_of_sample_names)
+        other_vcf_line.format_values_by_sample_string = other_vcf_line.combine_format_values_by_sample(other_vcf_line.vcf_values_for_format, list_of_sample_names)
+        return self
+
 
     def keep(self, list_of_sample_names):
-        self.format_values_by_sample_string = self.combine_format_values_by_sample(self.format_dict, list_of_sample_names)
-        return (self.chrom,
-                self.pos,
-                self.id,
-                self.ref,
-                self.alt,
-                self.qual,
-                self.filter,
-                self.info_string,
-                self.format,
-                self.format_values_by_sample_string
-                )
+        self.format_values_by_sample_string = self.combine_format_values_by_sample(self.vcf_values_for_format, list_of_sample_names)
+        return self
