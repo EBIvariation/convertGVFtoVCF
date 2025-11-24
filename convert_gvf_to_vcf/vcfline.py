@@ -355,7 +355,6 @@ class VcfLine:
         self.format_values_by_sample_string = '\t'.join(sample_format_value_tokens)
         return self.format_values_by_sample_string
     # functions responsible for INFO are below
-
     def merge_info_dicts(self, other_vcf_line):
         """ Merges and stores the INFO dictionaries for the INFO field of a VCF line.
         :param: other_vcf_line
