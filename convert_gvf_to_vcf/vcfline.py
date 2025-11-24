@@ -266,7 +266,9 @@ class VcfLine:
         return alterative_allele
 
     def __str__(self):
-        # string_to_return = '\t'.join((self.chrom, self.pos, self.key, self.qual, self.filter, self.info, self.source, self.phase, self.end, self.so_type, self.sample_name, self.format))
+        """ Creates and formats the VCF line.
+        :return: string_to_return - the VCF line as a string
+        """
         self.info_string = self.format_info_string()
         string_to_return = '\t'.join((self.chrom,
                 str(self.pos),
