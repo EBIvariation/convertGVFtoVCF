@@ -399,11 +399,11 @@ class VcfLine:
         if anchored_key in self.info_dict:
             self.info_dict = {anchored_key:self.info_dict.pop(anchored_key), **self.info_dict}
         # Remove None values
-        if self.info_dict.get('IMPRECISE') is None:
+        if "IMPRECISE" in self.info_dict and self.info_dict.get('IMPRECISE') is None:
             del self.info_dict["IMPRECISE"]
-        if self.info_dict.get('CIPOS') is None:
+        if "CIPOS" in self.info_dict and self.info_dict.get('CIPOS') is None:
             del self.info_dict["CIPOS"]
-        if self.info_dict.get('CIEND') is None:
+        if "CIEND" in self.info_dict and self.info_dict.get('CIEND') is None:
             del self.info_dict["CIEND"]
         # Format the string
         self.info_string = ";".join(f"{key}={value}" for key,value in self.info_dict.items())
