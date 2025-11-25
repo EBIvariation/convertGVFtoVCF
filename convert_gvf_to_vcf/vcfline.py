@@ -67,13 +67,16 @@ class VcfLine:
         self.ref = self.get_ref(reference_lookup)
         self.alt = self.get_alt(field_lines_dictionary, all_possible_lines_dictionary, reference_lookup)
 
-        self.sample_name = self.vcf_value_from_gvf_attribute["sample_name"] # this should be each samples names format value # sample names needs to be populated in attributes
+        # Get the sample name. This relates to the sample name in the GVF feature line.
+        self.sample_name = self.vcf_value_from_gvf_attribute["sample_name"]
+
         # # higher priority
         if self.vcf_values_for_format:
             list_of_format_keys = [format_key for format_value in self.vcf_values_for_format.values() for format_key in format_value.keys()]
             self.format = ":".join(list_of_format_keys)
         else:
             self.format = "." #TODO: this is temporary, when the multiple VCF lines are merged this will be filled in
+        print("format is type",type(self.format))
         # list of samples from the VCF header should be here # merging will affect this # order of the sample
 
     # Functions which are responsible for token generation/population for the VCF line
@@ -360,6 +363,7 @@ class VcfLine:
         :param: other_vcf_line
         """
         merged_info_dict = {}
+        # Merge the INFO dict of this VCF line and the other_vcf_line
         for key in self.vcf_values_for_info.keys() | other_vcf_line.vcf_values_for_info.keys():
             self.value_info_dict = self.vcf_values_for_info.get(key)
             other_vcf_line.value_info_dict = other_vcf_line.vcf_values_for_info.get(key)

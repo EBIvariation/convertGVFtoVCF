@@ -20,6 +20,7 @@ def generate_vcf_header_structured_lines(header_type, mapping_attribute_dict):
     all_possible_lines = {}
 
     for attribute in mapping_attribute_dict:
+        # Formatting the header string for FILTER, INFO or FORMAT and storing in a dictionary
         if mapping_attribute_dict[attribute].get(header_type) is not None and header_type != "ALT":
             header_string = (f'##{header_type}='
                              f'<ID={mapping_attribute_dict[attribute][header_type]["FieldKey"]},'
@@ -27,6 +28,7 @@ def generate_vcf_header_structured_lines(header_type, mapping_attribute_dict):
                              f'Type={mapping_attribute_dict[attribute][header_type]["Type"]},'
                              f'Description="{mapping_attribute_dict[attribute][header_type]["Description"]}">')
             all_possible_lines[mapping_attribute_dict[attribute][header_type]["FieldKey"]] = header_string
+        # Formatting the header string for ALT and storing in a dictionary
         elif mapping_attribute_dict[attribute].get(header_type) is not None and header_type == "ALT":
             if mapping_attribute_dict[attribute][header_type]["FieldKey"] is not None:
                 header_string = (f'##{header_type}='
