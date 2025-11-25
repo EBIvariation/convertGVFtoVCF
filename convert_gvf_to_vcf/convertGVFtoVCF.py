@@ -1,8 +1,7 @@
 import argparse
 import os
 from convert_gvf_to_vcf.utils import read_pragma_mapper, \
-    read_in_gvf_file, \
-    read_yaml, generate_symbolic_allele_dict
+    read_in_gvf_file
 from convert_gvf_to_vcf.vcfline import VcfLine
 from convert_gvf_to_vcf.logger import set_up_logging, logger
 from convert_gvf_to_vcf.lookup import Lookup
