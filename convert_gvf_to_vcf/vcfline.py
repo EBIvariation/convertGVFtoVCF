@@ -42,7 +42,7 @@ class VcfLine:
 
         (self.vcf_value_from_gvf_attribute,  # used to populate the VCF fields. This is a dict of non-converted GVF attribute keys and their values.
          self.vcf_values_for_info,  # a dict that stores INFO key-values to form VCF line. This includes converted GVF attribute keys (+ other SV INFO).
-         self.vcf_values_for_format  # a dict of format tag and values for each sample to form VCF line
+         self.vcf_values_for_format  # a dict of FORMAT key-values for each sample to form VCF line
          ) = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, reference_lookup.mapping_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
 
         # These might form useful parts of INFO field in VCF lines (useful information from GVF)
@@ -51,35 +51,32 @@ class VcfLine:
         self.end = int(gvf_feature_line_object.end)
         self.phase = gvf_feature_line_object.phase # this is always a placeholder '.'
 
-        # VCF DATALINE
+        # VCF DATALINE - mandatory columnes
         self.chrom = gvf_feature_line_object.seqid
         self.pos = int(gvf_feature_line_object.start)
         self.id = self.vcf_value_from_gvf_attribute["ID"]  # attributes: ID
-        self.length = self.end - self.pos
+        # note ref and alt are calculated below
         self.qual = gvf_feature_line_object.score # see EVA-3879: this is always '.'
         self.filter = "." # this is always a placeholder '.'; perhaps could add s50.
-
-        # INFO
-        self.key = self.chrom + "_" + str(self.pos)
         self.info_dict = {}  # dict that stores INFO key-values (including INFO from merged lines).
-
+        self.sample_name = self.vcf_value_from_gvf_attribute["sample_name"] #This relates to the sample name in the GVF feature line.
+        self.length = self.end - self.pos
         # calculated last
         self.ref = self.get_ref(reference_lookup)
         self.alt = self.get_alt(field_lines_dictionary, all_possible_lines_dictionary, reference_lookup)
 
-        # Get the sample name. This relates to the sample name in the GVF feature line.
-        self.sample_name = self.vcf_value_from_gvf_attribute["sample_name"]
+        # useful for generation of vcf lines
+        self.key = self.chrom + "_" + str(self.pos)
 
         # # higher priority
         if self.vcf_values_for_format:
-            list_of_format_keys = [format_key for format_value in self.vcf_values_for_format.values() for format_key in format_value.keys()]
-            self.format = ":".join(list_of_format_keys)
+            set_of_format_keys = set([format_key for format_value in self.vcf_values_for_format.values() for format_key in format_value.keys()])
+            self.format_keys = self.order_format_keys(set_of_format_keys) # a list of ordered format keys
+            # self.format = ":".join(list_of_format_keys)
         else:
-            self.format = "." #TODO: this is temporary, when the multiple VCF lines are merged this will be filled in
-        print("format is type",type(self.format))
+            self.format_keys = "." #TODO: this is temporary, when the multiple VCF lines are merged this will be filled in
         # list of samples from the VCF header should be here # merging will affect this # order of the sample
-        self.format_values_by_sample_string = ""
-        self.value_info_dict = {}
+
     # Functions which are responsible for token generation/population for the VCF line
     def add_padded_base(self, ref, alt, placed_before : bool, assembly_file):
         """ Adds a padded base to the REF and ALT allele of a VCF line.
@@ -273,7 +270,7 @@ class VcfLine:
         """ Creates and formats the VCF line.
         :return: string_to_return - the VCF line as a string
         """
-        self.info_string = self.format_info_string()
+        info_string = self.format_info_string()
         string_to_return = '\t'.join((self.chrom,
                 str(self.pos),
                 self.id,
@@ -281,8 +278,8 @@ class VcfLine:
                 self.alt,
                 self.qual,
                 self.filter,
-                self.info_string,
-                self.format,
+                info_string,
+                ":".join(self.format_keys),
                 self.format_values_by_sample_string
                 ))
         return string_to_return
@@ -321,19 +318,20 @@ class VcfLine:
         return anchored_list_of_format_keys
 
     def merge_format_keys(self, other_vcf_line):
-        """ Storing and merging of FORMAT keys of a VCF line.
+        """ Storing and merging of FORMAT keys of a VCF line in a list.
         :param: other_vcf_line: the other VCF line to merge with
         """
         merged_format_keys = set()
-        this_keys = self.format.split(":")
-        other_keys = other_vcf_line.format.split(":")
-        for this_key in this_keys:
+        # this_keys = self.format_keys.split(":")
+        # other_keys = other_vcf_line.format_keys.split(":")
+        for this_key in self.format_keys:
             merged_format_keys.add(this_key)
-        for other_key in other_keys:
+        for other_key in other_vcf_line.format_keys:
             merged_format_keys.add(other_key)
         list_of_merged_format_key = self.order_format_keys(merged_format_keys)
-        self.format = ":".join(list_of_merged_format_key)
-        other_vcf_line.format = ":".join(list_of_merged_format_key)
+        self.format_keys = list_of_merged_format_key
+        other_vcf_line.format_keys = list_of_merged_format_key
+
 
     def combine_format_values_by_sample(self, format_tag_and_values_per_sample, list_of_sample_names):
         """ Creates a partial vcf data line of sample format values.
