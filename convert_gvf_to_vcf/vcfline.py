@@ -78,7 +78,8 @@ class VcfLine:
             self.format = "." #TODO: this is temporary, when the multiple VCF lines are merged this will be filled in
         print("format is type",type(self.format))
         # list of samples from the VCF header should be here # merging will affect this # order of the sample
-
+        self.format_values_by_sample_string = ""
+        self.value_info_dict = {}
     # Functions which are responsible for token generation/population for the VCF line
     def add_padded_base(self, ref, alt, placed_before : bool, assembly_file):
         """ Adds a padded base to the REF and ALT allele of a VCF line.
@@ -399,8 +400,8 @@ class VcfLine:
         if "CIEND" in self.info_dict and self.info_dict.get('CIEND') is None:
             del self.info_dict["CIEND"]
         # Format the string
-        self.info_string = ";".join(f"{key}={value}" if key != "IMPRECISE" else f"{value}" for key,value in self.info_dict.items())
-        return self.info_string
+        info_string = ";".join(f"{key}={value}" if key != "IMPRECISE" else f"{value}" for key,value in self.info_dict.items())
+        return info_string
 
     # MERGE OR KEEP below
     def merge(self, other_vcf_line, list_of_sample_names):
