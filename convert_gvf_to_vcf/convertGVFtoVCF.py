@@ -1,7 +1,6 @@
 import argparse
 import os
-from convert_gvf_to_vcf.utils import read_pragma_mapper, \
-    read_in_gvf_file
+from convert_gvf_to_vcf.utils import read_pragma_mapper, read_in_gvf_file
 from convert_gvf_to_vcf.vcfline import VcfLine
 from convert_gvf_to_vcf.logger import set_up_logging, logger
 from convert_gvf_to_vcf.lookup import Lookup
@@ -146,10 +145,10 @@ def parse_pragma(pragma_to_parse, delimiter):
             # pragma_value = ''.join(map(str, pragma_tokens[0]))
         else:
             pragma_value = None
-            logger.warning("WARNING: no value for the following pragma %s", pragma_to_parse)
+            logger.warning(f"WARNING: no value for the following pragma {pragma_to_parse}")
         return pragma_name, pragma_value
     except ValueError:
-        logger.error("Skipping this, can't be parsed %s", pragma_to_parse)
+        logger.error(f"Skipping this, can't be parsed {pragma_to_parse}")
 
 def get_pragma_name_and_value(pragma_to_parse, delimiter, pragma_list, pragma_name_to_vcf_dict):
     """Get pragma name and value and its corresponding VCF header key.
