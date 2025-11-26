@@ -9,7 +9,7 @@ etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
 class Lookup:
     """
-    The class is responsible for the storage of look up dictionaries or files.
+    The class is responsible for the storage of look up dictionaries or files for a VCF file.
     """
     def __init__(self, assembly_file):
         self.mapping_attribute_dict = read_yaml(os.path.join(etc_folder, "attribute_mapper.yaml"))
