@@ -39,43 +39,52 @@ class VcfLine:
                  all_possible_lines_dictionary, #TODO: place this in reference
                  reference_lookup
                  ):
-
+        # Attributes which store important key-values dicts
         (self.vcf_value_from_gvf_attribute,  # used to populate the VCF fields. This is a dict of non-converted GVF attribute keys and their values.
          self.vcf_values_for_info,  # a dict that stores INFO key-values to form VCF line. This includes converted GVF attribute keys (+ other SV INFO).
          self.vcf_values_for_format  # a dict of FORMAT key-values for each sample to form VCF line
          ) = convert_gvf_attributes_to_vcf_values(gvf_feature_line_object.attributes, reference_lookup.mapping_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary)
 
-        # These might form useful parts of INFO field in VCF lines (useful information from GVF)
+        # Attributes which might form useful parts of INFO field in VCF lines (useful information from GVF)
         self.source = gvf_feature_line_object.source
         self.so_type = gvf_feature_line_object.feature_type #currently column 3 of gvf, but could be an attribute so perhapsVCF: INFO or FORMAT?
         self.end = int(gvf_feature_line_object.end)
         self.phase = gvf_feature_line_object.phase # this is always a placeholder '.'
 
-        # VCF DATALINE - mandatory columnes
+        # Attributes which are required to generate a VCF DATALINE
+        # MANDATORY VCF FIELD 1
         self.chrom = gvf_feature_line_object.seqid
+        # MANDATORY VCF FIELD 2
         self.pos = int(gvf_feature_line_object.start)
-        self.id = self.vcf_value_from_gvf_attribute["ID"]  # attributes: ID
-        # note ref and alt are calculated below
-        self.qual = gvf_feature_line_object.score # see EVA-3879: this is always '.'
-        self.filter = "." # this is always a placeholder '.'; perhaps could add s50.
+        # MANDATORY VCF FIELD 3
+        self.id = self.vcf_value_from_gvf_attribute["ID"] # attributes: ID
+        # note ref and alt are calculated below (fields 4 and 5)
+        # MANDATORY VCF FIELD 6
+        self.qual = gvf_feature_line_object.score  # see EVA-3879: this is always '.'
+        # MANDATORY VCF FIELD 7
+        self.filter = "." # this is always a placeholder '.'
+        # forms MANDATORY VCF FIELD 8
         self.info_dict = {}  # dict that stores INFO key-values (including INFO from merged lines).
-        self.sample_name = self.vcf_value_from_gvf_attribute["sample_name"] #This relates to the sample name in the GVF feature line.
-        self.length = self.end - self.pos
         # calculated last
+        self.length = self.end - self.pos # required for INFO fields- SVLEN and END
+        # MANDATORY VCF FIELD 4
         self.ref = self.get_ref(reference_lookup)
-        self.alt = self.get_alt(field_lines_dictionary, all_possible_lines_dictionary, reference_lookup)
+        # MANDATORY VCF FIELD 5
+        self.alt = self.get_alt(field_lines_dictionary,
+                                all_possible_lines_dictionary,
+                                reference_lookup)
+        # useful for conversion of vcf lines
+        self.key = self.chrom + "_" + str(self.pos) # required in main logic convert_gvf_features_to_vcf_objects
 
-        # useful for generation of vcf lines
-        self.key = self.chrom + "_" + str(self.pos)
-
-        # # higher priority
+        # presence of dict that stores FORMAT key-val per sample, store ordered list of FORMAT keys, else, use placeholder.
+        self.format_keys = []
         if self.vcf_values_for_format:
             set_of_format_keys = set([format_key for format_value in self.vcf_values_for_format.values() for format_key in format_value.keys()])
             self.format_keys = self.order_format_keys(set_of_format_keys) # a list of ordered format keys
-            # self.format = ":".join(list_of_format_keys)
         else:
-            self.format_keys = "." #TODO: this is temporary, when the multiple VCF lines are merged this will be filled in
-        # list of samples from the VCF header should be here # merging will affect this # order of the sample
+            self.format_keys.append(".") #TODO: this is temporary, when the multiple VCF lines are merged this will be filled in
+        self.list_of_format_values_per_sample = []
+
 
     # Functions which are responsible for token generation/population for the VCF line
     def add_padded_base(self, ref, alt, placed_before : bool, assembly_file):
@@ -279,8 +288,8 @@ class VcfLine:
                 self.qual,
                 self.filter,
                 info_string,
-                ":".join(self.format_keys),
-                self.format_values_by_sample_string
+                ":".join(self.format_keys) if isinstance(self.format_keys, list) else self.format_keys,
+                '\t'.join(self.list_of_format_values_per_sample)
                 ))
         return string_to_return
 
@@ -332,14 +341,12 @@ class VcfLine:
         self.format_keys = list_of_merged_format_key
         other_vcf_line.format_keys = list_of_merged_format_key
 
-
     def combine_format_values_by_sample(self, format_tag_and_values_per_sample, list_of_sample_names):
-        """ Creates a partial vcf data line of sample format values.
+        """ Creates list of format values for each sample for the vcf data line.
         :param format_tag_and_values_per_sample: nested dictionary {sample_name: {format_tag:formatvalue}}.
         :param list_of_sample_names: list of sample names
-        :return: sample_format_values_string: formatted string (in the VCF file, this would be the tab-separated values under the sample name)
+        :return: list_of_format_values_per_sample: a list e.g. ['.:3', '.:.', '.:.', '0:1:3'] (in the VCF file, this would be the tab-separated values under the sample name)
         """
-        sample_format_value_tokens = []
         # Creates the list of FORMAT keys so we can get its corresponding value later
         set_of_format_keys = {key for sample in format_tag_and_values_per_sample for key in
                               format_tag_and_values_per_sample[sample]}
@@ -349,13 +356,13 @@ class VcfLine:
             if sample in format_tag_and_values_per_sample:
                 format_value_list = []
                 for key in list_of_format_key:
-                    format_value_list.append(format_tag_and_values_per_sample.get(sample, '.').get(key,
-                                                                                                '.'))  # adds missing values if not found
-                sample_format_value_tokens.append(":".join(format_value_list))
+                    format_value_list.append(format_tag_and_values_per_sample.get(sample,
+                                                                                  '.').get(key,
+                                                                                           '.'))  # adds missing values if not found
+                self.list_of_format_values_per_sample.append(":".join(format_value_list))
             else:
-                sample_format_value_tokens.append(':'.join(['.' for key in list_of_format_key] or ['.']))
-        self.format_values_by_sample_string = '\t'.join(sample_format_value_tokens)
-        return self.format_values_by_sample_string
+                self.list_of_format_values_per_sample.append(':'.join(['.' for key in list_of_format_key] or ['.']))
+        return self.list_of_format_values_per_sample
     # functions responsible for INFO are below
     def merge_info_dicts(self, other_vcf_line):
         """ Merges and stores the INFO dictionaries for the INFO field of a VCF line.
@@ -425,11 +432,11 @@ class VcfLine:
         self.vcf_values_for_format = merged_format_dict
         other_vcf_line.vcf_values_for_format = merged_format_dict
 
-        self.format_values_by_sample_string = self.combine_format_values_by_sample(self.vcf_values_for_format, list_of_sample_names)
-        other_vcf_line.format_values_by_sample_string = other_vcf_line.combine_format_values_by_sample(other_vcf_line.vcf_values_for_format, list_of_sample_names)
+        self.list_of_format_values_per_sample = self.combine_format_values_by_sample(self.vcf_values_for_format, list_of_sample_names)
+        other_vcf_line.list_of_format_values_per_sample = other_vcf_line.combine_format_values_by_sample(other_vcf_line.vcf_values_for_format, list_of_sample_names)
         return self
 
 
     def keep(self, list_of_sample_names):
-        self.format_values_by_sample_string = self.combine_format_values_by_sample(self.vcf_values_for_format, list_of_sample_names)
+        self.list_of_format_values_per_sample = self.combine_format_values_by_sample(self.vcf_values_for_format, list_of_sample_names)
         return self
