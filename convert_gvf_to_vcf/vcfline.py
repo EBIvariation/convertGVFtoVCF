@@ -64,7 +64,7 @@ class VcfLine:
         # MANDATORY VCF FIELD 7
         self.filter = "." # this is always a placeholder '.'
         # forms MANDATORY VCF FIELD 8
-        self.info_dict = {}  # dict that stores INFO key-values (including INFO from merged lines).
+        self.info_dict = {}  # dict that stores all INFO key-values (including INFO from merged lines and SV INFO).
         # calculated last
         self.length = self.end - self.pos # required for INFO fields- SVLEN and END
         # MANDATORY VCF FIELD 4
@@ -279,7 +279,6 @@ class VcfLine:
         """ Creates and formats the VCF line.
         :return: string_to_return - the VCF line as a string
         """
-        info_string = self.format_info_string()
         string_to_return = '\t'.join((self.chrom,
                 str(self.pos),
                 self.id,
@@ -287,7 +286,7 @@ class VcfLine:
                 self.alt,
                 self.qual,
                 self.filter,
-                info_string,
+                self.format_info_string(),
                 ":".join(self.format_keys) if isinstance(self.format_keys, list) else self.format_keys,
                 '\t'.join(self.list_of_format_values_per_sample)
                 ))
@@ -364,30 +363,60 @@ class VcfLine:
                 self.list_of_format_values_per_sample.append(':'.join(['.' for key in list_of_format_key] or ['.']))
         return self.list_of_format_values_per_sample
     # functions responsible for INFO are below
+
+    def fill_merge_dicts(self, merged_info_dict, key, previous_line_info_value, current_line_info_value):
+        """ Logic for merging info dicts
+        :param: merged_info_dict: merged dictionary
+        :param: key: key for merged info dict
+        :param: previous_line_info_value
+        :param: current_line_info_value
+        :return: merged info dict
+        """
+        if previous_line_info_value is None and current_line_info_value is None:
+            pass
+        elif previous_line_info_value == current_line_info_value:
+            merged_info_dict[key] = previous_line_info_value
+        else:
+            if previous_line_info_value is None:
+                merged_info_dict[key] = current_line_info_value
+            elif current_line_info_value is None:
+                merged_info_dict[key] = previous_line_info_value
+            else:
+                merged_info_dict[key] = f"{previous_line_info_value},{current_line_info_value}"
+        return merged_info_dict
+
+
     def merge_info_dicts(self, other_vcf_line):
         """ Merges and stores the INFO dictionaries for the INFO field of a VCF line.
         :param: other_vcf_line
         """
+        # Create data structure to merge the INFO dict of this VCF line and the other_vcf_line
         merged_info_dict = {}
-        # Merge the INFO dict of this VCF line and the other_vcf_line
+        # Step 1: Merge from vcf_values_for_info
+        # Aim is to store converted GVF attributes
+        # vcf_values_for_info is a dict that stores INFO key-values to form VCF line. This includes converted GVF attribute keys (+ other SV INFO).
         for key in self.vcf_values_for_info.keys() | other_vcf_line.vcf_values_for_info.keys():
-            self.value_info_dict = self.vcf_values_for_info.get(key)
-            other_vcf_line.value_info_dict = other_vcf_line.vcf_values_for_info.get(key)
-            if self.value_info_dict == other_vcf_line.value_info_dict:
-                merged_info_dict[key] = self.value_info_dict
-            else:
-                if self.value_info_dict is None:
-                    merged_info_dict[key] = other_vcf_line.value_info_dict
-                elif other_vcf_line.value_info_dict is None:
-                    merged_info_dict[key] = self.value_info_dict
-                else:
-                    merged_info_dict[key] = f"{self.value_info_dict},{other_vcf_line.value_info_dict}"
-        # Anchors the key called ID so it is always the first
-        anchored_key = "ID"
-        merged_info_dict = {anchored_key: merged_info_dict.pop(anchored_key), **merged_info_dict}
+            this_info_value = self.vcf_values_for_info.get(key)
+            other_info_value = other_vcf_line.vcf_values_for_info.get(key)
+            merged_info_dict = self.fill_merge_dicts(merged_info_dict, key,this_info_value,other_info_value)
+
+        # Step 2: Merge from info_dict
+        # Aim is to store SV INFO
+        # info_dict = dict that stores all INFO key-values (including INFO from merged lines and SV INFO).
+        for info_dict_key in self.info_dict.keys() | other_vcf_line.info_dict.keys():
+            this_info_dict_value = self.info_dict.get(info_dict_key)
+            other_info_dict_value = other_vcf_line.info_dict.get(info_dict_key)
+            merged_info_dict = self.fill_merge_dicts(merged_info_dict,info_dict_key, this_info_dict_value,other_info_dict_value)
+
+        # Remove the ID
+        key_to_remove = "ID"
+        if key_to_remove in merged_info_dict:
+            del merged_info_dict[key_to_remove]
+
         # Store merged info dict for this VCF line and the other VCF line.
         self.info_dict = merged_info_dict
         other_vcf_line.info_dict = merged_info_dict
+
 
     def format_info_string(self):
         """ Creates a formatted INFO string using the INFO dictionary. Anchors ID to start of the string.
