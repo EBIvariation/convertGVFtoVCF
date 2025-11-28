@@ -129,13 +129,12 @@ class TestVcfline(unittest.TestCase):
         for vcf_obj in list_of_vcf_objects:
             sample_name_dict_format_kv = vcf_obj.vcf_values_for_format
             # sample_format_values_string = format_sample_values(sample_name_dict_format_kv, samples)
-            sample_format_values_string = vcf_obj.combine_format_values_by_sample(sample_name_dict_format_kv, samples)
-            assert isinstance(sample_format_values_string, str)
+            sample_format_values_list = vcf_obj.combine_format_values_by_sample(sample_name_dict_format_kv, samples)
+            assert isinstance(sample_format_values_list, list)
         number_of_tokens_should_have = len(samples)
-        tokens= sample_format_values_string.split("\t")
-        actual_number_of_tokens = len(tokens)
+        actual_number_of_tokens = len(sample_format_values_list)
         assert actual_number_of_tokens == number_of_tokens_should_have, f"must have {number_of_tokens_should_have}"
-        assert sample_format_values_string == ".:.\t.:.\t.:.\t0:1:3", "String must match expected value"
+        assert sample_format_values_list == ['.:.', '.:.', '.:.', '0:1:3'], "List must match expected value"
 
     def test_info_list_to_dict(self):
         pass
