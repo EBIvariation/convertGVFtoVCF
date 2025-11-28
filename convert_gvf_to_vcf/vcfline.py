@@ -451,7 +451,6 @@ class VcfLine:
         self.id = other_vcf_line.id = merged_id
         self.alt = other_vcf_line.alt = merged_alt
         self.filter = other_vcf_line.filter = merged_filter
-
         # Merging INFO using info_dict
         self.merge_info_dicts(other_vcf_line)
         # Merging FORMAT keys - these go under FORMAT
