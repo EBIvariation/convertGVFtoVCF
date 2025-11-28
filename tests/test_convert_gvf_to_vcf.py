@@ -4,14 +4,9 @@ import unittest
 
 from convert_gvf_to_vcf.lookup import Lookup
 #from convert_gvf_to_vcf.utils import read_file
-from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_line, read_in_gvf_file, \
-    convert_gvf_features_to_vcf_objects, \
-    generate_vcf_header_metainfo, generate_vcf_header_structured_lines, \
-    generate_vcf_header_line, \
-    read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, \
-    compare_vcf_objects, determine_merge_or_keep_vcf_objects, merge_vcf_objects
+from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_line, read_in_gvf_file, convert_gvf_features_to_vcf_objects, generate_vcf_header_metainfo, generate_vcf_header_line, compare_vcf_objects, determine_merge_or_keep_vcf_objects
 from convert_gvf_to_vcf.vcfline import VcfLine
-from convert_gvf_to_vcf.gvffeature import GvfFeatureline
+
 
 class TestConvertGVFtoVCF(unittest.TestCase):
     def setUp(self):
@@ -133,7 +128,16 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
         flags_for_list_of_vcf_objects = compare_vcf_objects(list_of_vcf_objects)
         merged_or_kept_objects = determine_merge_or_keep_vcf_objects(list_of_vcf_objects, flags_for_list_of_vcf_objects, list_of_samples)
-        assert len(merged_or_kept_objects) != 0
+        for j in flags_for_list_of_vcf_objects:
+            print(j)
+        for i in merged_or_kept_objects:
+            print(i)
+        assert len(merged_or_kept_objects) == 5 # 3 kept + 2 merged
+        # check variant 13 and 14 have been merged
+        assert merged_or_kept_objects[3].id == "13;14"
+        assert merged_or_kept_objects[3].info_dict["NAME"] == "nssv1389474,nssv1388955"
+
+
 
 
 if __name__ == '__main__':
