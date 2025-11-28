@@ -270,14 +270,12 @@ def determine_merge_or_keep_vcf_objects(list_of_vcf_objects, comparison_results,
         # Merge if the previous and current VCF object are the same (compare_result is True)
         if compare_result:
             merged_object = merge_vcf_objects(list_of_vcf_objects[index - 1], list_of_vcf_objects[index], list_of_sample_names)
-            merge_or_kept_objects.append(merged_object)
         # Keep previous if previous and current VCF object are different (compare_result is False)
         else:
-            # Prevents duplicates: Ensure previous line is not the same as the line before it.
-            if list_of_vcf_objects[index - 2] != list_of_vcf_objects[index - 1 ]:
                 # keep the previous VCF line object
-                kept_object = keep_vcf_objects(list_of_vcf_objects[index - 1], list_of_sample_names)
-                merge_or_kept_objects.append(kept_object)
+            kept_object = keep_vcf_objects(list_of_vcf_objects[index - 1], list_of_sample_names)
+            merge_or_kept_objects.append(kept_object)
+    merge_or_kept_objects.append(list_of_vcf_objects[-1])
     return merge_or_kept_objects
 
 def main():
