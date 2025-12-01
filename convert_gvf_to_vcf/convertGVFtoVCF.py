@@ -87,10 +87,12 @@ def generate_vcf_header_metainfo(gvf_pragmas,
         vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(non_essential_pragma, ": ", list_of_non_essential_pragma, pragma_to_vcf_map)
         if pragma_name.startswith("#Publication"):
             publication_tokens = get_pragma_tokens(pragma_value, ";", "=")
-            pragmas_to_add.append(generate_vcf_header_unstructured_line(publication_tokens[0], publication_tokens[1]))
+            for pub_token in publication_tokens:
+                pragmas_to_add.append(generate_vcf_header_unstructured_line(pub_token[0], pub_token[1]))
         elif pragma_name == "#Study":
             study_tokens = get_pragma_tokens(pragma_value, ";", "=")
-            pragmas_to_add.append(generate_vcf_header_unstructured_line(study_tokens[0], study_tokens[1]))
+            for s_token in study_tokens:
+                pragmas_to_add.append(generate_vcf_header_unstructured_line(s_token[0], s_token[1]))
         else:
             if vcf_header_key is not None:
                 pragmas_to_add.append(generate_vcf_header_unstructured_line(vcf_header_key, pragma_value))
@@ -147,8 +149,9 @@ def parse_pragma(pragma_to_parse, delimiter):
             pragma_value = None
             logger.warning(f"WARNING: no value for the following pragma {pragma_to_parse}")
         return pragma_name, pragma_value
-    except ValueError:
-        logger.error(f"Skipping this, can't be parsed {pragma_to_parse}")
+    except AttributeError as e:
+        logger.error(f"Skipping this, can't be parsed {pragma_to_parse}: {e}")
+        raise AttributeError(f"Cannot parse {pragma_to_parse}")
 
 def get_pragma_name_and_value(pragma_to_parse, delimiter, pragma_list, pragma_name_to_vcf_dict):
     """Get pragma name and value and its corresponding VCF header key.
@@ -175,7 +178,7 @@ def get_pragma_tokens(pragma_value, first_delimiter, second_delimiter):
     initial_list = pragma_value.split(first_delimiter)
     pragma_tokens = []
     for element in initial_list:
-        pragma_tokens = element.split(second_delimiter)
+        pragma_tokens.append(element.split(second_delimiter))
     return pragma_tokens
 
 # This is the main conversion logic

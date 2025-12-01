@@ -95,7 +95,4 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
         else:
             logger.info(f"catching attribute keys for review at a later date {attrib_key} {attrib_value}")
             catching_for_review.append(attrib_key)
-    # info_string = ''.join(f'{key}={value};' for key, value in vcf_info_values.items()).rstrip(';')
-    # print(type(vcf_info_values))
-    # print(vcf_info_values)
     return gvf_attribute_dictionary, vcf_info_values, vcf_format_values
