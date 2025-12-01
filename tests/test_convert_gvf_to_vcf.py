@@ -24,6 +24,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # Prepare References
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
         self.reference_lookup = Lookup(self.assembly)
+
+        self.ordered_list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
         # self.mapping_attribute_dict = read_yaml(
         #     os.path.join(self.etc_folder, 'attribute_mapper.yaml'))  # formerly attributes_mapper and INFOattributes
         # self.symbolic_allele_dictionary = generate_symbolic_allele_dict(self.mapping_attribute_dict)
@@ -83,14 +85,12 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         (
             header_standard_lines_dictionary,
-            vcf_data_lines,
             list_of_vcf_objects
-        ) = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, self.reference_lookup)
-        print("standard lines", header_standard_lines_dictionary)
+        ) = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, self.reference_lookup, self.ordered_list_of_samples)
         (unique_pragmas_to_add, sample_names,
          unique_alt_lines_to_add, unique_info_lines_to_add,
          unique_filter_lines_to_add, unique_format_lines_to_add) = generate_vcf_header_metainfo(
-            gvf_pragmas, gvf_non_essential, list_of_vcf_objects, header_standard_lines_dictionary
+            gvf_pragmas, gvf_non_essential
         )
         print(unique_pragmas_to_add)
         assert unique_pragmas_to_add == ['##fileformat=VCFv4.4', '##gff-version=3', '##source=DGVa', '##gvf-version=1.06',
@@ -110,6 +110,24 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
         assert unique_alt_lines_to_add == ['##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DUP,Description="Duplication">']
         assert unique_info_lines_to_add ==  ['##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">', '##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">', '##INFO=<ID=DBXREF,Number=.,Type=String,Description="A database cross-reference">', '##INFO=<ID=AD,Number=R,Type=Integer,Description="Total read depth for each allele">']
+        # TODO: repair these tests
+        # assert unique_alt_lines_to_add == ['##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DUP,Description="Duplication">']
+        # assert unique_info_lines_to_add ==  [
+        #     '##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">',
+        #     '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">',
+        #     '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">',
+        #     '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">',
+        #     '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">',
+        #     '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">',
+        #     '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">',
+        #     '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">',
+        #     '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">',
+        #     '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">',
+        #     '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">',
+        #     '##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">',
+        #     '##INFO=<ID=DBXREF,Number=.,Type=String,Description="A database cross-reference">',
+        #     '##INFO=<ID=AD,Number=R,Type=Integer,Description="Total read depth for each allele">'
+        # ]
 
     def test_generate_vcf_header_line(self):
         header_fields = generate_vcf_header_line(['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'])
@@ -122,21 +140,19 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # standard structured meta-information lines for this VCF file
         (
             header_lines_for_this_vcf,
-            vcf_data_lines,
             list_of_vcf_objects
-        ) = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, self.reference_lookup)
+        ) = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, self.reference_lookup, self.ordered_list_of_samples)
         assert len(gvf_pragmas) > 1
         assert len(gvf_non_essential) > 1
         assert len(gvf_lines_obj_list) > 1
         assert len(header_lines_for_this_vcf) > 1
-        assert len(vcf_data_lines) > 1
         assert len(list_of_vcf_objects) > 1
 
     def test_compare_vcf_objects(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        print(gvf_lines_obj_list)
-        header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, self.reference_lookup)
-        print(list_of_vcf_objects)
+        header_standard_lines_dictionary, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
+            gvf_lines_obj_list,  self.reference_lookup, self.ordered_list_of_samples
+        )
         # compare object, if equal, True, if not equal, False # (next function will make true = current and merge; false= previous)
         expected_flags_for_list_of_vcf_objects = [False, # line 1 vs 2
                                                   False, # line 2 vs 3
@@ -174,14 +190,12 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_determine_merge_or_keep_vcf_objects(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, self.reference_lookup)
+        header_standard_lines_dictionary, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
+            gvf_lines_obj_list,  self.reference_lookup, self.ordered_list_of_samples
+        )
         list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
         flags_for_list_of_vcf_objects = compare_vcf_objects(list_of_vcf_objects)
         merged_or_kept_objects = determine_merge_or_keep_vcf_objects(list_of_vcf_objects, flags_for_list_of_vcf_objects, list_of_samples)
-        for j in flags_for_list_of_vcf_objects:
-            print(j)
-        for i in merged_or_kept_objects:
-            print(i)
         assert len(merged_or_kept_objects) == 5 # 3 kept + 2 merged
         # check variant 13 and 14 have been merged
         assert merged_or_kept_objects[3].id == "13;14"

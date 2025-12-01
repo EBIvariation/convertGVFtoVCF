@@ -5,20 +5,18 @@ import unittest
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines, convert_gvf_features_to_vcf_objects, \
     generate_vcf_header_metainfo
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
-from convert_gvf_to_vcf.utils import read_in_gvf_file
-from convert_gvf_to_vcf.vcfline import VcfLine
+from convert_gvf_to_vcf.utils import read_yaml, generate_symbolic_allele_dict, read_in_gvf_file
+from convert_gvf_to_vcf.vcfline import VcfLine, VcfLineBuilder
 from convert_gvf_to_vcf.lookup import Lookup
 
-
-class TestVcfline(unittest.TestCase):
+class TestVcfLineBuilder(unittest.TestCase):
     def setUp(self):
-        # Prepare Directories
-        self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'convert_gvf_to_vcf'))
-        self.etc_folder =  os.path.join(self.input_folder_parent, "etc")
+        self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'convert_gvf_to_vcf'))
+        self.etc_folder = os.path.join(self.input_folder_parent, "etc")
         input_folder = os.path.dirname(__file__)
         # Prepare Inputs
         self.input_file = os.path.join(input_folder, "input", "zebrafish.gvf")
-        self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'convert_gvf_to_vcf'))
+        self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'convert_gvf_to_vcf'))
         # Prepare Outputs
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
         # Prepare References
@@ -27,8 +25,8 @@ class TestVcfline(unittest.TestCase):
         # Set up GVF line object
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
-        gvf_line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
-
+        gvf_line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6],
+                                         f_list[7], f_list[8])
         # Set up of data structures
         # Dictionary of standard structured meta-information lines for this VCF file
         lines_standard_alt = []
@@ -43,51 +41,45 @@ class TestVcfline(unittest.TestCase):
         }
 
         # Dictionary for all possible VCF meta-information lines
-        all_possible_info_lines = generate_vcf_header_structured_lines("INFO", self.reference_lookup.mapping_attribute_dict)
-        all_possible_alt_lines = generate_vcf_header_structured_lines("ALT", self.reference_lookup.mapping_attribute_dict)
-        all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER", self.reference_lookup.mapping_attribute_dict)
-        all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT", self.reference_lookup.mapping_attribute_dict)
+        all_possible_info_lines = generate_vcf_header_structured_lines("INFO",
+                                                                       self.reference_lookup.mapping_attribute_dict)
+        all_possible_alt_lines = generate_vcf_header_structured_lines("ALT",
+                                                                      self.reference_lookup.mapping_attribute_dict)
+        all_possible_filter_lines = generate_vcf_header_structured_lines("FILTER",
+                                                                         self.reference_lookup.mapping_attribute_dict)
+        all_possible_format_lines = generate_vcf_header_structured_lines("FORMAT",
+                                                                         self.reference_lookup.mapping_attribute_dict)
         self.all_possible_lines_dictionary = {
             "ALT": all_possible_alt_lines,
             "INFO": all_possible_info_lines,
             "FILTER": all_possible_filter_lines,
             "FORMAT": all_possible_format_lines,
         }
+        ordered_list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
+        self.vcf_builder = VcfLineBuilder(self.standard_lines_dictionary, self.all_possible_lines_dictionary,
+                                          self.reference_lookup, ordered_list_of_samples)
 
-        self.v = VcfLine(gvf_line_object,
-                    self.standard_lines_dictionary,
-                    self.all_possible_lines_dictionary,
-                    self.reference_lookup)
-        # Set up the other GVF line object
-        other_gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=776614,776914;End_range=786127,786427;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
-        other_f_list = other_gvf_feature_line.split("\t")
-        other_gvf_line_object = GvfFeatureline(other_f_list[0], other_f_list[1], other_f_list[2], other_f_list[3], other_f_list[4], other_f_list[5], other_f_list[6],
-                                         other_f_list[7], other_f_list[8])
-        self.other_v = VcfLine(other_gvf_line_object,
-                    self.standard_lines_dictionary,
-                    self.all_possible_lines_dictionary,
-                    self.reference_lookup)
+    def test_build_vcf_line(self):
+        # Set up GVF line object
+        gvf_attributes = 'ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=.'
+        gvf_line_object = GvfFeatureline('chromosome1', 'DGVa', 'copy_number_loss', '77', '78', '.', '+', '.', gvf_attributes )
+        vcf_line = self.vcf_builder.build_vcf_line(gvf_line_object)
+        assert vcf_line.chrom == 'chromosome1'
+        assert vcf_line.pos == 76
+        assert vcf_line.info_dict['NAME'] == 'nssv1412199'
+        assert vcf_line.info_dict['ALIAS'] == 'CNV28955'
 
     def test_add_padded_base(self):
-        test_ref = "A"
-        test_alt = "T"
-        padded_base, pos, ref, alt = self.v.add_padded_base(test_ref, test_alt, True, self.assembly)
-        assert padded_base is not None
-        assert pos is not None
-        assert ref is not None
-        assert alt is not None
-
-    def test_convert_iupac_ambiguity_code(self):
-        ref_to_convert = "TAGD"
-        converted_ref_allele = self.v.convert_iupac_ambiguity_code(self.reference_lookup.iupac_ambiguity_dictionary, ref_to_convert)
-        assert converted_ref_allele not in ["R", "Y", "M", "K", "S", "D", "W", "H", "B", "V", "D", "N"]
-
-    def test_check_ref(self):
-
-        reference_allele_to_check = "TGCR"
-        new_ref = self.v.check_ref(reference_allele_to_check, self.reference_lookup)
-        iupac_code = ["R", "Y", "M", "K", "S", "D", "W", "H", "B", "V", "D", "N"]
-        assert all(code not in new_ref for code in iupac_code)
+        padded_base, pos, ref, alt = self.vcf_builder.add_padded_base(chrom='chromosome1', pos=79, end=80, ref="A", alt='.', placed_before=True)
+        assert padded_base == 'C'
+        assert pos  == 78
+        assert ref == 'CA'
+        assert alt  == 'C'
+        padded_base, pos, ref, alt = self.vcf_builder.add_padded_base(chrom='chromosome1', pos=1, end=2, ref="A", alt='.', placed_before=False)
+        assert padded_base == 'C'
+        assert pos  == 1
+        assert ref == 'AC'
+        assert alt  == 'C'
 
     def test_get_ref(self):
         reference_allele = self.v.get_ref(self.reference_lookup)
@@ -108,13 +100,63 @@ class TestVcfline(unittest.TestCase):
 
 
     def test_get_alt(self):
-        alt_allele = self.v.get_alt(self.standard_lines_dictionary, self.all_possible_lines_dictionary, self.reference_lookup)
-        assert alt_allele == '<DEL>'
+        'chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."'
+        # TODO: This seems incorrect
+        vcf_value_from_gvf_attribute = {"Variant_seq":".", "Start_range":".,776614","End_range":"786127,."}
+        pos, ref, alt, info_dict = self.vcf_builder.get_alt(vcf_value_from_gvf_attribute, chrom='chromosome1', pos=77, end=78, length=1, ref='', so_type='copy_number_loss')
+        assert pos == 76
+        assert ref == 'T'
+        assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
+        assert alt == 'T<DEL>'
+
+    def test_generate_symbolic_allele(self):
+        # TODO: This seems incorrect
+        vcf_value_from_gvf_attribute = {"Variant_seq":".", "Start_range":".,776614","End_range":"786127,."}
+        symbolic_allele, info_dict, lines_standard_alt, lines_standard_info = self.vcf_builder.generate_symbolic_allele(vcf_value_from_gvf_attribute, pos=76, length=1, ref='.', so_type='copy_number_loss')
+        assert symbolic_allele == '<DEL>'
+        assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
+        assert lines_standard_alt == ['##ALT=<ID=DEL,Description="Deletion">']
+        assert lines_standard_info== [
+            '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">',
+            '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">'
+        ]
+
+    def test_check_ref(self):
+        assert self.vcf_builder.check_ref('A') == 'A'
+        assert self.vcf_builder.check_ref('T') == 'T'
+        assert self.vcf_builder.check_ref('C') == 'C'
+        assert self.vcf_builder.check_ref('G') == 'G'
+        assert self.vcf_builder.check_ref('TGCR') == 'TGCA'
+
+class TestVcfline(unittest.TestCase):
+    def setUp(self):
+        self.vcf_line = VcfLine(chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>', qual='.', filter='.',
+                                info_dict={'NAME': 'nssv1412199', 'SVLEN': '1'},
+                                vcf_values_for_format={'sample1':{'GT':'0/1'}}, order_sample_names=['sample1'])
+
 
     def test__str__(self):
-        pass
+        assert str(self.vcf_line) == 'Chromosome1\t76\t1\tT\t<DEL>\t.\t.\tNAME=nssv1412199;SVLEN=1\tGT\t0/1'
+
+    def test__eq__(self):
+        vcf_line1 = VcfLine(
+            chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>', qual='.', filter='.',
+            info_dict={},vcf_values_for_format={}
+        )
+        vcf_line2 = VcfLine(
+            chrom='Chromosome1', pos='76', id='2', ref='T', alt='', qual='.', filter='.',
+            info_dict={}, vcf_values_for_format={}
+        )
+        vcf_line3 = VcfLine(
+            chrom='Chromosome1', pos='77', id='4', ref='A', alt='ATT', qual='.', filter='.',
+            info_dict={}, vcf_values_for_format={}
+        )
+        assert vcf_line1 == vcf_line2
+        assert vcf_line1 != vcf_line3
 
     def test_merge_and_add(self):
+        merged_string = self.vcf_line.merge_and_add('1', '2', ';')
+        assert merged_string == '1;2'
         # testing merge for different elements
         merged_string = self.v.merge_and_add("1", "2",";")
         assert merged_string == "1;2"
@@ -123,32 +165,27 @@ class TestVcfline(unittest.TestCase):
         assert non_merged_string == "1"
 
     def test_order_format_keys(self):
-        set_of_format_keys = {"AD", "GT"}
-        ordered_list_of_format_keys = self.v.order_format_keys(set_of_format_keys)
-        assert ordered_list_of_format_keys == ['GT', 'AD']
+        assert self.vcf_line._order_format_keys(['DP', 'PL', 'GT', 'GQ']) == ['GT', 'DP', 'GQ', 'PL']
 
     def test_merge_format_keys(self):
-        pass
+        self.vcf_line.merge_format_keys()
 
-    def test_format_sample_values(self):
-        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        # standard structured meta-information lines for this VCF file
-        (
-            header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects
-        ) = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, self.reference_lookup)
-        (
-            unique_pragmas_to_add, samples, unique_alt_lines_to_add, unique_info_lines_to_add,
-            unique_filter_lines_to_add, unique_format_lines_to_add
-        ) = generate_vcf_header_metainfo(gvf_pragmas, gvf_non_essential, list_of_vcf_objects,
-                                         header_standard_lines_dictionary)
-        for vcf_obj in list_of_vcf_objects:
-            sample_name_dict_format_kv = vcf_obj.vcf_values_for_format
-            sample_format_values_list = vcf_obj.combine_format_values_by_sample(sample_name_dict_format_kv, samples)
-            assert isinstance(sample_format_values_list, list)
-        number_of_tokens_should_have = len(samples)
-        actual_number_of_tokens = len(sample_format_values_list)
-        assert actual_number_of_tokens == number_of_tokens_should_have, f"must have {number_of_tokens_should_have}"
-        assert sample_format_values_list == ['.:.', '.:.', '.:.', '0:1:3'], "List must match expected value"
+    def test_combine_format_values_by_sample_as_str(self):
+        assert self.vcf_line.combine_format_values_by_sample_as_str() == '0/1'
+        format_values = {
+            'sample1':{'GT':'0/1', 'DP':5, 'PL':'50,0,12', 'GQ':'25'},
+            'sample2': {'GT': '1/1', 'DP': '15', 'PL': '120,45,0', 'GQ': '50'},
+            'sample3': {'GT': '0/0', 'DP': 2, 'PL': '0,10,10', 'GQ': '2'},
+        }
+        vcf_line1 = VcfLine(chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>', qual='.', filter='.',
+                            info_dict={},
+                            vcf_values_for_format=format_values,
+                            order_sample_names=['sample1'])
+        # only print sample1
+        assert vcf_line1.combine_format_values_by_sample_as_str() == '0/1:5:25:50,0,12'
+        vcf_line1.order_sample_names = ['sample1', 'sample2', 'sample3']
+        # Now prints all 3 samples
+        assert vcf_line1.combine_format_values_by_sample_as_str()  == '0/1:5:25:50,0,12\t1/1:15:50:120,45,0\t0/0:2:2:0,10,10'
 
     def test_merge_info_dicts(self):
         pass

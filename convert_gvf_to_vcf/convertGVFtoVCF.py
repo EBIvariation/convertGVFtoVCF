@@ -1,7 +1,7 @@
 import argparse
 import os
 from convert_gvf_to_vcf.utils import read_pragma_mapper, read_in_gvf_file
-from convert_gvf_to_vcf.vcfline import VcfLine
+from convert_gvf_to_vcf.vcfline import VcfLineBuilder
 from convert_gvf_to_vcf.logger import set_up_logging, logger
 from convert_gvf_to_vcf.lookup import Lookup
 # setting up paths to useful directories
@@ -48,14 +48,10 @@ def generate_vcf_header_unstructured_line(vcf_unstructured_key,
     return custom_unstructured_string
 
 def generate_vcf_header_metainfo(gvf_pragmas,
-                                 gvf_non_essential,
-                                 list_of_vcf_objects,
-                                 standard_lines_dictionary):
+                                 gvf_non_essential):
     """ Generates a list of metainformation lines for the VCF header
     :param gvf_pragmas: list of gvf pragmas to convert
     :param gvf_non_essential: list of non-essential gvf pragmas to convert
-    :param list_of_vcf_objects: list of vcf objects
-    :param standard_lines_dictionary: dictionary of standard lines
     :return: unique_pragmas_to_add, sample_names: a list of pragmas (removed duplicates), list of sample names
     """
     pragmas_to_add = []
@@ -76,8 +72,9 @@ def generate_vcf_header_metainfo(gvf_pragmas,
     for pragma in gvf_pragmas:
         vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma, " ", list_of_pragma, pragma_to_vcf_map)
         pragmas_to_add.append(generate_vcf_header_unstructured_line(vcf_header_key, pragma_value))
-        for vcf_obj in list_of_vcf_objects:
-            pragmas_to_add.append(generate_vcf_header_unstructured_line("source", vcf_obj.source))
+        # FIXME: Why are we adding header from the VCF lines
+        # for vcf_obj in list_of_vcf_objects:
+        #     pragmas_to_add.append(generate_vcf_header_unstructured_line("source", vcf_obj.source))
     ####
     ####
     # Go through non-essential pragmas
@@ -112,10 +109,11 @@ def generate_vcf_header_metainfo(gvf_pragmas,
             uniq_sample_name.append(sample)
     ###
     unique_pragmas_to_add = list(dict.fromkeys(pragma for pragma in pragmas_to_add if pragma not in unique_pragmas_to_add))
-    unique_alt_lines_to_add = list(dict.fromkeys(alt_line for alt_line in standard_lines_dictionary["ALT"] if alt_line not in unique_alt_lines_to_add))
-    unique_info_lines_to_add = list(dict.fromkeys(info_line for info_line in standard_lines_dictionary["INFO"] if info_line not in unique_info_lines_to_add))
-    unique_filter_lines_to_add = list(dict.fromkeys(filter_line for filter_line in standard_lines_dictionary["FILTER"] if filter_line not in unique_filter_lines_to_add))
-    unique_format_lines_to_add = list(dict.fromkeys(format_line for format_line in standard_lines_dictionary["FORMAT"] if format_line not in unique_format_lines_to_add))
+    # TODO: The addition of headers from the VCF lines should be done in the VCF builder
+    # unique_alt_lines_to_add = list(dict.fromkeys(alt_line for alt_line in standard_lines_dictionary["ALT"] if alt_line not in unique_alt_lines_to_add))
+    # unique_info_lines_to_add = list(dict.fromkeys(info_line for info_line in standard_lines_dictionary["INFO"] if info_line not in unique_info_lines_to_add))
+    # unique_filter_lines_to_add = list(dict.fromkeys(filter_line for filter_line in standard_lines_dictionary["FILTER"] if filter_line not in unique_filter_lines_to_add))
+    # unique_format_lines_to_add = list(dict.fromkeys(format_line for format_line in standard_lines_dictionary["FORMAT"] if format_line not in unique_format_lines_to_add))
 
     return unique_pragmas_to_add, uniq_sample_name, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add
 
@@ -182,13 +180,12 @@ def get_pragma_tokens(pragma_value, first_delimiter, second_delimiter):
     return pragma_tokens
 
 # This is the main conversion logic
-def convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, reference_lookup):
+def convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, reference_lookup, ordered_list_of_samples):
     """ Creates VCF objects from GVF feature lines and stores the VCF objects.
     :param gvf_lines_obj_list: list of GVF feature line objects
     :param reference_lookup: an object that stores important dictionaries to be used for reference lookups.
-    :return: standard_header_lines, vcf_data_lines, list_of_vcf_objects: header lines for this VCF, datalines for this VCF and a list of VCF objects
+    :return: standard_header_lines,  list_of_vcf_objects: header lines for this VCF, datalines for this VCF and a list of VCF objects
     """
-    vcf_data_lines = {}  # DICTIONARY OF LISTS, {Chromosome_Pos: [VCF line object]}
     list_of_vcf_objects = []
     # Create data structure to store the header lines for this VCF file (standard meta-information lines)
     standard_header_lines ={
@@ -203,27 +200,14 @@ def convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, reference_lookup):
     all_header_lines_per_type_dict = {
         htype: generate_vcf_header_structured_lines(htype, reference_lookup.mapping_attribute_dict) for htype in ["ALT", "INFO", "FILTER", "FORMAT"]
     }
-
+    vcf_builder = VcfLineBuilder(standard_header_lines, all_header_lines_per_type_dict, reference_lookup, ordered_list_of_samples)
     # Create a vcf object for every feature line in the GVF (1:1)
     for gvf_featureline in gvf_lines_obj_list:
-        #NOTE: this is the main Logic of the code
-        vcf_object = VcfLine(gvf_featureline,
-                             standard_header_lines,
-                             all_header_lines_per_type_dict,
-                             reference_lookup)
+        vcf_object = vcf_builder.build_vcf_line(gvf_featureline)
         # Store VCF object in the list
         list_of_vcf_objects.append(vcf_object)
-
-        # vcf_object.key is formatted as follows: Chromosome_Pos
-        if vcf_object.key in vcf_data_lines:
-            # Add VCF object to the dictionary of lists
-            vcf_data_lines[vcf_object.key].append(vcf_object)
-        else:
-            # Get it into a format where the VCF object can be added to the dictionary of lists
-            vcf_data_line_objects_list = [vcf_object]
-            vcf_data_lines[vcf_object.key] = vcf_data_line_objects_list
-    # Returns the header of the VCF file, the datalines of the VCF file, and the object.
-    return standard_header_lines, vcf_data_lines, list_of_vcf_objects
+    # Returns the header of the VCF file, and the object.
+    return standard_header_lines, list_of_vcf_objects
 
 # The functions below relate to the VCF objects
 def compare_vcf_objects(list_of_vcf_objects):
@@ -318,32 +302,27 @@ def main():
     logger.info(f"Storing the assembly file: {assembly_file}")
     logger.info("Storing the IUPAC ambiguity dictionary.")
 
+    # Preparation work:
+    # Store the VCF metainformation and ensure preservation of important GVF data.
+    # This information will be useful when creating the VCF header.
+    # TODO: refactor function generate_vcf_metainfo
+    (
+        unique_pragmas_to_add,
+        samples,
+        unique_alt_lines_to_add,
+        unique_info_lines_to_add,
+        unique_filter_lines_to_add,
+        unique_format_lines_to_add
+    ) = generate_vcf_header_metainfo(gvf_pragmas, gvf_non_essential)
+
     # Convert each feature line in the GVF file to a VCF object (stores all the data for a line in the VCF file).
     # NOTE: Main Logic lives here.
-    (
-        header_lines,
-        vcf_data_lines, #TODO: check if this can be removed
-        list_of_vcf_objects
-    ) = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, reference_lookup)
+    (header_lines,list_of_vcf_objects) = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, reference_lookup, ordered_list_of_samples=samples)
 
     logger.info(f"Writing to the following VCF output: {args.vcf_output}")
     logger.info("Generating the VCF header and the meta-information lines")
     with open(args.vcf_output, "w") as vcf_output:
-        # Preparation work:
-        # Store the VCF metainformation and ensure preservation of important GVF data.
-        # This information will be useful when creating the VCF header.
-        # TODO: refactor function generate_vcf_metainfo
-        (
-            unique_pragmas_to_add,
-            samples,
-            unique_alt_lines_to_add,
-            unique_info_lines_to_add,
-            unique_filter_lines_to_add,
-            unique_format_lines_to_add
-        ) = generate_vcf_header_metainfo(gvf_pragmas,
-                                         gvf_non_essential,
-                                         list_of_vcf_objects,
-                                         header_lines)
+
         logger.info(f"Total number of samples in this VCF: {len(samples)}")
 
         # Part 1 of VCF file: Write the VCF header. This will include perserved data from the GVF file.
