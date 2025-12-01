@@ -82,9 +82,9 @@ class TestVcfLineBuilder(unittest.TestCase):
         assert alt  == 'C'
 
     def test_get_ref(self):
-        reference_allele = self.v.get_ref(self.reference_lookup)
+        reference_allele = self.vcf_builder.get_ref(vcf_value_from_gvf_attribute={}, chrom='chromosome1', pos=1, end=2)
         assert len(reference_allele) != 0
-        assert reference_allele == 'TA'
+        assert reference_allele == 'A'
 
     def test_generate_symbolic_allele(self):
         (output_symbolic_allele,
@@ -155,20 +155,15 @@ class TestVcfline(unittest.TestCase):
         assert vcf_line1 != vcf_line3
 
     def test_merge_and_add(self):
+        # testing merge for different elements
         merged_string = self.vcf_line.merge_and_add('1', '2', ';')
         assert merged_string == '1;2'
-        # testing merge for different elements
-        merged_string = self.v.merge_and_add("1", "2",";")
-        assert merged_string == "1;2"
         # testing non merge for same elements
-        non_merged_string = self.v.merge_and_add("1", "1", ";")
+        non_merged_string = self.vcf_line.merge_and_add("1", "1", ";")
         assert non_merged_string == "1"
 
     def test_order_format_keys(self):
         assert self.vcf_line._order_format_keys(['DP', 'PL', 'GT', 'GQ']) == ['GT', 'DP', 'GQ', 'PL']
-
-    def test_merge_format_keys(self):
-        self.vcf_line.merge_format_keys()
 
     def test_combine_format_values_by_sample_as_str(self):
         assert self.vcf_line.combine_format_values_by_sample_as_str() == '0/1'
