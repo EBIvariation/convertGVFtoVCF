@@ -1,11 +1,11 @@
-#TODO: 9 tests
+#TODO: 6 tests
 import os
 import unittest
 
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines, convert_gvf_features_to_vcf_objects, \
     generate_vcf_header_metainfo
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
-from convert_gvf_to_vcf.utils import read_yaml, generate_symbolic_allele_dict, read_in_gvf_file
+from convert_gvf_to_vcf.utils import read_in_gvf_file
 from convert_gvf_to_vcf.vcfline import VcfLine
 from convert_gvf_to_vcf.lookup import Lookup
 
@@ -28,6 +28,7 @@ class TestVcfline(unittest.TestCase):
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
         gvf_line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
+
         # Set up of data structures
         # Dictionary of standard structured meta-information lines for this VCF file
         lines_standard_alt = []
@@ -54,6 +55,15 @@ class TestVcfline(unittest.TestCase):
         }
 
         self.v = VcfLine(gvf_line_object,
+                    self.standard_lines_dictionary,
+                    self.all_possible_lines_dictionary,
+                    self.reference_lookup)
+        # Set up the other GVF line object
+        other_gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=776614,776914;End_range=786127,786427;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
+        other_f_list = other_gvf_feature_line.split("\t")
+        other_gvf_line_object = GvfFeatureline(other_f_list[0], other_f_list[1], other_f_list[2], other_f_list[3], other_f_list[4], other_f_list[5], other_f_list[6],
+                                         other_f_list[7], other_f_list[8])
+        self.other_v = VcfLine(other_gvf_line_object,
                     self.standard_lines_dictionary,
                     self.all_possible_lines_dictionary,
                     self.reference_lookup)
@@ -105,14 +115,19 @@ class TestVcfline(unittest.TestCase):
         pass
 
     def test_merge_and_add(self):
-        # previous="1"
-        # current ="2"
-        # delimiter =";"
-        # merged_string = merge_and_add(previous, current, delimiter)
-        # assert len(merged_string) > 1
-        pass
+        # testing merge for different elements
+        merged_string = self.v.merge_and_add("1", "2",";")
+        assert merged_string == "1;2"
+        # testing non merge for same elements
+        non_merged_string = self.v.merge_and_add("1", "1", ";")
+        assert non_merged_string == "1"
 
-    def test_put_GT_format_key_first(self):
+    def test_order_format_keys(self):
+        set_of_format_keys = {"AD", "GT"}
+        ordered_list_of_format_keys = self.v.order_format_keys(set_of_format_keys)
+        assert ordered_list_of_format_keys == ['GT', 'AD']
+
+    def test_merge_format_keys(self):
         pass
 
     def test_format_sample_values(self):
@@ -128,7 +143,6 @@ class TestVcfline(unittest.TestCase):
                                          header_standard_lines_dictionary)
         for vcf_obj in list_of_vcf_objects:
             sample_name_dict_format_kv = vcf_obj.vcf_values_for_format
-            # sample_format_values_string = format_sample_values(sample_name_dict_format_kv, samples)
             sample_format_values_list = vcf_obj.combine_format_values_by_sample(sample_name_dict_format_kv, samples)
             assert isinstance(sample_format_values_list, list)
         number_of_tokens_should_have = len(samples)
@@ -136,16 +150,10 @@ class TestVcfline(unittest.TestCase):
         assert actual_number_of_tokens == number_of_tokens_should_have, f"must have {number_of_tokens_should_have}"
         assert sample_format_values_list == ['.:.', '.:.', '.:.', '0:1:3'], "List must match expected value"
 
-    def test_info_list_to_dict(self):
-        pass
-
     def test_merge_info_dicts(self):
         pass
 
     def test_merge_info_string(self):
-        pass
-
-    def test_merge_format_keys(self):
         pass
 
     def test_merge(self):
