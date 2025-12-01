@@ -1,11 +1,13 @@
-#TODO: 5 test
 import os.path
 import unittest
 
+
 from convert_gvf_to_vcf.lookup import Lookup
-#from convert_gvf_to_vcf.utils import read_file
-from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_line, read_in_gvf_file, convert_gvf_features_to_vcf_objects, generate_vcf_header_metainfo, generate_vcf_header_line, compare_vcf_objects, determine_merge_or_keep_vcf_objects
-from convert_gvf_to_vcf.vcfline import VcfLine
+from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_line, read_in_gvf_file, \
+    convert_gvf_features_to_vcf_objects, generate_vcf_header_metainfo, generate_vcf_header_line, compare_vcf_objects, \
+    determine_merge_or_keep_vcf_objects, merge_vcf_objects, parse_pragma, get_pragma_name_and_value, get_pragma_tokens, \
+    keep_vcf_objects
+
 
 
 class TestConvertGVFtoVCF(unittest.TestCase):
@@ -29,20 +31,53 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
 
     def test_generate_vcf_header_structured_lines(self):
-        pass
+        key_to_test = "fileformat"
+        value_to_test= "VCFv4.4"
+        actual_output = generate_vcf_header_unstructured_line(key_to_test, value_to_test)
+        assert actual_output == "##fileformat=VCFv4.4"
 
     def test_generate_custom_unstructured_meta_line(self):
         formatted_string = generate_vcf_header_unstructured_line("test_string_key", "test_string_value")
         assert formatted_string == "##test_string_key=test_string_value"
 
     def test_parse_pragma(self):
-        pass
+        # testing: pragma has a name and value
+        essential_pragma = "##file-date 2015-07-15"
+        delimiter = " "
+        name, value = parse_pragma(essential_pragma, delimiter)
+        assert name, value == "##file-date, 2015-07-15"
+        # testing: pragma has only name, no value, should print warning
+        name_only_pragma = "##file-date"
+        name, value = parse_pragma(name_only_pragma, delimiter)
+        assert name, value == "##file-date, None"
+        # testing: invalid pragmas
+        invalid_pragma = None
+        with self.assertRaises(AttributeError):
+            parse_pragma(invalid_pragma, delimiter)
 
     def test_get_pragma_name_and_value(self):
-        pass
+        pragma_to_test = "##file-date 2015-07-15"
+        delimiter = " "
+        list_of_pragma = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
+        pragma_to_vcf_map = {'##file-date': 'fileDate', '##gff-version': 'gff-version', '##gvf-version': 'gvf-version', '##species': 'species', '##genome-build': 'genome-build', '#sample': 'sample', '#Study_accession': 'Study_accession', '#Study_type': 'Study_type', '#Display_name': 'Display_name', '#Publication': 'Publication', '#Study': 'Study', '#Assembly_name': 'Assembly_name', '#subject': 'subject'}
+        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma_to_test, delimiter, list_of_pragma, pragma_to_vcf_map)
+        assert vcf_header_key == "fileDate"
+        assert pragma_name == "##file-date"
+        assert pragma_value == "2015-07-15"
 
     def test_get_pragma_tokens(self):
-        pass
+        pragma_value = "First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"
+        pragma_tokens = get_pragma_tokens(pragma_value, ";", "=")
+        assert len(pragma_tokens) == 2
+        # Testing: expected
+        assert pragma_tokens[0][0] == "First_author"
+        assert pragma_tokens[0][1] == "Kim Brown"
+        assert pragma_tokens[1][0] == "Description"
+        assert pragma_tokens[1][1] == "Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"
+        # Testing: not expected
+        unexpected_pragma_tokens = [['A', '1'], ['B', '2']]
+        with self.assertRaises(AssertionError):
+            self.assertEqual(unexpected_pragma_tokens, pragma_tokens)
 
     def test_generate_vcf_metainfo(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
@@ -94,7 +129,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_compare_vcf_objects(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        print(gvf_lines_obj_list)
         header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, self.reference_lookup)
+        print(list_of_vcf_objects)
         # compare object, if equal, True, if not equal, False # (next function will make true = current and merge; false= previous)
         expected_flags_for_list_of_vcf_objects = [False, # line 1 vs 2
                                                   False, # line 2 vs 3
@@ -106,21 +143,29 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         actual_flags_for_list_of_vcf_objects = compare_vcf_objects(list_of_vcf_objects)
         assert actual_flags_for_list_of_vcf_objects == expected_flags_for_list_of_vcf_objects
 
-    def test_merge_vcf_objects(self):
-        # gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        # header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = gvf_features_to_vcf_objects(
-        #     gvf_lines_obj_list, self.reference_lookup)
-        # list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
-        # # use lines 4 and 5 of gvf file
-        # previous = list_of_vcf_objects[3] # line 4
-        # current = list_of_vcf_objects[4] #line 5
-        # merged_object = merge_vcf_objects(previous, current, list_of_samples)
-        # to_check = ('chromosome1', 127, '13;14', 'GTACGTACG', '<DUP>', '.', '.', 'ID=13,14;SVCID=CNV6230,CNV5711;ALIAS=CNV6230,CNV5711;END=131;NAME=nssv1389474,nssv1388955;VARCALLSOID=SO:0001742;AC=3;SVLEN=4;REMAP=.69625,.85344;VARSEQ=.', '.', '.\t.\t.\t.')
-        # assert merged_object == to_check #TODO: the info_string is different each time, ensure order is preserved
-        pass
+    # def test_merge_vcf_objects(self):
+    #     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+    #     header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
+    #         gvf_lines_obj_list, self.reference_lookup)
+    #     list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
+    #     # # use lines 4 and 5 of gvf file
+    #     previous = list_of_vcf_objects[3] # line 4
+    #     current = list_of_vcf_objects[4] #line 5
+    #     merged_object = merge_vcf_objects(previous, current, list_of_samples)
+    #
+        # to_check = '\t'.join(['chromosome1', '127', '13;14', 'GTACGTACG', '<DUP>', '.', '.',
+        #                       'ALIAS=CNV6230,CNV5711;NAME=nssv1389474,nssv1388955;VARSEQ=.;REMAP=.69625,.85344;SVCID=CNV6230,CNV5711;VARCALLSOID=SO:0001742;AC=3;SVLEN=4;END=131',
+        #                       '.', '.\t.\t.\t.'])
+        # assert merged_object == to_check
 
     def test_keep_vcf_objects(self):
-        pass
+        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
+                gvf_lines_obj_list, self.reference_lookup)
+        list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
+        previous_object = list_of_vcf_objects[1]
+        keep_vcf_objects(previous_object, list_of_samples)
+
 
     def test_determine_merge_or_keep_vcf_objects(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
@@ -136,9 +181,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # check variant 13 and 14 have been merged
         assert merged_or_kept_objects[3].id == "13;14"
         assert merged_or_kept_objects[3].info_dict["NAME"] == "nssv1389474,nssv1388955"
-
-
-
 
 if __name__ == '__main__':
     unittest.main()
