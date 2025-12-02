@@ -47,6 +47,79 @@ def generate_vcf_header_unstructured_line(vcf_unstructured_key,
     custom_unstructured_string = f"##{vcf_unstructured_key}={vcf_unstructured_value}"
     return custom_unstructured_string
 
+def get_sample_names_from_pragma(pragma_name, pragma_value):
+    # """Returns a list of sample names from a pragma name and value
+    # :param pragma_name: First part of the pragma e.g.: #sample
+    # :param pragma_value: Second part of the pragma e.g.: sample_name=Wilds2-3;subject_name=Wilds2-3
+    # :return: sample_names: a list
+    # """
+    sample_names = []
+    if pragma_name.startswith("#sample"):
+        list_of_sample_information = pragma_value.split(";")
+        for sample_info in list_of_sample_information:
+            if sample_info.startswith("sample_name"):
+                sample_names.append(sample_info.split("=")[1])
+    return sample_names
+
+def get_unique_sample_names(sample_names):
+    seen_sample_names = set()
+    uniq_sample_name = []
+    for sample in sample_names:
+        if sample not in seen_sample_names:
+            seen_sample_names.add(sample)
+            uniq_sample_name.append(sample)
+    return uniq_sample_name
+
+def convert_mandatory_pragmas(list_of_converted_pragmas):
+    # MANDATORY: file format for VCF
+    list_of_converted_pragmas.append(generate_vcf_header_unstructured_line("fileformat", "VCFv4.4"))
+    return list_of_converted_pragmas
+
+
+def convert_essential_pragmas(list_of_gvf_pragmas_to_convert, list_of_converted_pragmas, list_of_essential_pragma, pragma_to_vcf_map):
+    # """ This function converts Essential pragmas
+    # :param: list_of_gvf_pragmas_to_convert
+    # :param: list_of_converted_pragmas: list of existing converted pragmas
+    # :param: list_of_essential_pragma: these will be converted
+    # :param: pragma_to_vcf_map
+    # : return: list_of_converted_pragmas
+    # """
+    for pragma in list_of_gvf_pragmas_to_convert:
+        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma, " ", list_of_essential_pragma, pragma_to_vcf_map)
+        list_of_converted_pragmas.append(generate_vcf_header_unstructured_line(vcf_header_key, pragma_value))
+    return list_of_converted_pragmas
+
+def convert_nonessential_pragmas(nonessential_gvf_pragmas_to_convert,
+                                 list_of_converted_pragmas,
+                                 list_of_non_essential_pragma,
+                                 pragma_to_vcf_map,
+                                 sample_names):
+    # """ This converts nonessential pragmas including obtaining the sample names from the gvf pragma
+    # :param: nonessential_gvf_pragmas_to_convert
+    # :param: list_of_converted_pragmas
+    # :param: list_of_non_essential_pragma
+    # :param: pragma_pragma_to_vcf_map
+    # :param: sample
+    # return: list_of_converted_pragmas, sample_names
+    # """
+    for non_essential_pragma in nonessential_gvf_pragmas_to_convert:
+        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(non_essential_pragma, ": ", list_of_non_essential_pragma, pragma_to_vcf_map)
+        if pragma_name.startswith("#Publication"):
+            publication_tokens = get_pragma_tokens(pragma_value, ";", "=")
+            for pub_token in publication_tokens:
+                list_of_converted_pragmas.append(generate_vcf_header_unstructured_line(pub_token[0], pub_token[1]))
+        elif pragma_name == "#Study":
+            study_tokens = get_pragma_tokens(pragma_value, ";", "=")
+            for s_token in study_tokens:
+                list_of_converted_pragmas.append(generate_vcf_header_unstructured_line(s_token[0], s_token[1]))
+        else:
+            if vcf_header_key is not None:
+                list_of_converted_pragmas.append(generate_vcf_header_unstructured_line(vcf_header_key, pragma_value))
+        # populating sample headers
+        sample_names.extend(get_sample_names_from_pragma(pragma_name, pragma_value))
+    return list_of_converted_pragmas, sample_names
+
+
 def generate_vcf_header_metainfo(gvf_pragmas,
                                  gvf_non_essential):
     """ Generates a list of metainformation lines for the VCF header
@@ -54,7 +127,7 @@ def generate_vcf_header_metainfo(gvf_pragmas,
     :param gvf_non_essential: list of non-essential gvf pragmas to convert
     :return: unique_pragmas_to_add, sample_names: a list of pragmas (removed duplicates), list of sample names
     """
-    pragmas_to_add = []
+    converted_pragmas = []
     unique_pragmas_to_add = []
     sample_names = []
     unique_alt_lines_to_add = []
@@ -63,59 +136,35 @@ def generate_vcf_header_metainfo(gvf_pragmas,
     unique_format_lines_to_add = []
     ####
     # MANDATORY: file format for VCF
-    pragmas_to_add.append(generate_vcf_header_unstructured_line("fileformat", "VCFv4.4"))
+    converted_pragmas = convert_mandatory_pragmas(list_of_converted_pragmas=converted_pragmas)
+    # converted_pragmas.append(generate_vcf_header_unstructured_line("fileformat", "VCFv4.4"))
 
     #Go through essential pragmas
     #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
-    list_of_pragma = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
+    list_of_essential_pragmas = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
     pragma_to_vcf_map = read_pragma_mapper(os.path.join(etc_folder, 'pragma_mapper.tsv'))
-    for pragma in gvf_pragmas:
-        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma, " ", list_of_pragma, pragma_to_vcf_map)
-        pragmas_to_add.append(generate_vcf_header_unstructured_line(vcf_header_key, pragma_value))
+
+    converted_pragmas = convert_essential_pragmas(gvf_pragmas, converted_pragmas, list_of_essential_pragmas, pragma_to_vcf_map)
         # FIXME: Why are we adding header from the VCF lines
         # for vcf_obj in list_of_vcf_objects:
-        #     pragmas_to_add.append(generate_vcf_header_unstructured_line("source", vcf_obj.source))
-    ####
+        #     converted_pragmas.append(generate_vcf_header_unstructured_line("source", vcf_obj.source))
     ####
     # Go through non-essential pragmas
     list_of_non_essential_pragma = ["#sample", "#Study_accession", "#Study_type", "#Display_name", "#Publication"
                                     "#Study", "#Assembly_name", "#subject"]
-    for non_essential_pragma in gvf_non_essential:
-        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(non_essential_pragma, ": ", list_of_non_essential_pragma, pragma_to_vcf_map)
-        if pragma_name.startswith("#Publication"):
-            publication_tokens = get_pragma_tokens(pragma_value, ";", "=")
-            for pub_token in publication_tokens:
-                pragmas_to_add.append(generate_vcf_header_unstructured_line(pub_token[0], pub_token[1]))
-        elif pragma_name == "#Study":
-            study_tokens = get_pragma_tokens(pragma_value, ";", "=")
-            for s_token in study_tokens:
-                pragmas_to_add.append(generate_vcf_header_unstructured_line(s_token[0], s_token[1]))
-        else:
-            if vcf_header_key is not None:
-                pragmas_to_add.append(generate_vcf_header_unstructured_line(vcf_header_key, pragma_value))
-        ####
-        # populating sample headers
-        if pragma_name.startswith("#sample"):
-            list_of_sample_information = pragma_value.split(";")
-            for sample_info in list_of_sample_information:
-                if sample_info.startswith("sample_name"):
-                    sample_names.append(sample_info.split("=")[1])
+    convert_nonessential_pragmas(gvf_non_essential, converted_pragmas, list_of_non_essential_pragma, pragma_to_vcf_map, sample_names)
+
     # ensure unique sample names and preserve order
-    seen_sample_names = set()
-    uniq_sample_name = []
-    for sample in sample_names:
-        if sample not in seen_sample_names:
-            seen_sample_names.add(sample)
-            uniq_sample_name.append(sample)
+    unique_sample_name = get_unique_sample_names(sample_names)
     ###
-    unique_pragmas_to_add = list(dict.fromkeys(pragma for pragma in pragmas_to_add if pragma not in unique_pragmas_to_add))
+    unique_pragmas_to_add = list(dict.fromkeys(pragma for pragma in converted_pragmas if pragma not in unique_pragmas_to_add))
     # TODO: The addition of headers from the VCF lines should be done in the VCF builder
     # unique_alt_lines_to_add = list(dict.fromkeys(alt_line for alt_line in standard_lines_dictionary["ALT"] if alt_line not in unique_alt_lines_to_add))
     # unique_info_lines_to_add = list(dict.fromkeys(info_line for info_line in standard_lines_dictionary["INFO"] if info_line not in unique_info_lines_to_add))
     # unique_filter_lines_to_add = list(dict.fromkeys(filter_line for filter_line in standard_lines_dictionary["FILTER"] if filter_line not in unique_filter_lines_to_add))
     # unique_format_lines_to_add = list(dict.fromkeys(format_line for format_line in standard_lines_dictionary["FORMAT"] if format_line not in unique_format_lines_to_add))
 
-    return unique_pragmas_to_add, uniq_sample_name, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add
+    return unique_pragmas_to_add, unique_sample_name, unique_alt_lines_to_add, unique_info_lines_to_add, unique_filter_lines_to_add, unique_format_lines_to_add
 
 # the function below relates to the VCF headerline (Part 2)
 def generate_vcf_header_line(samples):
