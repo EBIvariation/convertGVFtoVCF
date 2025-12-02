@@ -81,13 +81,24 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.assertEqual(unexpected_pragma_tokens, pragma_tokens)
 
+    def test_get_sample_names_from_pragma(self):
+        pass
+    def test_get_unique_sample_names(self):
+        pass
+    def test_convert_mandatory_pragmas(self):
+        pass
+    def test_convert_essential_pragmas(self):
+        pass
+    def test_convert_nonessential_pragmas(self):
+        pass
+
     def test_generate_vcf_metainfo(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         (
             header_standard_lines_dictionary,
             list_of_vcf_objects
         ) = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, self.reference_lookup, self.ordered_list_of_samples)
-        (unique_pragmas_to_add, sample_names,
+        (unique_pragmas_to_add, unique_sample_names,
          unique_alt_lines_to_add, unique_info_lines_to_add,
          unique_filter_lines_to_add, unique_format_lines_to_add) = generate_vcf_header_metainfo(
             gvf_pragmas, gvf_non_essential
@@ -104,7 +115,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                                          '##subject=subject_name=JenMale7;subject_sex=Male', '##subject=subject_name=JenMale6;subject_sex=Male',
                                          '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3',
                                          '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
-
+        assert unique_sample_names == ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
+        # print(unique_alt_lines_to_add)
+        # print(unique_info_lines_to_add)
         # TODO: repair these tests
         # assert unique_alt_lines_to_add == ['##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DUP,Description="Duplication">']
         # assert unique_info_lines_to_add ==  [
