@@ -182,12 +182,23 @@ class TestVcfline(unittest.TestCase):
         # Now prints all 3 samples
         assert vcf_line1.combine_format_values_by_sample_as_str()  == '0/1:5:25:50,0,12\t1/1:15:50:120,45,0\t0/0:2:2:0,10,10'
 
+    def test_fill_merge_dicts(self):
+        merged_info_dict = {'END': '128', 'AD': '3', 'VARSEQ': '.', 'ALIAS': 'CNV5711', 'ID': '14', 'VARCALLSOID': 'SO:0001742', 'SVCID': 'CNV5711', 'DBXREF': 'mydata', 'NAME': 'nssv1388955', 'AC': '3', 'SVLEN': '1'}
+        key = "VARCALLSOID"
+        previous_line_info_value = "SO:0001742"
+        current_line_info_value = "SO:1234567"
+        merged_info_dict= VcfLine.fill_merge_dicts(self, merged_info_dict, key, previous_line_info_value, current_line_info_value)
+        expected_merged_info_dict = {'END': '128', 'AD': '3', 'VARSEQ': '.', 'ALIAS': 'CNV5711', 'ID': '14', 'VARCALLSOID': 'SO:0001742,SO:1234567', 'SVCID': 'CNV5711', 'DBXREF': 'mydata', 'NAME': 'nssv1388955', 'AC': '3', 'SVLEN': '1'}
+        assert merged_info_dict == expected_merged_info_dict
+
     def test_merge_info_dicts(self):
         pass
 
-    def test_merge_info_string(self):
+    def test_merge_vcf_values_for_format(self):
         pass
 
+    def test_format_info_string(self):
+        pass
     def test_merge(self):
         pass
 
