@@ -149,7 +149,6 @@ def generate_vcf_header_metainfo(gvf_pragmas,
         # FIXME: Why are we adding header from the VCF lines
         # for vcf_obj in list_of_vcf_objects:
         #     converted_pragmas.append(generate_vcf_header_unstructured_line("source", vcf_obj.source))
-
     # Go through non-essential pragmas
     list_of_non_essential_pragma = ["#sample", "#Study_accession", "#Study_type", "#Display_name", "#Publication"
                                     "#Study", "#Assembly_name", "#subject"]
