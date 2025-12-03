@@ -154,7 +154,6 @@ def generate_vcf_header_metainfo(gvf_pragmas,
     list_of_non_essential_pragma = ["#sample", "#Study_accession", "#Study_type", "#Display_name", "#Publication"
                                     "#Study", "#Assembly_name", "#subject"]
     convert_nonessential_pragmas(gvf_non_essential, converted_pragmas, list_of_non_essential_pragma, reference_lookup.pragma_to_vcf_map, sample_names)
-
     # ensure unique sample names and preserve order
     unique_sample_name = get_unique_sample_names(sample_names)
     ###
