@@ -1,3 +1,4 @@
+# TODO: 2 tests
 import os.path
 import unittest
 
@@ -214,20 +215,21 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         actual_flags_for_list_of_vcf_objects = compare_vcf_objects(list_of_vcf_objects)
         assert actual_flags_for_list_of_vcf_objects == expected_flags_for_list_of_vcf_objects
 
-    # def test_merge_vcf_objects(self):
-    #     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-    #     header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
-    #         gvf_lines_obj_list, self.reference_lookup)
-    #     list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
-    #     # # use lines 4 and 5 of gvf file
-    #     previous = list_of_vcf_objects[3] # line 4
-    #     current = list_of_vcf_objects[4] #line 5
-    #     merged_object = merge_vcf_objects(previous, current, list_of_samples)
-    #
-        # to_check = '\t'.join(['chromosome1', '127', '13;14', 'GTACGTACG', '<DUP>', '.', '.',
-        #                       'ALIAS=CNV6230,CNV5711;NAME=nssv1389474,nssv1388955;VARSEQ=.;REMAP=.69625,.85344;SVCID=CNV6230,CNV5711;VARCALLSOID=SO:0001742;AC=3;SVLEN=4;END=131',
-        #                       '.', '.\t.\t.\t.'])
-        # assert merged_object == to_check
+    def test_merge_vcf_objects(self):
+        #     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        #     header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
+        #         gvf_lines_obj_list, self.reference_lookup)
+        #     list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
+        #     # # use lines 4 and 5 of gvf file
+        #     previous = list_of_vcf_objects[3] # line 4
+        #     current = list_of_vcf_objects[4] #line 5
+        #     merged_object = merge_vcf_objects(previous, current, list_of_samples)
+        #
+            # to_check = '\t'.join(['chromosome1', '127', '13;14', 'GTACGTACG', '<DUP>', '.', '.',
+            #                       'ALIAS=CNV6230,CNV5711;NAME=nssv1389474,nssv1388955;VARSEQ=.;REMAP=.69625,.85344;SVCID=CNV6230,CNV5711;VARCALLSOID=SO:0001742;AC=3;SVLEN=4;END=131',
+            #                       '.', '.\t.\t.\t.'])
+            # assert merged_object == to_check
+        pass
 
     def test_keep_vcf_objects(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
