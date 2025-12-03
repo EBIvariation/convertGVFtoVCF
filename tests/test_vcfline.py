@@ -133,7 +133,9 @@ class TestVcfline(unittest.TestCase):
         self.vcf_line = VcfLine(chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>', qual='.', filter='.',
                                 info_dict={'NAME': 'nssv1412199', 'SVLEN': '1'},
                                 vcf_values_for_format={'sample1':{'GT':'0/1'}}, order_sample_names=['sample1'])
-
+        self.other_vcf_line = VcfLine(chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>', qual='.', filter='.',
+                                info_dict={'NAME': 'nssv9912199', 'SVLEN': '4'},
+                                vcf_values_for_format={'sample1':{'GT':'0/1'}}, order_sample_names=['sample2'])
 
     def test__str__(self):
         assert str(self.vcf_line) == 'Chromosome1\t76\t1\tT\t<DEL>\t.\t.\tNAME=nssv1412199;SVLEN=1\tGT\t0/1'
@@ -192,7 +194,12 @@ class TestVcfline(unittest.TestCase):
         assert merged_info_dict == expected_merged_info_dict
 
     def test_merge_info_dicts(self):
-        pass
+        VcfLine.merge_info_dicts(
+            self.vcf_line, self.other_vcf_line
+        )
+        expected_merge_info_dict = {'NAME': 'nssv1412199,nssv9912199', 'SVLEN': '1,4'}
+        assert self.vcf_line.info_dict == expected_merge_info_dict
+        assert self.other_vcf_line.info_dict == expected_merge_info_dict
 
     def test_merge_vcf_values_for_format(self):
         pass
