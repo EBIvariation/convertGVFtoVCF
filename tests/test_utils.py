@@ -1,10 +1,10 @@
-# TODO: 1 test to complete
 import os
 import unittest
 
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
-from convert_gvf_to_vcf.utils import read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, read_in_gvf_file
+from convert_gvf_to_vcf.utils import read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, read_in_gvf_file, \
+    build_iupac_ambiguity_code
 from convert_gvf_to_vcf.vcfline import VcfLine
 from convert_gvf_to_vcf.lookup import Lookup
 
@@ -43,4 +43,18 @@ class TestUtils(unittest.TestCase):
         assert len(gvf_lines_obj_list) > 1
 
     def test_build_iupac_ambiguity_code(self):
-        pass
+        expected_dictionary_iupac ={
+            'R': ['A', 'G'],
+            'Y': ['C', 'T'],
+            'M': ['A', 'C'],
+            'K': ['G', 'T'],
+            'S': ['C', 'G'],
+            'D': ['A', 'G', 'T'],
+            'W': ['A', 'T'],
+            'H': ['A', 'C', 'T'],
+            'B': ['C', 'G', 'T'],
+            'V': ['A', 'C', 'G'],
+            'N': ['A', 'C', 'G', 'T']
+        }
+        dictionary_iupac = build_iupac_ambiguity_code()
+        assert dictionary_iupac == expected_dictionary_iupac
