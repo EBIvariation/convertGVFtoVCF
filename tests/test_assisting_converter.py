@@ -14,9 +14,6 @@ class TestAssistingConverter(unittest.TestCase):
         self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'convert_gvf_to_vcf'))
         # the inputs below are INFO attribute files
         self.etc_folder =  os.path.join(self.input_folder_parent, "etc")
-        # self.mapping_attribute_dict = read_yaml(
-        #     os.path.join(self.etc_folder, 'attribute_mapper.yaml'))  # formerly attributes_mapper and INFOattributes
-        # self.symbolic_allele_dictionary = generate_symbolic_allele_dict(self.mapping_attribute_dict)
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
         self.etc_folder =  os.path.join(self.input_folder_parent, "etc")
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
