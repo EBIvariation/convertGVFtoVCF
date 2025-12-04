@@ -1,4 +1,3 @@
-#TODO: 1 test
 import os
 import unittest
 
