@@ -1,11 +1,9 @@
 import os
 import unittest
 
-from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines
-from convert_gvf_to_vcf.gvffeature import GvfFeatureline
+
 from convert_gvf_to_vcf.utils import read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, read_in_gvf_file, \
     build_iupac_ambiguity_code
-from convert_gvf_to_vcf.vcfline import VcfLine
 from convert_gvf_to_vcf.lookup import Lookup
 
 class TestUtils(unittest.TestCase):
