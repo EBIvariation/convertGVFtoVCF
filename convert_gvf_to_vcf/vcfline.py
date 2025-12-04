@@ -459,7 +459,6 @@ class VcfLine:
         self.merge_info_dicts(other_vcf_line)
         # Merging FORMAT values - these go under the Sample
         self.merge_vcf_values_for_format(other_vcf_line)
-
         return self
 
 
