@@ -2,10 +2,8 @@
 import os
 import unittest
 
-from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines, convert_gvf_features_to_vcf_objects, \
-    generate_vcf_header_metainfo
+from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
-from convert_gvf_to_vcf.utils import read_yaml, generate_symbolic_allele_dict, read_in_gvf_file
 from convert_gvf_to_vcf.vcfline import VcfLine, VcfLineBuilder
 from convert_gvf_to_vcf.lookup import Lookup
 
