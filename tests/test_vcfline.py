@@ -207,9 +207,21 @@ class TestVcfline(unittest.TestCase):
         assert self.vcf_line.vcf_values_for_format == expected_merge_vcf_values_for_format
 
     def test_format_info_string(self):
-        pass
+        formatted_info_string = VcfLine.format_info_string(self.vcf_line)
+        expected_info_string = "NAME=nssv1412199;SVLEN=1"
+        assert formatted_info_string == expected_info_string
+
     def test_merge(self):
-        pass
+        list_of_samples = ['sample1']
+        VcfLine.merge(self.vcf_line, self.other_vcf_line, list_of_samples)
+        assert self.vcf_line.id == self.other_vcf_line.id
+        assert self.vcf_line.alt == self.other_vcf_line.alt
+        assert self.vcf_line.filter == self.other_vcf_line.filter
+        assert self.vcf_line.info_dict == self.other_vcf_line.info_dict
+        # assert self.vcf_line.vcf_values_for_format == self.other_vcf_line.vcf_values_for_format
+
 
     def test_keep(self):
-        pass
+        list_of_samples = ['sample1']
+        VcfLine.keep(self, list_of_samples)
+        assert self.vcf_line.order_sample_names == list_of_samples
