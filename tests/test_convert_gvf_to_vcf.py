@@ -237,7 +237,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                 gvf_lines_obj_list, self.reference_lookup, self.ordered_list_of_samples)
         list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
         previous_object = list_of_vcf_objects[1]
-        keep_vcf_objects(previous_object, list_of_samples)
+        kept_object = keep_vcf_objects(previous_object, list_of_samples)
+        assert kept_object == previous_object
 
 
     def test_determine_merge_or_keep_vcf_objects(self):
