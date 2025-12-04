@@ -62,7 +62,7 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     :param mapping_attribute_dict: attributes
     :param field_lines_dictionary: dictionaries for ALT INFO FILTER and FORMAT
     :param all_possible_lines_dictionary: all possible VCF header lines
-    :return gvf_attribute_dictionary, info_string: dict of GVF attributes and formatted info string.
+    :return gvf_attribute_dictionary, vcf_info_values, vcf_format_values: dict of GVF attributes and VCF values.
     """
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
     vcf_info_values = {} # key is info field value; value is value
