@@ -388,6 +388,7 @@ class VcfLine:
     def merge_info_dicts(self, other_vcf_line):
         """ Merges and stores the INFO dictionaries for the INFO field of a VCF line.
         :param: other_vcf_line
+        :return: None
         """
         # Create data structure to merge the INFO dict of this VCF line and the other_vcf_line
         merged_info_dict = {}
@@ -409,11 +410,15 @@ class VcfLine:
         other_vcf_line.info_dict = merged_info_dict
 
     def merge_vcf_values_for_format(self, other_vcf_line):
+        """ Merge FORMAT vcf value dictionary for two vcf lines.
+        :param: other_vcf_line
+        return: None
+        """
         for sample in other_vcf_line.vcf_values_for_format:
             if sample not in self.vcf_values_for_format:
                 self.vcf_values_for_format[sample] = other_vcf_line.vcf_values_for_format.get(sample, {})
             else:
-                for format_key in other_vcf_line.vcf_values_for_format.get[sample]:
+                for format_key in other_vcf_line.vcf_values_for_format.get(sample):
                     if format_key not in self.vcf_values_for_format[sample]:
                         self.vcf_values_for_format[sample][format_key] = other_vcf_line.vcf_values_for_format[sample][format_key]
 
