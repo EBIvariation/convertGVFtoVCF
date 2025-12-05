@@ -1,5 +1,7 @@
 import argparse
 import os
+
+from convert_gvf_to_vcf.pragmaprocessor import PragmaProcessor
 from convert_gvf_to_vcf.utils import read_in_gvf_file
 from convert_gvf_to_vcf.vcfline import VcfLineBuilder
 from convert_gvf_to_vcf.logger import set_up_logging, logger
@@ -329,7 +331,6 @@ def main():
     # Read input file and separate out its components
     logger.info(f"Reading in the following GVF input: {args.gvf_input}")
     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
-
     # Creating lookup object to store important dictionaries and log what has been stored.
     reference_lookup = Lookup(assembly_file)
     logger.info("Creating the reference lookup object.")
