@@ -72,12 +72,12 @@ class TestVcfLineBuilder(unittest.TestCase):
         assert padded_base == 'C'
         assert pos  == 78
         assert ref == 'CA'
-        assert alt  == 'C'
+        assert alt  == '.'
         padded_base, pos, ref, alt = self.vcf_builder.add_padded_base(chrom='chromosome1', pos=1, end=2, ref="A", alt='.', placed_before=False)
         assert padded_base == 'C'
         assert pos  == 1
         assert ref == 'AC'
-        assert alt  == 'C'
+        assert alt  == '.'
 
     def test_get_ref(self):
         reference_allele = self.vcf_builder.get_ref(vcf_value_from_gvf_attribute={}, chrom='chromosome1', pos=1, end=2)
@@ -103,8 +103,8 @@ class TestVcfLineBuilder(unittest.TestCase):
         pos, ref, alt, info_dict = self.vcf_builder.get_alt(vcf_value_from_gvf_attribute, chrom='chromosome1', pos=77, end=78, length=1, ref='', so_type='copy_number_loss')
         assert pos == 76
         assert ref == 'T'
-        assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
         assert alt == '<DEL>'
+        assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
 
     def test_generate_symbolic_allele(self):
         # TODO: This seems incorrect
