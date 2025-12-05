@@ -152,8 +152,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_gvf_features_to_vcf_objects(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        assembly_file = self.assembly
-
         # standard structured meta-information lines for this VCF file
         (
             header_lines_for_this_vcf,
