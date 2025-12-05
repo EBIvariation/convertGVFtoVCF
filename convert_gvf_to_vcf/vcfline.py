@@ -256,7 +256,6 @@ class VcfLineBuilder:
         else:
             alt = "."
             print("Could not determine the alternative allele.")
-        print(pos, ref, alt, symbolic_allele, info_dict)
         return pos, ref, alt, info_dict
 
 

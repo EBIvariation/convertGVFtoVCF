@@ -99,13 +99,12 @@ class TestVcfLineBuilder(unittest.TestCase):
 
     def test_get_alt(self):
         'chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."'
-        # TODO: This seems incorrect
         vcf_value_from_gvf_attribute = {"Variant_seq":".", "Start_range":".,776614","End_range":"786127,."}
         pos, ref, alt, info_dict = self.vcf_builder.get_alt(vcf_value_from_gvf_attribute, chrom='chromosome1', pos=77, end=78, length=1, ref='', so_type='copy_number_loss')
         assert pos == 76
         assert ref == 'T'
         assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
-        assert alt == 'T<DEL>'
+        assert alt == '<DEL>'
 
     def test_generate_symbolic_allele(self):
         # TODO: This seems incorrect
