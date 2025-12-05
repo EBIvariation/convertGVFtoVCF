@@ -1,4 +1,3 @@
-# TODO: 2 tests
 import os.path
 import unittest
 
@@ -25,12 +24,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # Prepare References
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
         self.reference_lookup = Lookup(self.assembly)
-
         self.ordered_list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
-        # self.mapping_attribute_dict = read_yaml(
-        #     os.path.join(self.etc_folder, 'attribute_mapper.yaml'))  # formerly attributes_mapper and INFOattributes
-        # self.symbolic_allele_dictionary = generate_symbolic_allele_dict(self.mapping_attribute_dict)
-
 
 
     def test_generate_vcf_header_structured_lines(self):
@@ -49,7 +43,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         delimiter = " "
         name, value = parse_pragma(essential_pragma, delimiter)
         assert name, value == "##file-date, 2015-07-15"
-        # testing: pragma has only name, no value, should print warning
+        # testing: pragma has only a name, no value, should print warning
         name_only_pragma = "##file-date"
         name, value = parse_pragma(name_only_pragma, delimiter)
         assert name, value == "##file-date, None"
@@ -180,20 +174,26 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert actual_flags_for_list_of_vcf_objects == expected_flags_for_list_of_vcf_objects
 
     def test_merge_vcf_objects(self):
-        #     gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        #     header_standard_lines_dictionary, vcf_data_lines, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
-        #         gvf_lines_obj_list, self.reference_lookup)
-        #     list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
-        #     # # use lines 4 and 5 of gvf file
-        #     previous = list_of_vcf_objects[3] # line 4
-        #     current = list_of_vcf_objects[4] #line 5
-        #     merged_object = merge_vcf_objects(previous, current, list_of_samples)
-        #
-            # to_check = '\t'.join(['chromosome1', '127', '13;14', 'GTACGTACG', '<DUP>', '.', '.',
-            #                       'ALIAS=CNV6230,CNV5711;NAME=nssv1389474,nssv1388955;VARSEQ=.;REMAP=.69625,.85344;SVCID=CNV6230,CNV5711;VARCALLSOID=SO:0001742;AC=3;SVLEN=4;END=131',
-            #                       '.', '.\t.\t.\t.'])
-            # assert merged_object == to_check
-        pass
+        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
+        (header_standard_lines_dictionary,
+         list_of_vcf_objects) = convert_gvf_features_to_vcf_objects(
+                gvf_lines_obj_list,
+            self.reference_lookup,
+            list_of_samples)
+        # use lines 4 and 5 of gvf file
+        previous = list_of_vcf_objects[3] # line 4
+        current = list_of_vcf_objects[4] #line 5
+        merged_object = merge_vcf_objects(previous, current, list_of_samples)
+        assert merged_object.chrom == "chromosome1"
+        assert merged_object.pos == 127
+        assert merged_object.id == "13;14"
+        assert merged_object.ref == "GTACG"
+        assert merged_object.alt == "G<DUP>"
+        assert merged_object.qual == "."
+        assert merged_object.filter == "."
+        assert merged_object.info_dict == {'VARSEQ': '.', 'SVCID': 'CNV6230,CNV5711', 'END': '131', 'ALIAS': 'CNV6230,CNV5711', 'AC': '3', 'VARCALLSOID': 'SO:0001742', 'REMAP': '.69625,.85344', 'NAME': 'nssv1389474,nssv1388955', 'SVLEN': '4'}
+
 
     def test_keep_vcf_objects(self):
         gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
