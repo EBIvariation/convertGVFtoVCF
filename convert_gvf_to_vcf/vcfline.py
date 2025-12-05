@@ -97,18 +97,10 @@ class VcfLineBuilder:
             pos = pos - 1
             padded_base = extract_reference_allele(self.reference_lookup.assembly_file, chrom, pos, pos + 1)
             ref = padded_base + ref
-            if alt == ".":
-                alt = padded_base
-            else:
-                alt = padded_base + alt
         else:
             end = end + 1
             padded_base = extract_reference_allele(self.reference_lookup.assembly_file, chrom, end-1, end)
             ref = ref + padded_base
-            if alt == ".":
-                alt = padded_base
-            else:
-                alt = alt + padded_base
         return padded_base, pos, ref, alt
 
     def convert_iupac_ambiguity_code(self, ref_to_convert):
@@ -264,6 +256,7 @@ class VcfLineBuilder:
         else:
             alt = "."
             print("Could not determine the alternative allele.")
+        print(pos, ref, alt, symbolic_allele, info_dict)
         return pos, ref, alt, info_dict
 
 
