@@ -6,6 +6,7 @@ from Bio import SeqIO
 from convert_gvf_to_vcf.assistingconverter import convert_gvf_attributes_to_vcf_values
 
 
+
 def extract_reference_allele(fasta_file, chromosome_name, position, end):
     """ Extracts the reference allele from the assembly.
     :param fasta_file: FASTA file of the assembly
@@ -72,6 +73,17 @@ class VcfLineBuilder:
         return VcfLine(chrom=chrom, pos=pos, id=id, ref=ref, alt=alt, qual=qual, filter=filter,
                        info_dict=vcf_values_for_info, vcf_values_for_format=vcf_values_for_format,
                        order_sample_names=self.ordered_list_of_samples)
+
+    def build_vcf_header(self):
+        """Stores VCF header lines and makes them unique.
+        :return" self.field_lines_dictionary: VCF header lines ALT,INFO,FILTER,FORMAT
+        """
+        # make unique
+        self.field_lines_dictionary["ALT"] = list(dict.fromkeys(self.field_lines_dictionary["ALT"]))
+        self.field_lines_dictionary["INFO"] = list(dict.fromkeys(self.field_lines_dictionary["INFO"]))
+        self.field_lines_dictionary["FILTER"] = list(dict.fromkeys(self.field_lines_dictionary["FILTER"]))
+        self.field_lines_dictionary["FORMAT"] = list(dict.fromkeys(self.field_lines_dictionary["FORMAT"]))
+        return self.field_lines_dictionary
 
     # Functions which are responsible for token generation/population for the VCF line
     def add_padded_base(self, chrom, pos, end, ref, alt, placed_before : bool):
