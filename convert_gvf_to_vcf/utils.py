@@ -5,6 +5,7 @@ import yaml
 
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
 
+
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
