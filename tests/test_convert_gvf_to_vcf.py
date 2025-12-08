@@ -189,7 +189,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert merged_object.pos == 127
         assert merged_object.id == "13;14"
         assert merged_object.ref == "GTACG"
-        assert merged_object.alt == "G<DUP>"
+        assert merged_object.alt == "<DUP>"
         assert merged_object.qual == "."
         assert merged_object.filter == "."
         assert merged_object.info_dict == {'VARSEQ': '.', 'SVCID': 'CNV6230,CNV5711', 'END': '131', 'ALIAS': 'CNV6230,CNV5711', 'AC': '3', 'VARCALLSOID': 'SO:0001742', 'REMAP': '.69625,.85344', 'NAME': 'nssv1389474,nssv1388955', 'SVLEN': '4'}
