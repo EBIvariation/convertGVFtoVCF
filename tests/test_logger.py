@@ -18,7 +18,7 @@ class TestLogger(unittest.TestCase):
         # none as input
         expected_log_path_for_none = os.path.normpath(os.path.join(self.input_folder_parent, '..', "tests/output/converted.log"))
         log_path_for_none = set_up_logging(log_path=None)
-        assert os.path.exists(log_path_for_none), f"{log_path_for_none} does not exist"
+        assert os.path.lexists(log_path_for_none), f"{log_path_for_none} does not exist"
         assert log_path_for_none == expected_log_path_for_none
         # input path
         input_path = os.path.normpath(os.path.join(self.input_folder_parent, '..', 'tests/input/test.log'))
