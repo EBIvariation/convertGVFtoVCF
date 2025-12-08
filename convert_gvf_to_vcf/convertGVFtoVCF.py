@@ -1,7 +1,6 @@
 import argparse
 import os
 
-from convert_gvf_to_vcf.pragmaprocessor import PragmaProcessor
 from convert_gvf_to_vcf.utils import read_in_gvf_file
 from convert_gvf_to_vcf.vcfline import VcfLineBuilder
 from convert_gvf_to_vcf.logger import set_up_logging, logger
