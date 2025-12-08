@@ -13,5 +13,4 @@ def set_up_logging(log_path=None):
     logging.basicConfig(filename=log_path,
                         level=logging.DEBUG,
                         format="%(asctime)s - %(levelname)s - %(message)s")
-    logging.info("Opened Log file.")
     return log_path
