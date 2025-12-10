@@ -214,8 +214,9 @@ class TestVcfline(unittest.TestCase):
         assert self.vcf_line.alt == self.other_vcf_line.alt
         assert self.vcf_line.filter == self.other_vcf_line.filter
         assert self.vcf_line.info_dict == self.other_vcf_line.info_dict
-        # assert self.vcf_line.vcf_values_for_format == self.other_vcf_line.vcf_values_for_format
-
+        expected_union = {'sample1': {'GT': '0/1'}, 'sample2': {'GT': '0/1'}}
+        vcfline_union = self.vcf_line.vcf_values_for_format | self.other_vcf_line.vcf_values_for_format
+        assert vcfline_union == expected_union
 
     def test_keep(self):
         list_of_samples = ['sample1']
