@@ -141,7 +141,7 @@ def convert_gvf_pragmas_for_vcf_header(gvf_pragmas,
     # sample_names = []
     ####
     # MANDATORY header for VCF: file format for VCF
-    converted_pragmas.append(generate_vcf_header_unstructured_line("fileformat", "VCFv4.4"))
+    mandatory_first_line = generate_vcf_header_unstructured_line("fileformat", "VCFv4.4")
     #Go through pragmas
     #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
     list_of_gvf_pragmas = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
@@ -156,7 +156,9 @@ def convert_gvf_pragmas_for_vcf_header(gvf_pragmas,
     # ensure unique sample names and preserve order
     unique_sample_name = get_unique_sample_names(sample_names)
     ###
-    unique_converted_pragmas = list(dict.fromkeys(pragma for pragma in converted_pragmas if pragma not in unique_converted_pragmas))
+    # unique_converted_pragmas = list(dict.fromkeys(pragma for pragma in converted_pragmas if pragma not in unique_converted_pragmas))
+    unique_converted_pragmas = list(set(converted_pragmas))
+    unique_converted_pragmas = [mandatory_first_line] + unique_converted_pragmas
     return unique_converted_pragmas, unique_sample_name
 
 # the function below relates to the VCF headerline (Part 2)
