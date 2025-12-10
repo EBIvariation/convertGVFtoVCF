@@ -76,11 +76,13 @@ def get_unique_sample_names(sample_names):
     return uniq_sample_name
 
 
-def convert_essential_pragmas(list_of_gvf_pragmas_to_convert,
-                              list_of_converted_pragmas,
-                              list_of_essential_pragma,
-                              pragma_to_vcf_map):
-    """ This function converts essential pragmas using the delimiter for essential pragmas (delim=" ").
+def convert_gvf_pragmas_to_vcf_header(list_of_gvf_pragmas_to_convert,
+                                      list_of_converted_pragmas,
+                                      list_of_gvf_pragmas,
+                                      pragma_to_vcf_map):
+    """ This function converts pragmas using the delimiter for pragmas (delim=" ").
+    Format of pragma = Pragmas are found in the header and must start with "##".
+    Function of pragmas = Pragmas are essential for compliance with the specification and to be considered a valid GVF file. Important for interoperability.
     :param: list_of_gvf_pragmas_to_convert: pragmas to be converted
     :param: list_of_converted_pragmas: list of existing converted pragmas: will be appending results to this list
     :param: list_of_essential_pragma: a reference list of essential pragmas
@@ -88,25 +90,27 @@ def convert_essential_pragmas(list_of_gvf_pragmas_to_convert,
     : return: list_of_converted_pragmas: updated version
     """
     for pragma in list_of_gvf_pragmas_to_convert:
-        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma, " ", list_of_essential_pragma, pragma_to_vcf_map)
+        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma, " ", list_of_gvf_pragmas, pragma_to_vcf_map)
         list_of_converted_pragmas.append(generate_vcf_header_unstructured_line(vcf_header_key, pragma_value))
     return list_of_converted_pragmas
 
-def convert_nonessential_pragmas(nonessential_gvf_pragmas_to_convert,
-                                 list_of_converted_pragmas,
-                                 list_of_non_essential_pragma,
-                                 pragma_to_vcf_map,
-                                 sample_names):
+def convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
+                                             list_of_converted_pragmas,
+                                             list_of_gvf_pragma_comments,
+                                             pragma_to_vcf_map,
+                                             sample_names):
     """ This converts nonessential pragmas including obtaining the sample names from the gvf pragma
-    :param: nonessential_gvf_pragmas_to_convert: pragmas to be converted
+    Format of pragma comment = These tend to start with '#'. Since these comments are relevent to DGVa the delimiter is ": "
+    Function of pragma comment = These are non-essential and tend to be ignored by GVF processors. They can contain useful additional info.
+    :param: gvf_pragma_comments_to_convert: pragma comments to be converted
     :param: list_of_converted_pragmas: will append results to this list
-    :param: list_of_non_essential_pragma : reference list
-    :param: pragma_pragma_to_vcf_map: a mapping dict of GVF pragmas and their VCF counterpart
+    :param: list_of_gvf_pragma_comments : reference list
+    :param: pragma_to_vcf_map: a mapping dict of GVF pragmas and their VCF counterpart
     :param: sample_names: will append results to this list
     return: list_of_converted_pragmas, sample_names
     """
-    for non_essential_pragma in nonessential_gvf_pragmas_to_convert:
-        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(non_essential_pragma, ": ", list_of_non_essential_pragma, pragma_to_vcf_map)
+    for gvf_pragma_comment in gvf_pragma_comments_to_convert:
+        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(gvf_pragma_comment, ": ", list_of_gvf_pragma_comments, pragma_to_vcf_map)
         if pragma_name.startswith("#Publication"):
             publication_tokens = get_pragma_tokens(pragma_value, ";", "=")
             for pub_token in publication_tokens:
@@ -126,11 +130,11 @@ def convert_nonessential_pragmas(nonessential_gvf_pragmas_to_convert,
 
 
 def convert_gvf_pragmas_for_vcf_header(gvf_pragmas,
-                                       gvf_non_essential,
+                                       gvf_pragma_comments,
                                        reference_lookup):
     """ Generates a list of VCF-compatible pragmas and samples.
     :param gvf_pragmas: list of gvf pragmas to convert
-    :param gvf_non_essential: list of non-essential gvf pragmas to convert
+    :param gvf_pragma_comments: list of gvf pragma comments to convert
     :return: unique_converted_pragmas, sample_names: a list of pragmas (removed duplicates), list of sample names
     """
     converted_pragmas = []
@@ -139,14 +143,14 @@ def convert_gvf_pragmas_for_vcf_header(gvf_pragmas,
     ####
     # MANDATORY header for VCF: file format for VCF
     converted_pragmas.append(generate_vcf_header_unstructured_line("fileformat", "VCFv4.4"))
-    #Go through essential pragmas
+    #Go through pragmas
     #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
-    list_of_essential_pragmas = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
-    converted_pragmas = convert_essential_pragmas(gvf_pragmas, converted_pragmas, list_of_essential_pragmas, reference_lookup.pragma_to_vcf_map)
-    # Go through non-essential pragmas
-    list_of_non_essential_pragma = ["#sample", "#Study_accession", "#Study_type", "#Display_name", "#Publication"
+    list_of_gvf_pragmas = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
+    converted_pragmas = convert_gvf_pragmas_to_vcf_header(gvf_pragmas, converted_pragmas, list_of_gvf_pragmas, reference_lookup.pragma_to_vcf_map)
+    # Go through gvf pragma comments
+    list_of_gvf_pragma_comments = ["#sample", "#Study_accession", "#Study_type", "#Display_name", "#Publication"
                                     "#Study", "#Assembly_name", "#subject"]
-    convert_nonessential_pragmas(gvf_non_essential, converted_pragmas, list_of_non_essential_pragma, reference_lookup.pragma_to_vcf_map, sample_names)
+    convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments, converted_pragmas, list_of_gvf_pragma_comments, reference_lookup.pragma_to_vcf_map, sample_names)
     # ensure unique sample names and preserve order
     unique_sample_name = get_unique_sample_names(sample_names)
     ###
@@ -329,7 +333,7 @@ def main():
 
     # Read input file and separate out its components
     logger.info(f"Reading in the following GVF input: {args.gvf_input}")
-    gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
+    gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(args.gvf_input)
     # Creating lookup object to store important dictionaries and log what has been stored.
     reference_lookup = Lookup(assembly_file)
     logger.info("Creating the reference lookup object.")
@@ -345,7 +349,7 @@ def main():
     (
         pragmas_for_vcf,
         samples
-    ) = convert_gvf_pragmas_for_vcf_header(gvf_pragmas, gvf_non_essential, reference_lookup)
+    ) = convert_gvf_pragmas_for_vcf_header(gvf_pragmas, gvf_pragma_comments, reference_lookup)
 
     # Convert each feature line in the GVF file to a VCF object (stores all the data for a line in the VCF file).
     # NOTE: Main Logic lives here.

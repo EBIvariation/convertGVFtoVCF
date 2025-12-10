@@ -6,8 +6,8 @@ from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_line, read_in_gvf_file, \
     convert_gvf_features_to_vcf_objects, convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line, compare_vcf_objects, \
     determine_merge_or_keep_vcf_objects, merge_vcf_objects, parse_pragma, get_pragma_name_and_value, get_pragma_tokens, \
-    keep_vcf_objects, get_sample_name_from_pragma, get_unique_sample_names, convert_essential_pragmas, \
-    convert_nonessential_pragmas
+    keep_vcf_objects, get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
+    convert_gvf_pragma_comment_to_vcf_header
 
 
 class TestConvertGVFtoVCF(unittest.TestCase):
@@ -39,9 +39,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_parse_pragma(self):
         # testing: pragma has a name and value
-        essential_pragma = "##file-date 2015-07-15"
+        gvf_pragma = "##file-date 2015-07-15"
         delimiter = " "
-        name, value = parse_pragma(essential_pragma, delimiter)
+        name, value = parse_pragma(gvf_pragma, delimiter)
         assert name, value == "##file-date, 2015-07-15"
         # testing: pragma has only a name, no value, should print warning
         name_only_pragma = "##file-date"
@@ -91,7 +91,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert isinstance(unique_samples, list)
         assert unique_samples == expected_list
 
-    def test_convert_essential_pragmas(self):
+    def test_convert_gvf_pragmas_to_vcf_header(self):
         list_of_gvf_pragmas_to_convert = [
             '##gff-version 3',
             '##gvf-version 1.06',
@@ -100,28 +100,28 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             '##genome-build NCBI GRCz10'
         ]
         list_of_converted_pragmas = ['##fileformat=VCFv4.4']
-        list_of_essential_pragma = ['##file-date', '##gff-version', '##gvf-version', '##species', '##genome-build']
-        list_of_converted_pragmas = convert_essential_pragmas(
+        list_of_gvf_pragmas = ['##file-date', '##gff-version', '##gvf-version', '##species', '##genome-build']
+        list_of_converted_pragmas = convert_gvf_pragmas_to_vcf_header(
             list_of_gvf_pragmas_to_convert,
             list_of_converted_pragmas,
-            list_of_essential_pragma,
+            list_of_gvf_pragmas,
             self.reference_lookup.pragma_to_vcf_map
                                   )
         assert isinstance(list_of_converted_pragmas, list)
         expected_list = ['##fileformat=VCFv4.4', '##gff-version=3', '##gvf-version=1.06', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10']
         assert list_of_converted_pragmas == expected_list
 
-    def test_convert_nonessential_pragmas(self):
-        nonessential_gvf_pragmas_to_convert = ['#Study_accession: nstd62', '#Study_type: Control Set', '#Display_name: Brown_et_al_2012', '#Publication: PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year=2012', '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '#Assembly_name: GRCz10', '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7', '#testing_unknown_pragma']
+    def test_convert_gvf_pragma_comment_to_vcf_header(self):
+        gvf_pragma_comments_to_convert = ['#Study_accession: nstd62', '#Study_type: Control Set', '#Display_name: Brown_et_al_2012', '#Publication: PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year=2012', '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '#Assembly_name: GRCz10', '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7', '#testing_unknown_pragma']
         list_of_converted_pragmas = ['##fileformat=VCFv4.4', '##gff-version=3', '##gvf-version=1.06', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10']
-        list_of_non_essential_pragma = ['#sample', '#Study_accession', '#Study_type', '#Display_name', '#Publication#Study', '#Assembly_name',
+        list_of_gvf_pragma_comments = ['#sample', '#Study_accession', '#Study_type', '#Display_name', '#Publication#Study', '#Assembly_name',
          '#subject']
         sample_names = []
-        list_of_converted_pragmas, sample_names = convert_nonessential_pragmas(nonessential_gvf_pragmas_to_convert,
-                                     list_of_converted_pragmas,
-                                     list_of_non_essential_pragma,
-                                     self.reference_lookup.pragma_to_vcf_map,
-                                     sample_names)
+        list_of_converted_pragmas, sample_names = convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
+                                                                                           list_of_converted_pragmas,
+                                                                                           list_of_gvf_pragma_comments,
+                                                                                           self.reference_lookup.pragma_to_vcf_map,
+                                                                                           sample_names)
         expected_list_of_converted_pragmas = ['##fileformat=VCFv4.4', '##gff-version=3', '##gvf-version=1.06', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10', '##Study_accession=nstd62', '##Study_type=Control Set', '##Display_name=Brown_et_al_2012', '##PMID=22203992', '##Journal=Proceedings of the National Academy of Sciences of the United States of America', '##Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.', '##Publication_year=2012', '##First_author=Kim Brown', '##Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '##Assembly_name=GRCz10', '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9', '##subject=subject_name=JenMale7;subject_sex=Male', '##subject=subject_name=JenMale6;subject_sex=Male', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3', '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
         expected_list_of_sample_names = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
         assert isinstance(list_of_converted_pragmas, list)
@@ -131,20 +131,20 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_convert_gvf_pragmas_for_vcf_header(self):
         gvf_pragma = ['##gff-version 3', '##gvf-version 1.06', '##species http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##file-date 2015-07-15', '##genome-build NCBI GRCz10']
-        gvf_non_essential = ['#Study_accession: nstd62', '#Study_type: Control Set', '#Display_name: Brown_et_al_2012', '#Publication: PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year=2012', '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '#Assembly_name: GRCz10', '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7', '#testing_unknown_pragma']
-        unique_converted_pragmas, unique_sample_name =convert_gvf_pragmas_for_vcf_header(gvf_pragma, gvf_non_essential, self.reference_lookup)
+        gvf_pragma_comments = ['#Study_accession: nstd62', '#Study_type: Control Set', '#Display_name: Brown_et_al_2012', '#Publication: PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year=2012', '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '#Assembly_name: GRCz10', '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7', '#testing_unknown_pragma']
+        unique_converted_pragmas, unique_sample_name =convert_gvf_pragmas_for_vcf_header(gvf_pragma, gvf_pragma_comments, self.reference_lookup)
         expected_unique_converted_pragmas = ['##fileformat=VCFv4.4', '##gff-version=3', '##gvf-version=1.06', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10', '##Study_accession=nstd62', '##Study_type=Control Set', '##Display_name=Brown_et_al_2012', '##PMID=22203992', '##Journal=Proceedings of the National Academy of Sciences of the United States of America', '##Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.', '##Publication_year=2012', '##First_author=Kim Brown', '##Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '##Assembly_name=GRCz10', '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9', '##subject=subject_name=JenMale7;subject_sex=Male', '##subject=subject_name=JenMale6;subject_sex=Male', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3', '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
         expected_unique_sample_name = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
         assert unique_converted_pragmas == expected_unique_converted_pragmas
         assert unique_sample_name == expected_unique_sample_name
 
     def test_generate_vcf_metainfo(self):
-        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         (
             unique_converted_pragmas,
             unique_sample_names
         ) = convert_gvf_pragmas_for_vcf_header(
-            gvf_pragmas, gvf_non_essential, self.reference_lookup
+            gvf_pragmas, gvf_pragma_comments, self.reference_lookup
         )
         assert unique_converted_pragmas == ['##fileformat=VCFv4.4', '##gff-version=3', '##gvf-version=1.06', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10', '##Study_accession=nstd62', '##Study_type=Control Set', '##Display_name=Brown_et_al_2012', '##PMID=22203992', '##Journal=Proceedings of the National Academy of Sciences of the United States of America', '##Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.', '##Publication_year=2012', '##First_author=Kim Brown', '##Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '##Assembly_name=GRCz10', '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9', '##subject=subject_name=JenMale7;subject_sex=Male', '##subject=subject_name=JenMale6;subject_sex=Male', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3', '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
         assert unique_sample_names == ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
@@ -154,20 +154,20 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert header_fields == '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tJenMale6\tWilds2-3\tZon9\tJenMale7'
 
     def test_gvf_features_to_vcf_objects(self):
-        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         # standard structured meta-information lines for this VCF file
         (
             header_lines_for_this_vcf,
             list_of_vcf_objects
         ) = convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, self.reference_lookup, self.ordered_list_of_samples)
         assert len(gvf_pragmas) > 1
-        assert len(gvf_non_essential) > 1
+        assert len(gvf_pragma_comments) > 1
         assert len(gvf_lines_obj_list) > 1
         assert len(header_lines_for_this_vcf) > 1
         assert len(list_of_vcf_objects) > 1
 
     def test_compare_vcf_objects(self):
-        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         header_standard_lines_dictionary, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
             gvf_lines_obj_list,  self.reference_lookup, self.ordered_list_of_samples
         )
@@ -183,7 +183,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert actual_flags_for_list_of_vcf_objects == expected_flags_for_list_of_vcf_objects
 
     def test_merge_vcf_objects(self):
-        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
         (header_standard_lines_dictionary,
          list_of_vcf_objects) = convert_gvf_features_to_vcf_objects(
@@ -205,7 +205,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
 
     def test_keep_vcf_objects(self):
-        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         header_standard_lines_dictionary, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
                 gvf_lines_obj_list, self.reference_lookup, self.ordered_list_of_samples)
         list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
@@ -215,7 +215,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
 
     def test_determine_merge_or_keep_vcf_objects(self):
-        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         header_standard_lines_dictionary, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
             gvf_lines_obj_list,  self.reference_lookup, self.ordered_list_of_samples
         )
