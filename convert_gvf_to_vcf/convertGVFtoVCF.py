@@ -103,11 +103,11 @@ def convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
     :param: list_of_converted_pragma_comments: will append results to this list
     :param: list_of_gvf_pragma_comments : reference list
     :param: pragma_to_vcf_map: a mapping dict of GVF pragmas and their VCF counterpart
-    :param: sample_names: will append results to this list
-    return: list_of_converted_pragma_comments, sample_names
+    :param: sample_names_from_pragma_comments: will append results to this list
+    return: list_of_converted_pragma_comments, sample_names_from_pragma_comments
     """
     list_of_converted_pragma_comments = []
-    sample_names = []
+    sample_names_from_pragma_comments = []
     for gvf_pragma_comment in gvf_pragma_comments_to_convert:
         vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(gvf_pragma_comment, ": ", list_of_gvf_pragma_comments, pragma_to_vcf_map)
         if pragma_name.startswith("#Publication"):
@@ -124,8 +124,8 @@ def convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
         # populating sample headers
         sample_name = get_sample_name_from_pragma(pragma_name, pragma_value)
         if sample_name is not None:
-            sample_names.append(get_sample_name_from_pragma(pragma_name, pragma_value))
-    return list_of_converted_pragma_comments, sample_names
+            sample_names_from_pragma_comments.append(get_sample_name_from_pragma(pragma_name, pragma_value))
+    return list_of_converted_pragma_comments, sample_names_from_pragma_comments
 
 
 def convert_gvf_pragmas_for_vcf_header(gvf_pragmas,
