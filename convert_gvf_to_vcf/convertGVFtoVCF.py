@@ -75,9 +75,7 @@ def get_unique_sample_names(sample_names):
             uniq_sample_name.append(sample)
     return uniq_sample_name
 
-
 def convert_gvf_pragmas_to_vcf_header(list_of_gvf_pragmas_to_convert,
-                                      list_of_converted_pragmas,
                                       list_of_gvf_pragmas,
                                       pragma_to_vcf_map):
     """ This function converts pragmas using the delimiter for pragmas (delim=" ").
@@ -89,6 +87,7 @@ def convert_gvf_pragmas_to_vcf_header(list_of_gvf_pragmas_to_convert,
     :param: pragma_to_vcf_map: a mapping dict of GVF pragmas and their VCF counterpart
     : return: list_of_converted_pragmas: updated version
     """
+    list_of_converted_pragmas = []
     for pragma in list_of_gvf_pragmas_to_convert:
         vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma, " ", list_of_gvf_pragmas, pragma_to_vcf_map)
         list_of_converted_pragmas.append(generate_vcf_header_unstructured_line(vcf_header_key, pragma_value))
@@ -100,7 +99,7 @@ def convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
                                              pragma_to_vcf_map,
                                              sample_names):
     """ This converts nonessential pragmas including obtaining the sample names from the gvf pragma
-    Format of pragma comment = These tend to start with '#'. Since these comments are relevent to DGVa the delimiter is ": "
+    Format of pragma comment = These tend to start with '#'. These comments are relevant to DGVa delimiter is ": "
     Function of pragma comment = These are non-essential and tend to be ignored by GVF processors. They can contain useful additional info.
     :param: gvf_pragma_comments_to_convert: pragma comments to be converted
     :param: list_of_converted_pragmas: will append results to this list
@@ -146,7 +145,8 @@ def convert_gvf_pragmas_for_vcf_header(gvf_pragmas,
     #Go through pragmas
     #TODO: list of pragmas to add:reference=file, contig, phasing,INFO#
     list_of_gvf_pragmas = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
-    converted_pragmas = convert_gvf_pragmas_to_vcf_header(gvf_pragmas, converted_pragmas, list_of_gvf_pragmas, reference_lookup.pragma_to_vcf_map)
+    converted_pragmas_to_vcf_header = convert_gvf_pragmas_to_vcf_header(gvf_pragmas, list_of_gvf_pragmas, reference_lookup.pragma_to_vcf_map)
+    converted_pragmas.extend(converted_pragmas_to_vcf_header)
     # Go through gvf pragma comments
     list_of_gvf_pragma_comments = ["#sample", "#Study_accession", "#Study_type", "#Display_name", "#Publication"
                                     "#Study", "#Assembly_name", "#subject"]
