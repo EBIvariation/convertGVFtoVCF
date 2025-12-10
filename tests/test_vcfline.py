@@ -1,4 +1,3 @@
-#TODO: 6 tests
 import os
 import unittest
 
