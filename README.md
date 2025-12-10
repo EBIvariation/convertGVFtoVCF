@@ -1,6 +1,5 @@
 # convertGVFtoVCF
 converts GVF file to VCF file
 
-Dependencies
-Install biopython:
-pip install biopython
+Install Dependencies
+pip install -r requirements.txt

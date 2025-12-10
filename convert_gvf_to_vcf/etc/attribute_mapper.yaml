@@ -1,0 +1,911 @@
+# Below is an example format
+# name: (this can be the name of gvf_attribute or if unavailable, a general name)
+#   FIELD: (INFO/FORMAT/ALT)
+#       FieldKey: Initials
+#       Number: [INFO/FORMAT]Values for Field tag (codes available: A, R, G, ., 1, 0, n)
+#       Type: [INFO/FORMAT] Data type
+#       Description: explanation
+#       From: where this came from, VCF specification (Reserved, SV), or GVF specification or DGVa
+#       SOID: [ALT]if applicable, the sequence ontology ID
+ancestral_haplotype:
+    FORMAT:
+        FieldKey: AHAP
+        Number: 1
+        Type: Integer
+        Description: "Unique identifier of ancestral haplotype"
+        From: SVVCF
+allele_ancestral:
+    INFO:
+        FieldKey: AA
+        Number: 1
+        Type: String
+        Description: "Ancestral allele"
+        From: ReservedVCF
+allele_count:
+    INFO:
+        FieldKey: AC
+        Number: A
+        Type: Integer
+        Description: "Allele count in genotypes, for each ALT allele, in the same order as listed"
+        From: ReservedVCF
+allele_depth_forward:
+    INFO:
+        FieldKey: ADF
+        Number: R
+        Type: Integer
+        Description: "Read depth for each allele on the forward strand"
+        From: ReservedVCF
+    FORMAT:
+        FieldKey: ADF
+        Number: R
+        Type: Integer
+        Description: "Read depth for each allele on the forward strand"
+        From: ReservedVCF
+allele_depth_reverse:
+    INFO:
+        FieldKey: ADR
+        Number: R
+        Type: Integer
+        Description: "Read depth for each allele on the reverse strand"
+        From: ReservedVCF
+    FORMAT:
+        FieldKey: ADR
+        Number: R
+        Type: Integer
+        Description: "Read depth for each allele on the reverse strand"
+        From: ReservedVCF
+allele_frequency:
+    INFO:
+        FieldKey: AF
+        Number: A
+        Type: Float
+        Description: "Allele frequency for each ALT allele in the same order as listed (estimated from primary data, not called genotypes)"
+        From: ReservedVCF
+allele_number:
+    INFO:
+        FieldKey: AN
+        Number: 1
+        Type: Integer
+        Description: "Total number of alleles in called genotypes"
+        From: [DGVa, ReservedVCF]
+alu_deletion:
+    ALT:
+        FieldKey: DEL:ME:ALU
+        Description: "Alu deletion"
+        From: SVVCF
+        SOID: SO:0002070
+alu_insertion:
+    ALT:
+        FieldKey: INS
+        Description: "Alu insertion"
+        From: SVVCF
+        SOID: SO:0002063
+base_quality:
+    INFO:
+        FieldKey: BQ
+        Number: 1
+        Type: Float
+        Description: "RMS base quality"
+        From: ReservedVCF
+breakpoint_id:
+    INFO:
+        FieldKey: BKPTID
+        Number: A
+        Type: String
+        Description: "ID of the assembled alternate allele in the assembly file"
+        From: SVVCF
+cicn:
+    INFO:
+        FieldKey: CICN
+        Number: .
+        Type: Float
+        Description: "Confidence interval around copy number"
+        From: SVVCF
+    FORMAT:
+        FieldKey: CICN
+        Number: 2
+        Type: Float
+        Description: "Confidence interval around copy number"
+        From: SVVCF
+ciend:
+    INFO:
+        FieldKey: CIEND
+        Number: .
+        Type: Integer
+        Description: "Confidence interval around END for symbolic structural variants"
+        From: SVVCF
+cilen:
+    INFO:
+        FieldKey: CILEN
+        Number: .
+        Type: Integer
+        Description: "Confidence interval for the SVLEN field"
+        From: SVVCF
+cirb:
+    INFO:
+        FieldKey: CIRB
+        Number: .
+        Type: Integer
+        Description: "Confidence interval around RB"
+        From: SVVCF
+ciruc:
+    INFO:
+        FieldKey: CIRUC
+        Number: .
+        Type: Float
+        Description: "Confidence interval around RUC"
+        From: SVVCF
+cipos:
+    INFO:
+        FieldKey: CIPOS
+        Number: .
+        Type: Integer
+        Description: "Confidence interval around POS for symbolic structural variants"
+        From: SVVCF
+cigar_string:
+    INFO:
+        FieldKey: CIGAR
+        Number: A
+        Type: String
+        Description: "Cigar string describing how to align an alternate allele to the reference allele"
+        From: ReservedVCF
+complex_structural_alteration:
+    ALT:
+        FieldKey: None
+        Description: "complex_structural_alteration"
+        From: SVVCF
+        SOID: SO:0001784
+complex_substitution:
+    ALT:
+        FieldKey: None
+        Description: "Complex substituition"
+        From: SVVCF
+        SOID: SO:1000005
+copy_number:
+    INFO:
+        FieldKey: CN
+        Number: A
+        Type: Float
+        Description: "Copy number of CNV/breakpoint"
+        From: SVVCF
+    FORMAT:
+        FieldKey: CN
+        Number: 1
+        Type: Float
+        Description: "CopyNumber"
+        From: SVVCF
+copy_number_gain:
+    ALT:
+        FieldKey: DUP
+        Description: "Duplication"
+        From: SVVCF
+        SOID: SO:0001742
+copy_number_loss:
+    ALT:
+        FieldKey: DEL
+        Description: "Deletion"
+        From: SVVCF
+        SOID: SO:0001743
+copy_number_likelihood:
+    FORMAT:
+        FieldKey: CNL
+        Number: G
+        Type: Float
+        Description: "Copy number genotype likelihood"
+        From: SVVCF
+copy_number_probability:
+    FORMAT:
+        FieldKey: CNP
+        Number: G
+        Type: Float
+        Description: "Copy number posterior probabilities"
+        From: SVVCF
+copy_number_quality:
+    FORMAT:
+        FieldKey: CNQ
+        Number: 1
+        Type: Float
+        Description: "Copy number genotype quality"
+        From: SVVCF
+copy_number_variation:
+    ALT:
+        FieldKey: CNV
+        Description: "Copy number variable region"
+        From: SVVCF
+        SOID: SO:0001019
+dbsnp:
+    INFO:
+        FieldKey: DB
+        Number: 0
+        Type: Flag
+        Description: "dbSNP membership"
+        From: ReservedVCF
+dbripid:
+    INFO:
+        FieldKey: DBRIPID
+        Number: A
+        Type: String
+        Description: "ID of this element in DBRIP"
+        From: SVVCF
+dbvarid:
+    INFO:
+        FieldKey: DBVARID
+        Number: A
+        Type: String
+        Description: "ID of this element in DBVAR"
+        From: SVVCF
+deletion:
+    ALT:
+        FieldKey: DEL
+        Description: "Deletion"
+        From: SVVCF
+        SOID: SO:0000159
+delins:
+    ALT:
+        FieldKey: None
+        Description: "Deletion-Insertion"
+        From: SVVCF
+        SOID: SO:1000032
+dgvid:
+    INFO:
+        FieldKey: DGVID
+        Number: A
+        Type: String
+        Description: "ID of this element in Database of Genomic Variation"
+        From: SVVCF
+duplication:
+    ALT:
+        FieldKey: DUP
+        Description: "Duplication"
+        From: SVVCF
+        SOID: SO:1000035
+Total_reads:
+    INFO:
+        FieldKey: DP
+        Number: 1
+        Type: Integer
+        Description: "Combined depth across samples"
+        From: [DGVa, ReservedVCF]
+    FORMAT:
+        FieldKey: DP
+        Number: 1
+        Type: Integer
+        Description: "Read depth"
+        From: [ DGVa, ReservedVCF ]
+end:
+    INFO:
+        FieldKey: END
+        Number: 1
+        Type: Integer
+        Description: "End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record"
+        From: [ReservedVCF, SVVCF]
+event:
+    INFO:
+        FieldKey: EVENT
+        Number: A
+        Type: String
+        Description: "ID of associated event"
+        From: SVVCF
+event_type:
+    INFO:
+        FieldKey: EVENTTYPE
+        Number: A
+        Type: String
+        Description: "Type of associated event"
+        From: SVVCF
+expected_count:
+    FORMAT:
+        FieldKey: EC
+        Number: A
+        Type: Integer
+        Description: "Expected alternate allele counts"
+        From: ReservedVCF
+filter_called:
+    FORMAT:
+        FieldKey: FT
+        Number: 1
+        Type: String
+        Description: "Filter indicating if this genotype was 'called'"
+        From: ReservedVCF
+genotype_likelihoods:
+    FORMAT:
+        FieldKey: GL
+        Number: G
+        Type: Float
+        Description: "Genotype likelihoods"
+        From: ReservedVCF
+genotype_probabilities:
+    FORMAT:
+        FieldKey: GP
+        Number: G
+        Type: Float
+        Description: "Genotype posterior probabilities"
+        From: ReservedVCF
+genotype_quality:
+    FORMAT:
+        FieldKey: GQ
+        Number: 1
+        Type: Integer
+        Description: "Conditional genotype quality"
+        From: ReservedVCF
+haplotype_identifier:
+    FORMAT:
+        FieldKey: HAP
+        Number: 1
+        Type: Integer
+        Description: "Unique haplotype identifier"
+        From: SVVCF
+haplotype_quality:
+    FORMAT:
+        FieldKey: HQ
+        Number: 2
+        Type: Integer
+        Description: "Haplotype quality"
+        From: ReservedVCF
+hapmap2:
+    INFO:
+        FieldKey: H2
+        Number: 0
+        Type: Flag
+        Description: "HapMap2 membership"
+        From: ReservedVCF
+hapmap3:
+    INFO:
+        FieldKey: H3
+        Number: 0
+        Type: Flag
+        Description: "HapMap3 membership"
+        From: ReservedVCF
+homlen:
+    INFO:
+        FieldKey: HOMLEN
+        Number: A
+        Type: Integer
+        Description: "Length of base pair identical micro-homology at breakpoints"
+        From: SVVCF
+homseq:
+    INFO:
+        FieldKey: HOMSEQ
+        Number: A
+        Type: String
+        Description: "Sequence of base pair identical micro-homology at breakpoints"
+        From: SVVCF
+insertion:
+    ALT:
+        FieldKey: INS
+        Description: "Insertion"
+        From: SVVCF
+        SOID: SO:0000667
+intrachromosomal_translocation:
+    ALT:
+        FieldKey: BND
+        Description: "Intrachromosomal translocation"
+        From: SVVCF
+        SOID: SO:0002061
+interchromosomal_translocation:
+    ALT:
+        FieldKey: BND
+        Description: "Interchromosomal translocation"
+        From: SVVCF
+        SOID: SO:0002060
+inversion:
+    ALT:
+        FieldKey: INV
+        Description: "Inversion"
+        From: SVVCF
+        SOID: SO:1000036
+imprecise:
+    INFO:
+        FieldKey: IMPRECISE
+        Number: 0
+        Type: Flag
+        Description: "Imprecise structural variation"
+        From: SVVCF
+line1_deletion:
+    ALT:
+        FieldKey: DEL:ME:LINE1
+        Description: "LINE1 deletion"
+        From: SVVCF
+        SOID: SO:0002069
+line1_insertion:
+    ALT:
+        FieldKey: INS:ME:LINE1
+        Description: "LINE1 Insertion"
+        From: SVVCF
+        SOID: SO:0002064
+mapping_quality:
+    INFO:
+        FieldKey: MQ
+        Number: 1
+        Type: Float
+        Description: "RMS mapping quality"
+        From: ReservedVCF
+    FORMAT:
+        FieldKey: MQ
+        Number: 1
+        Type: Integer
+        Description: "RMS mapping quality"
+        From: ReservedVCF
+mapping_quality_zero:
+    INFO:
+        FieldKey: MQ0
+        Number: 1
+        Type: Integer
+        Description: "Number of MAPQ == 0 reads"
+        From: ReservedVCF
+mate_id:
+    INFO:
+        FieldKey: MATEID
+        Number: A
+        Type: String
+        Description: "ID of mate breakend"
+        From: SVVCF
+meinfo:
+    INFO:
+        FieldKey: MEINFO
+        Number: .
+        Type: String
+        Description: "Mobile element info of the form NAME,START,END,POLARITY"
+        From: SVVCF
+metrans:
+    INFO:
+        FieldKey: METRANS
+        Number: .
+        Type: String
+        Description: "Mobile element transduction info of the form CHR,START,END,POLARITY"
+        From: SVVCF
+mobile_element_insertion:
+    ALT:
+        FieldKey: INS:ME
+        Description: "Mobile element insertion"
+        From: SVVCF
+        SOID: SO:0001837
+novel:
+    INFO:
+        FieldKey: NOVEL
+        Number: 0
+        Type: Flag
+        Description: "Indicates a novel structural variation"
+        From: SVVCF
+novel_phred_score:
+    FORMAT:
+        FieldKey: NQ
+        Number: 1
+        Type: Integer
+        Description: "Phred style probability score that the variant is novel"
+        From: SVVCF
+novel_sequence_insertion:
+    ALT:
+        FieldKey: INS
+        Description: "Novel sequence insertion"
+        From: SVVCF
+        SOID: SO:0001838
+number_samples:
+    INFO:
+        FieldKey: NS
+        Number: 1
+        Type: Integer
+        Description: "Number of samples with data"
+        From: ReservedVCF
+parid:
+    INFO:
+        FieldKey: PARID
+        Number: A
+        Type: String
+        Description: "ID of partner breakend"
+        From: SVVCF
+phred_likelihoods:
+    FORMAT:
+        FieldKey: PL
+        Number: G
+        Type: Integer
+        Description: "Phred-scaled genotype likelihoods rounded to the closest integer"
+        From: ReservedVCF
+phred_probabilities:
+    FORMAT:
+        FieldKey: PP
+        Number: G
+        Type: Integer
+        Description: "Phred-scaled genotype posterior probabilities rounded to the closest integer"
+        From: ReservedVCF
+phasing_quality:
+    FORMAT:
+        FieldKey: PQ
+        Number: 1
+        Type: Integer
+        Description: "Phasing quality"
+        From: ReservedVCF
+repeat_number:
+    INFO:
+        FieldKey: RN
+        Number: A
+        Type: Integer
+        Description: "Total number of repeat sequences in this allele"
+        From: SVVCF
+repeat_seq:
+    INFO:
+        FieldKey: RUS
+        Number: .
+        Type: String
+        Description: "Repeat unit sequence of the corresponding repeat sequence"
+        From: SVVCF
+repeat_length:
+    INFO:
+        FieldKey: RUL
+        Number: .
+        Type: Integer
+        Description: "Repeat unit length of the corresponding repeat sequence"
+        From: SVVCF
+repeat_count:
+    INFO:
+        FieldKey: RUC
+        Number: .
+        Type: Float
+        Description: "Repeat unit count of corresponding repeat sequence"
+        From: SVVCF
+repeat_base:
+    INFO:
+        FieldKey: RB
+        Number: .
+        Type: Integer
+        Description: "Total number of bases in the corresponding repeat sequence"
+        From: SVVCF
+repeat_base_indiv:
+    INFO:
+        FieldKey: RUB
+        Number: .
+        Type: Integer
+        Description: "Number of bases in each individual repeat unit"
+        From: SVVCF
+short_tandem_repeat_variation:
+    ALT:
+        FieldKey: CNV:TR
+        Description: "Tandem repeat determined based on DNA abundance"
+        From: SVVCF
+        SOID: SO:0002096
+strand_bias:
+    INFO:
+        FieldKey: SB
+        Number: 4
+        Type: Integer
+        Description: "Strand bias"
+        From: ReservedVCF
+somatic:
+    INFO:
+        FieldKey: SOMATIC
+        Number: 0
+        Type: Flag
+        Description: "Somatic mutation (for cancer genomics)"
+        From: ReservedVCF
+sva_insertion:
+    ALT:
+        FieldKey: INS:ME:SVA
+        Description: "SVA insertion"
+        From: SVVCF
+        SOID: SO:0002065
+svclaim:
+    INFO:
+        FieldKey: SVCLAIM
+        Number: A
+        Type: String
+        Description: "Claim made by the structural variant call. Valid values are D, J, DJ for abundance, adjacency and both respectively"
+        From: SVVCF
+svlen:
+    INFO:
+        FieldKey: SVLEN
+        Number: A
+        Type: String
+        Description: "Length of structural variant"
+        From: SVVCF
+svtype:
+    INFO:
+        FieldKey: SVTYPE
+        Number: 1
+        Type: String
+        Description: "Type of structural variant"
+        From: SVVCF
+validated:
+    INFO:
+        FieldKey: VALIDATED
+        Number: 0
+        Type: Flag
+        Description: "Validated by follow-up experiment"
+        From: ReservedVCF
+tandem_duplication:
+    ALT:
+        FieldKey: DUP:TANDEM
+        Description: "Tandem duplication"
+        SOID: SO:1000173
+        From: SVVCF
+thousand_genomes:
+    INFO:
+        FieldKey: 1000G
+        Number: 0
+        Type: Flag
+        Description: "1000 Genomes membership"
+        From: ReservedVCF
+sequence_alteration:
+    ALT:
+        FieldKey: None
+        Description: "Sequence alteration"
+        From: SVVCF
+        SOID: SO:0001059
+Variant_freq:
+    INFO:
+        FieldKey: AF
+        Number: A
+        Type: Float
+        Description: "Allele frequency for each ALT allele in the same order as listed (estimated from primary data, not called genotypes)"
+        From: [GVF, ReservedVCF]
+Genotype:
+    FORMAT:
+        FieldKey: GT
+        Number: 1
+        Type: String
+        Description: "Genotype"
+        From: [GVF, ReservedVCF]
+Zygosity:
+    FORMAT:
+        FieldKey: GT
+        Number: 1
+        Type: String
+        Description: "Zygosity"
+        From: [GVF, ReservedVCF]
+Phased:
+    FORMAT:
+        FieldKey: PS
+        Number: 1
+        Type: Integer
+        Description: "Phase set"
+        From: [GVF, ReservedVCF]
+Variant_reads:
+    INFO:
+        FieldKey: AD
+        Number: R
+        Type: Integer
+        Description: "Total read depth for each allele"
+        From: [GVF, ReservedVCF]
+    FORMAT:
+        FieldKey: AD
+        Number: R
+        Type: Integer
+        Description: "Read depth for each allele"
+        From: [GVF, ReservedVCF]
+3'_inner_flank_link:
+    INFO:
+        FieldKey: TIFL
+        Number: .
+        Type: String
+        Description: "Three prime inner flank link"
+        From: DGVa
+5'_inner_flank_link:
+    INFO:
+        FieldKey: FIFL
+        Number: .
+        Type: String
+        Description: "Five prime inner flank link"
+        From: DGVa
+assertion_method:
+    INFO:
+        FieldKey: AM
+        Number: .
+        Type: String
+        Description: "Assertion method"
+        From: DGVa
+breakpoint_order:
+    INFO:
+        FieldKey: BO
+        Number: .
+        Type: String
+        Description: "breakpoint order"
+        From: DGVa
+clinical_significance:
+    INFO:
+        FieldKey: CLINSIG
+        Number: .
+        Type: String
+        Description: "Clinical Significance"
+        From: DGVa
+evidence_sequence_link:
+    INFO:
+        FieldKey: ESL
+        Number: .
+        Type: String
+        Description: "Evidence Sequence Link"
+        From: DGVa
+log2_value:
+    INFO:
+        FieldKey: LOG
+        Number: .
+        Type: Float
+        Description: "Log2 Value"
+        From: DGVa
+mutation_order:
+    INFO:
+        FieldKey: MO
+        Number: .
+        Type: Integer
+        Description: "Mutation"
+        From: DGVa
+Name:
+    INFO:
+        FieldKey: NAME
+        Number: .
+        Type: String
+        Description: "Name"
+        From: DGVa
+Parent:
+    INFO:
+        FieldKey: PARENT
+        Number: .
+        Type: String
+        Description: "Parent"
+        From: DGVa
+phenotype_description:
+    INFO:
+        FieldKey: PHENODESC
+        Number: .
+        Type: Stromg
+        Description: "Phenotype description"
+        From: DGVa
+phenotype_link:
+    INFO:
+        FieldKey: PHENOLINK
+        Number: .
+        Type: String
+        Description: "Phenotype link"
+        From: DGVa
+reciprocal_alignment:
+    INFO:
+        FieldKey: RALIGN
+        Number: .
+        Type: String
+        Description: "Reciprocal Alignment"
+        From: DGVa
+remap_score:
+    INFO:
+        FieldKey: REMAP
+        Number: .
+        Type: Float
+        Description: "Remap score"
+        From: DGVa
+samples:
+    INFO:
+        FieldKey: SAMP
+        Number: .
+        Type: String
+        Description: "Samples"
+        From: DGVa
+submitter_variant_call_id:
+    INFO:
+        FieldKey: SVCID
+        Number: .
+        Type: Integer
+        Description: "submitter variant call ID"
+        From: DGVa
+submitter_variant_region_id:
+    INFO:
+        FieldKey: SVRID
+        Number: .
+        Type: Integer
+        Description: "Submitter variant region ID"
+        From: DGVa
+support_count:
+    INFO:
+        FieldKey: SUPCOUNT
+        Number: .
+        Type: Integer
+        Description: "Support Count"
+        From: DGVa
+supporting_sequence_link:
+    INFO:
+        FieldKey: SSEQLINK
+        Number: .
+        Type: String
+        Description: "Supporting Sequence Link"
+        From: DGVa
+variant_call_description:
+    INFO:
+        FieldKey: VARCALLDESC
+        Number: .
+        Type: String
+        Description: "Variant Call Description"
+        From: DGVa
+variant_region_so_id:
+    INFO:
+        FieldKey: VARREGSOID
+        Number: .
+        Type: String
+        Description: "Variant Region Sequence Ontology ID"
+        From: DGVa
+variant_call_so_id:
+    INFO:
+        FieldKey: VARCALLSOID
+        Number: .
+        Type: String
+        Description: "Variant call Sequence ontology ID"
+        From:
+ID:
+    INFO:
+        FieldKey: ID
+        Number: .
+        Type: String
+        Description: "A unique identifier"
+        From: GVF
+Variant_seq:
+    INFO:
+        FieldKey: VARSEQ
+        Number: .
+        Type: String
+        Description: "Alleles found in an individual (or group of individuals)."
+        From: GVF
+Reference_seq:
+    INFO:
+        FieldKey: REFSEQ
+        Number: .
+        Type: String
+        Description: "The sequence corresponding to the seq id, start, end of the associated genomic sequence file."
+        From: DGVa
+Alias:
+    INFO:
+        FieldKey: ALIAS
+        Number: .
+        Type: String
+        Description: "Secondary Name"
+        From: DGVa
+Variant_effect:
+    INFO:
+        FieldKey: VAREFF
+        Number: .
+        Type: String
+        Description: "The effect of a sequence alteration on a sequence feature"
+        From: GVF
+Variant_codon:
+    INFO:
+        FieldKey: VARCDN
+        Number: .
+        Type: String
+        Description: "The codons that overlap a feature as modified by the sequences in the Variant_seq attributes"
+        From: GVF
+Reference_codon:
+    INFO:
+        FieldKey: REFCDN
+        Number: .
+        Type: String
+        Description: "The codons that overlap a feature on the the reference genome."
+        From: GVF
+Variant_aa:
+    INFO:
+        FieldKey: VARAA
+        Number: .
+        Type: String
+        Description: "The amino acids that overlap a feature as modified by the sequences in the Variant_seq attribute."
+        From: GVF
+Reference_aa:
+    INFO:
+        FieldKey: REFAA
+        Number: .
+        Type: String
+        Description: "The amino acids that overlap a feature on the reference genome."
+        From: GVF
+Breakpoint_detail:
+    INFO:
+        FieldKey: BD
+        Number: .
+        Type: String
+        Description: "Describes the source or destination of the a zero-length sequence alteration in the form seqid:start-end:strand"
+        From: GVF
+Sequence_context:
+    INFO:
+        FieldKey: SEQCTXT
+        Number: .
+        Type: String
+        Description: "A region of sequence context from the reference genome around a sequence alteration."
+        From: GVF
+Dbxref:
+    INFO:
+        FieldKey: DBXREF
+        Number: .
+        Type: String
+        Description: "A database cross-reference"
+        From: GVF
