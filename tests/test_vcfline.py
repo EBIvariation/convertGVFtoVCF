@@ -199,7 +199,7 @@ class TestVcfline(unittest.TestCase):
         assert self.other_vcf_line.info_dict == expected_merge_info_dict
 
     def test_merge_vcf_values_for_format(self):
-        VcfLine.merge_vcf_values_for_format(self.vcf_line, self.other_vcf_line)
+        self.vcf_line.merge_vcf_values_for_format(self.other_vcf_line)
         expected_merge_vcf_values_for_format = {'sample1': {'GT': '0/1'}, 'sample2': {'GT': '0/1'}}
         assert self.vcf_line.vcf_values_for_format == expected_merge_vcf_values_for_format
 
