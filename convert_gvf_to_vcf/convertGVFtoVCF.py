@@ -83,9 +83,12 @@ def generate_vcf_header_metainfo(gvf_pragmas,
     for non_essential_pragma in gvf_non_essential:
         vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(non_essential_pragma, ": ", list_of_non_essential_pragma, pragma_to_vcf_map)
         if pragma_name.startswith("#Publication"):
-            publication_tokens = get_pragma_tokens(pragma_value, ";", "=")
-            for pub_token in publication_tokens:
-                pragmas_to_add.append(generate_vcf_header_unstructured_line(pub_token[0], pub_token[1]))
+            if ";" in pragma_value:
+                publication_tokens = get_pragma_tokens(pragma_value, ";", "=")
+                for pub_token in publication_tokens:
+                    pragmas_to_add.append(generate_vcf_header_unstructured_line(pub_token[0], pub_token[1]))
+            else:
+                pragmas_to_add.append(generate_vcf_header_unstructured_line(pragma_name.lstrip("#"), pragma_value))
         elif pragma_name == "#Study":
             study_tokens = get_pragma_tokens(pragma_value, ";", "=")
             for s_token in study_tokens:
