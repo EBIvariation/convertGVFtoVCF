@@ -27,70 +27,17 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.reference_lookup = Lookup(self.assembly)
         self.ordered_list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
 
+    # the tests below relate to the VCF header (Part 1)
     def test_generate_vcf_header_structured_lines(self):
         all_possible_lines = generate_vcf_header_structured_lines("INFO", self.reference_lookup.mapping_attribute_dict)
         assert isinstance(all_possible_lines, dict)
         assert all_possible_lines["AA"] == '##INFO=<ID=AA,Number=1,Type=String,Description="Ancestral allele">'
-
-    def test_get_sample_name_from_pragma(self):
-        pragma_name = "#sample"
-        pragma_value = "sample_name=JenMale6;subject_name=JenMale6"
-        sample_name = get_sample_name_from_pragma(pragma_name, pragma_value)
-        assert sample_name == "JenMale6"
-
-    def test_get_unique_sample_names(self):
-        duplicated_samples = ["JenMale6", "JenMale6", "JenMale7"]
-        unique_samples = get_unique_sample_names(duplicated_samples)
-        expected_list = ["JenMale6", "JenMale7"]
-        assert isinstance(unique_samples, list)
-        assert unique_samples == expected_list
 
     def test_generate_vcf_header_unstructured_lines(self):
         key_to_test = "fileformat"
         value_to_test= "VCFv4.4"
         actual_output = generate_vcf_header_unstructured_line(key_to_test, value_to_test)
         assert actual_output == "##fileformat=VCFv4.4"
-
-    def test_parse_pragma(self):
-        # testing: pragma has a name and value
-        gvf_pragma = "##file-date 2015-07-15"
-        delimiter = " "
-        name, value = parse_pragma(gvf_pragma, delimiter)
-        assert name == "##file-date"
-        assert value == "2015-07-15"
-        # testing: pragma has only a name, no value, should print warning
-        name_only_pragma = "##file-date"
-        name, value = parse_pragma(name_only_pragma, delimiter)
-        assert name == "##file-date"
-        assert value is None
-        # testing: invalid pragmas
-        invalid_pragma = None
-        with self.assertRaises(AttributeError):
-            parse_pragma(invalid_pragma, delimiter)
-
-    def test_get_pragma_name_and_value(self):
-        pragma_to_test = "##file-date 2015-07-15"
-        delimiter = " "
-        list_of_pragma = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
-        pragma_to_vcf_map = {'##file-date': 'fileDate', '##gff-version': 'gff-version', '##gvf-version': 'gvf-version', '##species': 'species', '##genome-build': 'genome-build', '#sample': 'sample', '#Study_accession': 'Study_accession', '#Study_type': 'Study_type', '#Display_name': 'Display_name', '#Publication': 'Publication', '#Study': 'Study', '#Assembly_name': 'Assembly_name', '#subject': 'subject'}
-        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma_to_test, delimiter, list_of_pragma, pragma_to_vcf_map)
-        assert vcf_header_key == "fileDate"
-        assert pragma_name == "##file-date"
-        assert pragma_value == "2015-07-15"
-
-    def test_get_pragma_tokens(self):
-        pragma_value = "First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"
-        pragma_tokens = get_pragma_tokens(pragma_value, ";", "=")
-        assert len(pragma_tokens) == 2
-        # Testing: expected
-        assert pragma_tokens[0][0] == "First_author"
-        assert pragma_tokens[0][1] == "Kim Brown"
-        assert pragma_tokens[1][0] == "Description"
-        assert pragma_tokens[1][1] == "Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"
-        # Testing: not expected
-        unexpected_pragma_tokens = [['A', '1'], ['B', '2']]
-        with self.assertRaises(AssertionError):
-            self.assertEqual(unexpected_pragma_tokens, pragma_tokens)
 
     def test_get_sample_names_from_pragma(self):
         pragma_name = "#sample"
@@ -99,6 +46,13 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert isinstance(list_of_samples, str)
         expected_value = 'JenMale6'
         assert list_of_samples == expected_value
+
+    def test_get_unique_sample_names(self):
+        duplicated_samples = ["JenMale6", "JenMale6", "JenMale7"]
+        unique_samples = get_unique_sample_names(duplicated_samples)
+        expected_list = ["JenMale6", "JenMale7"]
+        assert isinstance(unique_samples, list)
+        assert unique_samples == expected_list
 
     def test_convert_gvf_pragmas_to_vcf_header(self):
         list_of_gvf_pragmas_to_convert = [
@@ -147,35 +101,55 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # assert unique_converted_pragmas == expected_unique_converted_pragmas
         assert unique_sample_name == expected_unique_sample_name
 
-    def test_generate_vcf_metainfo(self):
-        gvf_pragmas = ['##gff-version 3', '##gvf-version 1.06', '##species http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##file-date 2015-07-15', '##genome-build NCBI GRCz10']
-        gvf_pragma_comments_with_publication = ['#Study_accession: nstd62', '#Study_type: Control Set', '#Display_name: Brown_et_al_2012', '#Publication: PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year=2012', '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '#Assembly_name: GRCz10', '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7', '#testing_unknown_pragma']
-        (unique_pragmas_to_add, sample_names,
-         unique_alt_lines_to_add, unique_info_lines_to_add,
-         unique_filter_lines_to_add, unique_format_lines_to_add) = generate_vcf_header_metainfo(
-            gvf_pragmas, gvf_pragma_comments_with_publication
-        )
-        expected_unique_converted_pragmas = ['##fileformat=VCFv4.4', '##gff-version=3', '##gvf-version=1.06', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10', '##Study_accession=nstd62', '##Study_type=Control Set', '##Display_name=Brown_et_al_2012', '##PMID=22203992', '##Journal=Proceedings of the National Academy of Sciences of the United States of America', '##Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.', '##Publication_year=2012', '##First_author=Kim Brown', '##Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '##Assembly_name=GRCz10', '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9', '##subject=subject_name=JenMale7;subject_sex=Male', '##subject=subject_name=JenMale6;subject_sex=Male', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3', '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
-        assert unique_converted_pragmas[0] == '##fileformat=VCFv4.4'
-        for converted_pragma in unique_converted_pragmas:
-            self.assertTrue(converted_pragma in expected_unique_converted_pragmas)
-        assert unique_sample_names == ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
-
-        # Testing for '#Publication: Not_applicable'
-        gvf_pragma_comments_without_publication = ['#Study_accession: nstd62', '#Study_type: Control Set', '#Display_name: Brown_et_al_2012', '#Publication: Not_applicable', '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '#Assembly_name: GRCz10', '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7', '#testing_unknown_pragma']
-        (unique_pragmas_to_add, sample_names,
-         unique_alt_lines_to_add, unique_info_lines_to_add,
-         unique_filter_lines_to_add, unique_format_lines_to_add) = generate_vcf_header_metainfo(
-            gvf_pragmas, gvf_pragma_comments_without_publication
-        )
-        assert unique_pragmas_to_add == ['##fileformat=VCFv4.4', '##gff-version=3', '##gvf-version=1.06', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10', '##Study_accession=nstd62', '##Study_type=Control Set', '##Display_name=Brown_et_al_2012', '##Publication=Not_applicable', '##First_author=Kim Brown', '##Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '##Assembly_name=GRCz10', '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9', '##subject=subject_name=JenMale7;subject_sex=Male', '##subject=subject_name=JenMale6;subject_sex=Male', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3', '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
-
-
+    # the test below relates to the VCF headerline (Part 2)
     def test_generate_vcf_header_line(self):
         header_fields = generate_vcf_header_line(['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'])
         assert header_fields == '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tJenMale6\tWilds2-3\tZon9\tJenMale7'
 
-    def test_gvf_features_to_vcf_objects(self):
+    # the tests below relate to the GVF header
+    def test_parse_pragma(self):
+        # testing: pragma has a name and value
+        gvf_pragma = "##file-date 2015-07-15"
+        delimiter = " "
+        name, value = parse_pragma(gvf_pragma, delimiter)
+        assert name == "##file-date"
+        assert value == "2015-07-15"
+        # testing: pragma has only a name, no value, should print warning
+        name_only_pragma = "##file-date"
+        name, value = parse_pragma(name_only_pragma, delimiter)
+        assert name == "##file-date"
+        assert value is None
+        # testing: invalid pragmas
+        invalid_pragma = None
+        with self.assertRaises(AttributeError):
+            parse_pragma(invalid_pragma, delimiter)
+
+    def test_get_pragma_name_and_value(self):
+        pragma_to_test = "##file-date 2015-07-15"
+        delimiter = " "
+        list_of_pragma = ["##file-date", "##gff-version", "##gvf-version", "##species", "##genome-build"]
+        pragma_to_vcf_map = {'##file-date': 'fileDate', '##gff-version': 'gff-version', '##gvf-version': 'gvf-version', '##species': 'species', '##genome-build': 'genome-build', '#sample': 'sample', '#Study_accession': 'Study_accession', '#Study_type': 'Study_type', '#Display_name': 'Display_name', '#Publication': 'Publication', '#Study': 'Study', '#Assembly_name': 'Assembly_name', '#subject': 'subject'}
+        vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(pragma_to_test, delimiter, list_of_pragma, pragma_to_vcf_map)
+        assert vcf_header_key == "fileDate"
+        assert pragma_name == "##file-date"
+        assert pragma_value == "2015-07-15"
+
+    def test_get_pragma_tokens(self):
+        pragma_value = "First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"
+        pragma_tokens = get_pragma_tokens(pragma_value, ";", "=")
+        assert len(pragma_tokens) == 2
+        # Testing: expected
+        assert pragma_tokens[0][0] == "First_author"
+        assert pragma_tokens[0][1] == "Kim Brown"
+        assert pragma_tokens[1][0] == "Description"
+        assert pragma_tokens[1][1] == "Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"
+        # Testing: not expected
+        unexpected_pragma_tokens = [['A', '1'], ['B', '2']]
+        with self.assertRaises(AssertionError):
+            self.assertEqual(unexpected_pragma_tokens, pragma_tokens)
+
+    # This test is for main conversion logic
+    def test_convert_gvf_features_to_vcf_objects(self):
         gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         # standard structured meta-information lines for this VCF file
         (
@@ -188,6 +162,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert len(header_lines_for_this_vcf) > 1
         assert len(list_of_vcf_objects) > 1
 
+    # The test below relate to the VCF objects
     def test_compare_vcf_objects(self):
         gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         header_standard_lines_dictionary, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
@@ -225,7 +200,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert merged_object.filter == "."
         assert merged_object.info_dict == {'VARSEQ': '.', 'SVCID': 'CNV6230,CNV5711', 'END': '131', 'ALIAS': 'CNV6230,CNV5711', 'AC': '3', 'VARCALLSOID': 'SO:0001742', 'REMAP': '.69625,.85344', 'NAME': 'nssv1389474,nssv1388955', 'SVLEN': '4'}
 
-
     def test_keep_vcf_objects(self):
         gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
         header_standard_lines_dictionary, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
@@ -234,7 +208,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         previous_object = list_of_vcf_objects[1]
         kept_object = keep_vcf_objects(previous_object, list_of_samples)
         assert kept_object == previous_object
-
 
     def test_determine_merge_or_keep_vcf_objects(self):
         gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)

@@ -75,6 +75,7 @@ def get_unique_sample_names(sample_names):
             uniq_sample_name.append(sample)
     return uniq_sample_name
 
+
 def convert_gvf_pragmas_to_vcf_header(list_of_gvf_pragmas_to_convert,
                                       list_of_gvf_pragmas,
                                       pragma_to_vcf_map):
