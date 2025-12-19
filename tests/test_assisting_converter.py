@@ -3,7 +3,6 @@ import unittest
 
 from convert_gvf_to_vcf.assistingconverter import get_gvf_attributes, generate_custom_structured_meta_line, \
     convert_gvf_attributes_to_vcf_values
-from convert_gvf_to_vcf.utils import read_yaml, generate_symbolic_allele_dict
 from convert_gvf_to_vcf.lookup import Lookup
 
 class TestAssistingConverter(unittest.TestCase):
