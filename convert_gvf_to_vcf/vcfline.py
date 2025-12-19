@@ -6,6 +6,7 @@ from Bio import SeqIO
 from convert_gvf_to_vcf.assistingconverter import convert_gvf_attributes_to_vcf_values
 
 
+
 def extract_reference_allele(fasta_file, chromosome_name, position, end):
     """ Extracts the reference allele from the assembly.
     :param fasta_file: FASTA file of the assembly
@@ -73,6 +74,17 @@ class VcfLineBuilder:
                        info_dict=vcf_values_for_info, vcf_values_for_format=vcf_values_for_format,
                        order_sample_names=self.ordered_list_of_samples)
 
+    def build_vcf_header(self):
+        """Stores VCF header lines and makes them unique.
+        :return" self.field_lines_dictionary: VCF header lines ALT,INFO,FILTER,FORMAT
+        """
+        # make unique
+        self.field_lines_dictionary["ALT"] = list(dict.fromkeys(self.field_lines_dictionary["ALT"]))
+        self.field_lines_dictionary["INFO"] = list(dict.fromkeys(self.field_lines_dictionary["INFO"]))
+        self.field_lines_dictionary["FILTER"] = list(dict.fromkeys(self.field_lines_dictionary["FILTER"]))
+        self.field_lines_dictionary["FORMAT"] = list(dict.fromkeys(self.field_lines_dictionary["FORMAT"]))
+        return self.field_lines_dictionary
+
     # Functions which are responsible for token generation/population for the VCF line
     def add_padded_base(self, chrom, pos, end, ref, alt, placed_before : bool):
         """ Adds a padded base to the REF and ALT allele of a VCF line.
@@ -85,18 +97,10 @@ class VcfLineBuilder:
             pos = pos - 1
             padded_base = extract_reference_allele(self.reference_lookup.assembly_file, chrom, pos, pos + 1)
             ref = padded_base + ref
-            if alt == ".":
-                alt = padded_base
-            else:
-                alt = padded_base + alt
         else:
             end = end + 1
             padded_base = extract_reference_allele(self.reference_lookup.assembly_file, chrom, end-1, end)
             ref = ref + padded_base
-            if alt == ".":
-                alt = padded_base
-            else:
-                alt = alt + padded_base
         return padded_base, pos, ref, alt
 
     def convert_iupac_ambiguity_code(self, ref_to_convert):
@@ -388,6 +392,7 @@ class VcfLine:
     def merge_info_dicts(self, other_vcf_line):
         """ Merges and stores the INFO dictionaries for the INFO field of a VCF line.
         :param: other_vcf_line
+        :return: None
         """
         # Create data structure to merge the INFO dict of this VCF line and the other_vcf_line
         merged_info_dict = {}
@@ -409,11 +414,15 @@ class VcfLine:
         other_vcf_line.info_dict = merged_info_dict
 
     def merge_vcf_values_for_format(self, other_vcf_line):
+        """ Merge FORMAT vcf value dictionary for two vcf lines.
+        :param: other_vcf_line
+        return: None
+        """
         for sample in other_vcf_line.vcf_values_for_format:
             if sample not in self.vcf_values_for_format:
                 self.vcf_values_for_format[sample] = other_vcf_line.vcf_values_for_format.get(sample, {})
             else:
-                for format_key in other_vcf_line.vcf_values_for_format.get[sample]:
+                for format_key in other_vcf_line.vcf_values_for_format.get(sample):
                     if format_key not in self.vcf_values_for_format[sample]:
                         self.vcf_values_for_format[sample][format_key] = other_vcf_line.vcf_values_for_format[sample][format_key]
 
@@ -454,7 +463,6 @@ class VcfLine:
         self.merge_info_dicts(other_vcf_line)
         # Merging FORMAT values - these go under the Sample
         self.merge_vcf_values_for_format(other_vcf_line)
-
         return self
 
 

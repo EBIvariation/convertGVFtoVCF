@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 def set_up_logging(log_path=None):
     # Set up paths
     input_folder = os.path.dirname(__file__)
-    output_folder = os.path.join(input_folder, "..","tests", "output")
+    output_folder = os.path.normpath(os.path.join(input_folder, "..","tests", "output"))
     if log_path is None:
         log_path = os.path.join(output_folder, "converted.log")
     logging.basicConfig(filename=log_path,

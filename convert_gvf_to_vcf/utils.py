@@ -10,6 +10,7 @@ convert_gvf_to_vcf_folder = os.path.dirname(__file__)
 etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
 
+
 def read_yaml(yaml_file):
     """Reads a yaml file (of attributes) and returns dictionary
     :param yaml_file: file of attributes

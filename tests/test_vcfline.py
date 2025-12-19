@@ -1,11 +1,8 @@
-#TODO: 6 tests
 import os
 import unittest
 
-from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines, convert_gvf_features_to_vcf_objects, \
-    generate_vcf_header_metainfo
+from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
-from convert_gvf_to_vcf.utils import read_yaml, generate_symbolic_allele_dict, read_in_gvf_file
 from convert_gvf_to_vcf.vcfline import VcfLine, VcfLineBuilder
 from convert_gvf_to_vcf.lookup import Lookup
 
@@ -74,12 +71,12 @@ class TestVcfLineBuilder(unittest.TestCase):
         assert padded_base == 'C'
         assert pos  == 78
         assert ref == 'CA'
-        assert alt  == 'C'
+        assert alt  == '.'
         padded_base, pos, ref, alt = self.vcf_builder.add_padded_base(chrom='chromosome1', pos=1, end=2, ref="A", alt='.', placed_before=False)
         assert padded_base == 'C'
         assert pos  == 1
         assert ref == 'AC'
-        assert alt  == 'C'
+        assert alt  == '.'
 
     def test_get_ref(self):
         reference_allele = self.vcf_builder.get_ref(vcf_value_from_gvf_attribute={}, chrom='chromosome1', pos=1, end=2)
@@ -101,13 +98,12 @@ class TestVcfLineBuilder(unittest.TestCase):
 
     def test_get_alt(self):
         'chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."'
-        # TODO: This seems incorrect
         vcf_value_from_gvf_attribute = {"Variant_seq":".", "Start_range":".,776614","End_range":"786127,."}
         pos, ref, alt, info_dict = self.vcf_builder.get_alt(vcf_value_from_gvf_attribute, chrom='chromosome1', pos=77, end=78, length=1, ref='', so_type='copy_number_loss')
         assert pos == 76
         assert ref == 'T'
+        assert alt == '<DEL>'
         assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
-        assert alt == 'T<DEL>'
 
     def test_generate_symbolic_allele(self):
         # TODO: This seems incorrect
@@ -133,7 +129,9 @@ class TestVcfline(unittest.TestCase):
         self.vcf_line = VcfLine(chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>', qual='.', filter='.',
                                 info_dict={'NAME': 'nssv1412199', 'SVLEN': '1'},
                                 vcf_values_for_format={'sample1':{'GT':'0/1'}}, order_sample_names=['sample1'])
-
+        self.other_vcf_line = VcfLine(chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>', qual='.', filter='.',
+                                info_dict={'NAME': 'nssv9912199', 'SVLEN': '4'},
+                                vcf_values_for_format={'sample2':{'GT':'0/1'}}, order_sample_names=['sample2'])
 
     def test__str__(self):
         assert str(self.vcf_line) == 'Chromosome1\t76\t1\tT\t<DEL>\t.\t.\tNAME=nssv1412199;SVLEN=1\tGT\t0/1'
@@ -182,14 +180,45 @@ class TestVcfline(unittest.TestCase):
         # Now prints all 3 samples
         assert vcf_line1.combine_format_values_by_sample_as_str()  == '0/1:5:25:50,0,12\t1/1:15:50:120,45,0\t0/0:2:2:0,10,10'
 
-    def test_merge_info_dicts(self):
-        pass
+    def test_fill_merge_dicts(self):
+        merged_info_dict = {'END': '128', 'AD': '3', 'VARSEQ': '.', 'ALIAS': 'CNV5711', 'ID': '14', 'VARCALLSOID': 'SO:0001742', 'SVCID': 'CNV5711', 'DBXREF': 'mydata', 'NAME': 'nssv1388955', 'AC': '3', 'SVLEN': '1'}
+        key = "VARCALLSOID"
+        previous_line_info_value = "SO:0001742"
+        current_line_info_value = "SO:1234567"
+        merged_info_dict= VcfLine.fill_merge_dicts(self, merged_info_dict, key, previous_line_info_value, current_line_info_value)
+        expected_merged_info_dict = {'END': '128', 'AD': '3', 'VARSEQ': '.', 'ALIAS': 'CNV5711', 'ID': '14', 'VARCALLSOID': 'SO:0001742,SO:1234567', 'SVCID': 'CNV5711', 'DBXREF': 'mydata', 'NAME': 'nssv1388955', 'AC': '3', 'SVLEN': '1'}
+        assert merged_info_dict == expected_merged_info_dict
 
-    def test_merge_info_string(self):
-        pass
+    def test_merge_info_dicts(self):
+        VcfLine.merge_info_dicts(
+            self.vcf_line, self.other_vcf_line
+        )
+        expected_merge_info_dict = {'NAME': 'nssv1412199,nssv9912199', 'SVLEN': '1,4'}
+        assert self.vcf_line.info_dict == expected_merge_info_dict
+        assert self.other_vcf_line.info_dict == expected_merge_info_dict
+
+    def test_merge_vcf_values_for_format(self):
+        self.vcf_line.merge_vcf_values_for_format(self.other_vcf_line)
+        expected_merge_vcf_values_for_format = {'sample1': {'GT': '0/1'}, 'sample2': {'GT': '0/1'}}
+        assert self.vcf_line.vcf_values_for_format == expected_merge_vcf_values_for_format
+
+    def test_format_info_string(self):
+        formatted_info_string = VcfLine.format_info_string(self.vcf_line)
+        expected_info_string = "NAME=nssv1412199;SVLEN=1"
+        assert formatted_info_string == expected_info_string
 
     def test_merge(self):
-        pass
+        list_of_samples = ['sample1']
+        VcfLine.merge(self.vcf_line, self.other_vcf_line, list_of_samples)
+        assert self.vcf_line.id == self.other_vcf_line.id
+        assert self.vcf_line.alt == self.other_vcf_line.alt
+        assert self.vcf_line.filter == self.other_vcf_line.filter
+        assert self.vcf_line.info_dict == self.other_vcf_line.info_dict
+        expected_union = {'sample1': {'GT': '0/1'}, 'sample2': {'GT': '0/1'}}
+        vcfline_union = self.vcf_line.vcf_values_for_format | self.other_vcf_line.vcf_values_for_format
+        assert vcfline_union == expected_union
 
     def test_keep(self):
-        pass
+        list_of_samples = ['sample1']
+        VcfLine.keep(self, list_of_samples)
+        assert self.vcf_line.order_sample_names == list_of_samples
