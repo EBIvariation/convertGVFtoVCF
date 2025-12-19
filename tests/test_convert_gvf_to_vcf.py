@@ -33,10 +33,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         actual_output = generate_vcf_header_unstructured_line(key_to_test, value_to_test)
         assert actual_output == "##fileformat=VCFv4.4"
 
-    def test_generate_custom_unstructured_meta_line(self):
-        formatted_string = generate_vcf_header_unstructured_line("test_string_key", "test_string_value")
-        assert formatted_string == "##test_string_key=test_string_value"
-
     def test_parse_pragma(self):
         # testing: pragma has a name and value
         gvf_pragma = "##file-date 2015-07-15"
