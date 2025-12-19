@@ -4,10 +4,11 @@ import unittest
 
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_line, read_in_gvf_file, \
-    convert_gvf_features_to_vcf_objects, convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line, compare_vcf_objects, \
+    convert_gvf_features_to_vcf_objects, convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line, \
+    compare_vcf_objects, \
     determine_merge_or_keep_vcf_objects, merge_vcf_objects, parse_pragma, get_pragma_name_and_value, get_pragma_tokens, \
     keep_vcf_objects, get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
-    convert_gvf_pragma_comment_to_vcf_header
+    convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines
 
 
 class TestConvertGVFtoVCF(unittest.TestCase):
@@ -26,8 +27,25 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.reference_lookup = Lookup(self.assembly)
         self.ordered_list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
 
-
     def test_generate_vcf_header_structured_lines(self):
+        all_possible_lines = generate_vcf_header_structured_lines("INFO", self.reference_lookup.mapping_attribute_dict)
+        assert isinstance(all_possible_lines, dict)
+        assert all_possible_lines["AA"] == '##INFO=<ID=AA,Number=1,Type=String,Description="Ancestral allele">'
+
+    def test_get_sample_name_from_pragma(self):
+        pragma_name = "#sample"
+        pragma_value = "sample_name=JenMale6;subject_name=JenMale6"
+        sample_name = get_sample_name_from_pragma(pragma_name, pragma_value)
+        assert sample_name == "JenMale6"
+
+    def test_get_unique_sample_names(self):
+        duplicated_samples = ["JenMale6", "JenMale6", "JenMale7"]
+        unique_samples = get_unique_sample_names(duplicated_samples)
+        expected_list = ["JenMale6", "JenMale7"]
+        assert isinstance(unique_samples, list)
+        assert unique_samples == expected_list
+
+    def test_generate_vcf_header_unstructured_lines(self):
         key_to_test = "fileformat"
         value_to_test= "VCFv4.4"
         actual_output = generate_vcf_header_unstructured_line(key_to_test, value_to_test)
@@ -81,13 +99,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert isinstance(list_of_samples, str)
         expected_value = 'JenMale6'
         assert list_of_samples == expected_value
-
-    def test_get_unique_sample_names(self):
-        duplicated_samples = ["JenMale6", "JenMale6", "JenMale7"]
-        unique_samples = get_unique_sample_names(duplicated_samples)
-        expected_list = ["JenMale6", "JenMale7"]
-        assert isinstance(unique_samples, list)
-        assert unique_samples == expected_list
 
     def test_convert_gvf_pragmas_to_vcf_header(self):
         list_of_gvf_pragmas_to_convert = [
