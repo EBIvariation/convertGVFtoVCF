@@ -114,9 +114,9 @@ def convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
             if ";" in pragma_value:
                 publication_tokens = get_pragma_tokens(pragma_value, ";", "=")
                 for pub_token in publication_tokens:
-                    pragmas_to_add.append(generate_vcf_header_unstructured_line(pub_token[0], pub_token[1]))
+                    list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(pub_token[0], pub_token[1]))
             else:
-                pragmas_to_add.append(generate_vcf_header_unstructured_line(pragma_name.lstrip("#"), pragma_value))
+                list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(pragma_name.lstrip("#"), pragma_value))
         elif pragma_name == "#Study":
             study_tokens = get_pragma_tokens(pragma_value, ";", "=")
             for s_token in study_tokens:
