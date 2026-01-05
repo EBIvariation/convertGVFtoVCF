@@ -75,6 +75,7 @@ def get_unique_sample_names(sample_names):
             uniq_sample_name.append(sample)
     return uniq_sample_name
 
+
 def convert_gvf_pragmas_to_vcf_header(list_of_gvf_pragmas_to_convert,
                                       list_of_gvf_pragmas,
                                       pragma_to_vcf_map):
@@ -111,9 +112,12 @@ def convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
     for gvf_pragma_comment in gvf_pragma_comments_to_convert:
         vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(gvf_pragma_comment, ": ", list_of_gvf_pragma_comments, pragma_to_vcf_map)
         if pragma_name.startswith("#Publication"):
-            publication_tokens = get_pragma_tokens(pragma_value, ";", "=")
-            for pub_token in publication_tokens:
-                list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(pub_token[0], pub_token[1]))
+            if ";" in pragma_value:
+                publication_tokens = get_pragma_tokens(pragma_value, ";", "=")
+                for pub_token in publication_tokens:
+                    list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(pub_token[0], pub_token[1]))
+            else:
+                list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(pragma_name.lstrip("#"), pragma_value))
         elif pragma_name == "#Study":
             study_tokens = get_pragma_tokens(pragma_value, ";", "=")
             for s_token in study_tokens:
