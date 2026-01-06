@@ -100,7 +100,7 @@ class TestVcfLineBuilder(unittest.TestCase):
          'submitter_variant_call_id': 'CNV28955', 'sample_name': 'Wilds2-3', 'remap_score': '.98857',
          'Variant_seq': '.'}
         start_range_lower_bound, start_range_upper_bound, end_range_lower_bound, end_range_upper_bound = self.vcf_builder.create_coordinate_range(
-            vcf_value_from_gvf_attribute_with_range, pos=int(1), end=int(2))
+            vcf_value_from_gvf_attribute_with_range, pos=1, end=2)
         assert start_range_lower_bound == "."
         assert start_range_upper_bound == "1"
         assert end_range_lower_bound == "2"
