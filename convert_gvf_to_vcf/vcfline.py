@@ -150,7 +150,25 @@ class VcfLineBuilder:
             reference_allele = self.check_ref(reference_allele)
         return reference_allele
 
-    def generate_symbolic_allele(self, vcf_value_from_gvf_attribute, pos, length, ref, so_type):
+    def create_coordinate_range(self, vcf_value_from_gvf_attribute, pos, end):
+        """ Create the start and end range using the dictionary of GVF attributes and the pos and end
+        :return: start_range_lower_bound, start_range_upper_bound, end_range_lower_bound, end_range_upper_bound
+        """
+        if "Start_range" in vcf_value_from_gvf_attribute:
+            start_range_lower_bound = vcf_value_from_gvf_attribute["Start_range"][0]
+            start_range_upper_bound = vcf_value_from_gvf_attribute["Start_range"][1]
+        else:
+            start_range_lower_bound = pos
+            start_range_upper_bound = "."
+        if "End_range" in vcf_value_from_gvf_attribute:
+            end_range_lower_bound = vcf_value_from_gvf_attribute["End_range"][0]
+            end_range_upper_bound = vcf_value_from_gvf_attribute["End_range"][1]
+        else:
+            end_range_lower_bound = end
+            end_range_upper_bound = "."
+        return start_range_lower_bound, start_range_upper_bound, end_range_lower_bound, end_range_upper_bound
+
+    def generate_symbolic_allele(self, vcf_value_from_gvf_attribute, pos, end, length, ref, so_type):
         """ Generates the symbolic allele and stores the corresponding metainformation lines.
         Also determines if variant is precise or imprecise.
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
@@ -170,10 +188,9 @@ class VcfLineBuilder:
         if length:
             info_svlen_value = str(length)
 
-        start_range_lower_bound = vcf_value_from_gvf_attribute["Start_range"][0]
-        start_range_upper_bound = vcf_value_from_gvf_attribute["Start_range"][1]
-        end_range_lower_bound = vcf_value_from_gvf_attribute["End_range"][0]
-        end_range_upper_bound = vcf_value_from_gvf_attribute["End_range"][1]
+        # Creating start/end co-ordinate ranges
+        (start_range_lower_bound, start_range_upper_bound,
+         end_range_lower_bound, end_range_upper_bound) = self.create_coordinate_range(vcf_value_from_gvf_attribute, pos, end)
 
         # setting up fields to be inserted into INFO
         info_end_key = "END"
@@ -236,7 +253,7 @@ class VcfLineBuilder:
         if any(base in vcf_value_from_gvf_attribute["Variant_seq"] for base in ["A", "C", "G", "T", "N"]):
             alt = vcf_value_from_gvf_attribute["Variant_seq"]
         elif vcf_value_from_gvf_attribute["Variant_seq"] == '.':
-            symbolic_allele, info_dict, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(vcf_value_from_gvf_attribute, pos, length, ref, so_type)
+            symbolic_allele, info_dict, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(vcf_value_from_gvf_attribute, pos, end, length, ref, so_type)
             if symbolic_allele is None:
                 alt = "."
             elif (vcf_value_from_gvf_attribute["Variant_seq"] == "." or vcf_value_from_gvf_attribute["Variant_seq"] == "-") and symbolic_allele is not None:
