@@ -95,10 +95,7 @@ class TestVcfLineBuilder(unittest.TestCase):
         assert end_range_lower_bound == "2"
         assert end_range_upper_bound == "."
         # without range
-        vcf_value_from_gvf_attribute_without_range={'ID': '1', 'Name': 'nssv1412199', 'Alias': 'CNV28955', 'variant_call_so_id': 'SO:0001743',
-         'parent': 'nsv811094',
-         'submitter_variant_call_id': 'CNV28955', 'sample_name': 'Wilds2-3', 'remap_score': '.98857',
-         'Variant_seq': '.'}
+        vcf_value_from_gvf_attribute_without_range={}
         start_range_lower_bound, start_range_upper_bound, end_range_lower_bound, end_range_upper_bound = self.vcf_builder.create_coordinate_range(
             vcf_value_from_gvf_attribute_with_range, pos=1, end=2)
         assert start_range_lower_bound == "."
