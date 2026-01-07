@@ -155,21 +155,25 @@ class VcfLineBuilder:
         :return: start_range_lower_bound, start_range_upper_bound, end_range_lower_bound, end_range_upper_bound
         """
         if "Start_range" in vcf_value_from_gvf_attribute:
+            # Set value to the start range found in the GVF attribute
             start_range_lower_bound = vcf_value_from_gvf_attribute["Start_range"][0]
             start_range_upper_bound = vcf_value_from_gvf_attribute["Start_range"][1]
         else:
-            start_range_lower_bound = pos
-            start_range_upper_bound = "."
+            # Setting values for a precise variant. Start Ranges only apply to imprecise variants.
+            start_range_lower_bound = None
+            start_range_upper_bound = None
         if "End_range" in vcf_value_from_gvf_attribute:
+            # Set value to the end range found in the GVF attribute
             end_range_lower_bound = vcf_value_from_gvf_attribute["End_range"][0]
             end_range_upper_bound = vcf_value_from_gvf_attribute["End_range"][1]
         else:
-            end_range_lower_bound = end
-            end_range_upper_bound = "."
+            # Set value for a precise variant. End Ranges only apply to imprecise variants.
+            end_range_lower_bound = None
+            end_range_upper_bound = None
         return start_range_lower_bound, start_range_upper_bound, end_range_lower_bound, end_range_upper_bound
 
     def generate_symbolic_allele(self, vcf_value_from_gvf_attribute, pos, end, length, ref, so_type):
-        """ Generates the symbolic allele and stores the corresponding metainformation lines.
+        """ Generates the symbolic allele and stores the corresponding ALT metainformation lines.
         Also determines if variant is precise or imprecise.
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
@@ -183,10 +187,6 @@ class VcfLineBuilder:
 
         if symbolic_allele_id in all_possible_alt_lines:
             lines_standard_alt.append(all_possible_alt_lines[symbolic_allele_id])
-        info_svlen_key = "SVLEN"
-        info_svlen_value = None
-        if length:
-            info_svlen_value = str(length)
 
         # Creating start/end co-ordinate ranges
         (start_range_lower_bound, start_range_upper_bound,
@@ -201,20 +201,48 @@ class VcfLineBuilder:
         info_cipos_value = None
         info_ciend_key = "CIEND"
         info_ciend_value = None
-
-        if start_range_lower_bound == "." or start_range_upper_bound == "." or end_range_lower_bound == "." or end_range_upper_bound == ".":
+        info_svlen_key = "SVLEN"
+        info_svlen_value = None
+        if length:
+            info_svlen_value = str(length)
+        # Precise variant
+        if (
+                start_range_lower_bound is None or
+                start_range_upper_bound is None or
+                end_range_lower_bound is None or
+                end_range_upper_bound is None
+        ):
             is_imprecise = False
             info_end_value = str(pos + len(ref) - 1)
         else:
+            # Imprecise variant
             is_imprecise = True
             info_imprecise_value = "IMPRECISE"
-
-            cipos_lower_bound = int(start_range_lower_bound) - pos
-            cipos_upper_bound = int(start_range_upper_bound) - pos
+            # Converting start_range co-ordinates
+            # if the lower bound is unknown for the imprecise variant, pass this to CIPOS (i.e. CIPOS=.,0)
+            if start_range_lower_bound == ".":
+                cipos_lower_bound = "."
+            else:
+                cipos_lower_bound = int(start_range_lower_bound) - pos
+            # if the upper bound is unknown for the imprecise variant, pass this to CIPOS(i.e. CIPOS=0,.)
+            if start_range_upper_bound == ".":
+                cipos_upper_bound = "."
+            else:
+                cipos_upper_bound = int(start_range_upper_bound) - pos
+            # form the CIPOS value
             info_cipos_value = str(cipos_lower_bound) + "," + str(cipos_upper_bound)
-
-            ciend_lower_bound = int(start_range_lower_bound) - pos
-            ciend_upper_bound = int(start_range_upper_bound) - pos
+            # Converting End_range co-ordinates
+            # if the lower bound is unknown for the imprecise variant, pass this to CIPOS (i.e. CIPOS=.,0)
+            if end_range_lower_bound == ".":
+                ciend_lower_bound = "."
+            else:
+                ciend_lower_bound = int(end_range_lower_bound) - end
+            # if the upper bound is unknown for the imprecise variant, pass this to CIPOS(i.e. CIPOS=0,.)
+            if end_range_lower_bound == ".":
+                ciend_upper_bound = "."
+            else:
+                ciend_upper_bound = int(end_range_lower_bound) - end
+            # form the CIEND value
             info_ciend_value = str(ciend_lower_bound) + "," + str(ciend_upper_bound)
 
             if symbolic_allele == "<INS>":
