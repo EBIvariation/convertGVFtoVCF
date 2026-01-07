@@ -1,6 +1,8 @@
 import os
 import unittest
 
+from Bio.PDB import refmat
+
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
 from convert_gvf_to_vcf.vcfline import VcfLine, VcfLineBuilder
@@ -107,28 +109,6 @@ class TestVcfLineBuilder(unittest.TestCase):
         assert end_range_upper_bound == "."
 
     def test_generate_symbolic_allele(self):
-        (output_symbolic_allele,
-         info_field,
-         output_lines_standard_alt,
-         output_lines_standard_info) = self.v.generate_symbolic_allele(self.standard_lines_dictionary,
-                                                                       self.all_possible_lines_dictionary,
-                                                                       self.reference_lookup.symbolic_allele_dictionary)
-        assert output_symbolic_allele == '<DEL>'
-        assert info_field == {'END': '78', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
-        assert output_lines_standard_alt == ['##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DEL,Description="Deletion">']
-        assert output_lines_standard_info == ['##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">']
-
-
-    def test_get_alt(self):
-        'chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."'
-        vcf_value_from_gvf_attribute = {"Variant_seq":".", "Start_range":".,776614","End_range":"786127,."}
-        pos, ref, alt, info_dict = self.vcf_builder.get_alt(vcf_value_from_gvf_attribute, chrom='chromosome1', pos=77, end=78, length=1, ref='', so_type='copy_number_loss')
-        assert pos == 76
-        assert ref == 'T'
-        assert alt == '<DEL>'
-        assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
-
-    def test_generate_symbolic_allele(self):
         # TODO: This seems incorrect
         vcf_value_from_gvf_attribute = {"Variant_seq":".", "Start_range":".,776614","End_range":"786127,."}
         symbolic_allele, info_dict, lines_standard_alt, lines_standard_info = self.vcf_builder.generate_symbolic_allele(vcf_value_from_gvf_attribute, pos=76, end=77, length=1, ref='.', so_type='copy_number_loss')
@@ -139,6 +119,88 @@ class TestVcfLineBuilder(unittest.TestCase):
             '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">',
             '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">'
         ]
+
+    def test_generate_info_field_symbolic_allele(self):
+        end = 100
+        end_range_lower_bound = 100
+        end_range_upper_bound = 200
+        info_end_value = None
+        length = 13
+        pos = 1
+        ref = "A" * 13
+        start_range_lower_bound = 1
+        start_range_upper_bound = 2
+        symbolic_allele = "<INS>"
+        info_dict, is_imprecise = self.vcf_builder.generate_info_field_symbolic_allele(
+            end, end_range_lower_bound, end_range_upper_bound,
+            length, pos, ref,
+            start_range_lower_bound, start_range_upper_bound,
+            symbolic_allele
+        )
+        assert info_dict == {'END': '13', 'IMPRECISE': 'IMPRECISE', 'CIPOS': '0,1', 'CIEND': '0,100', 'SVLEN': '13'}
+        assert is_imprecise is True
+
+    def test_generate_info_field_for_imprecise_variant(self):
+        end = 100
+        end_range_lower_bound = 100
+        end_range_upper_bound = 200
+        info_end_value = None
+        length = 13
+        pos = 1
+        ref = "A"*13
+        start_range_lower_bound = 1
+        start_range_upper_bound = 2
+        symbolic_allele = "<INS>"
+        info_ciend_value, info_cipos_value, info_end_value, info_imprecise_value, is_imprecise = self.vcf_builder.generate_info_field_for_imprecise_variant(
+            end, end_range_lower_bound, end_range_upper_bound,
+            info_end_value,
+            length, pos, ref,
+            start_range_lower_bound, start_range_upper_bound,
+            symbolic_allele
+        )
+        assert info_ciend_value == "0,100"
+        assert info_cipos_value == "0,1"
+        assert info_end_value == "13"
+        assert info_imprecise_value == "IMPRECISE"
+        assert is_imprecise is True
+
+    def test_generate_info_field_for_precise_variant(self):
+        pos = 34
+        ref = "AAATTTGGG"
+        info_end_value, is_imprecise = self.vcf_builder.generate_info_field_for_precise_variant(pos, ref)
+        assert info_end_value == "42"
+        assert is_imprecise is False
+
+    def test_calculate_CIPOS_and_CIEND(self):
+        # known imprecise variant
+        end=133
+        end_range_lower_bound=122
+        end_range_upper_bound=133
+        pos=1
+        start_range_lower_bound=1
+        start_range_upper_bound=10
+        ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound = self.vcf_builder.calculate_CIPOS_and_CIEND(end, end_range_lower_bound, end_range_upper_bound, pos, start_range_lower_bound, start_range_upper_bound)
+        assert (ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound) == (-11, 0, 0, 9)
+        # unknown precise variant
+        end=122
+        end_range_lower_bound=122
+        end_range_upper_bound="."
+        pos=1
+        start_range_lower_bound="."
+        start_range_upper_bound=10
+        ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound = self.vcf_builder.calculate_CIPOS_and_CIEND(end, end_range_lower_bound, end_range_upper_bound, pos, start_range_lower_bound, start_range_upper_bound)
+        assert (ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound) == (0, ".", ".", 9)
+
+    def test_get_alt(self):
+            'chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."'
+            vcf_value_from_gvf_attribute = {"Variant_seq": ".", "Start_range": ".,776614", "End_range": "786127,."}
+            pos, ref, alt, info_dict = self.vcf_builder.get_alt(vcf_value_from_gvf_attribute, chrom='chromosome1',
+                                                                pos=77, end=78, length=1, ref='',
+                                                                so_type='copy_number_loss')
+            assert pos == 76
+            assert ref == 'T'
+            assert alt == '<DEL>'
+            assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
 
     def test_check_ref(self):
         assert self.vcf_builder.check_ref('A') == 'A'
