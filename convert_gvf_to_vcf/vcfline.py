@@ -145,7 +145,7 @@ class VcfLineBuilder:
             if assembly_file:
                 reference_allele = extract_reference_allele(assembly_file, chrom, pos, end)
             else:
-                print("WARNING: No reference provided. Placeholder inserted for Reference allele.")
+                logger.warning("No reference provided. Placeholder inserted for Reference allele.")
                 reference_allele = "."
         if reference_allele != ".":
             reference_allele = self.check_ref(reference_allele)
