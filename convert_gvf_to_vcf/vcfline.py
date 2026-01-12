@@ -4,6 +4,7 @@ The purpose of this file is to populate for each field of a VCF line (and perfor
 
 from Bio import SeqIO
 from convert_gvf_to_vcf.assistingconverter import convert_gvf_attributes_to_vcf_values
+from convert_gvf_to_vcf.logger import logger
 
 
 
@@ -269,10 +270,10 @@ class VcfLineBuilder:
                     ref = self.check_ref(ref)
             else:
                 alt = "."
-                print("Cannot identify symbolic allele. Variant type is not supported.")
+                logger.warning("Cannot identify symbolic allele. Variant type is not supported.")
         else:
             alt = "."
-            print("Could not determine the alternative allele.")
+            logger.warning("Could not determine the alternative allele.")
         return pos, ref, alt, info_dict
 
 
