@@ -334,6 +334,8 @@ class VcfLine:
                                  for format_value in self.vcf_values_for_format.values()
                                  for format_key in format_value.keys()
                                  ])
+        if len(set_of_format_key) == 0:
+            set_of_format_key = set('.')
         return self._order_format_keys(set_of_format_key)  # a list of ordered format keys
 
     def merge_and_add(self, previous_element, current_element, delimiter):
