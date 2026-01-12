@@ -1,3 +1,4 @@
+# The purpose of this file is to map the GVF attribute to its corresponding VCF tag (Field:FieldKey)
 # Below is an example format
 # name: (this can be the name of gvf_attribute or if unavailable, a general name)
 #   FIELD: (INFO/FORMAT/ALT)
@@ -494,6 +495,13 @@ parid:
         Type: String
         Description: "ID of partner breakend"
         From: SVVCF
+parent:
+    INFO:
+        FieldKey: PARENT
+        Number: A
+        Type: String
+        Description: "Parent"
+        From: SVVCF
 phred_likelihoods:
     FORMAT:
         FieldKey: PL
@@ -776,6 +784,13 @@ samples:
         Type: String
         Description: "Samples"
         From: DGVa
+sample_name:
+    INFO:
+        FieldKey: SAMPLENAME
+        Number: .
+        Type: String
+        Description: "Sample Name"
+        From: DGVa
 submitter_variant_call_id:
     INFO:
         FieldKey: SVCID
@@ -824,7 +839,14 @@ variant_call_so_id:
         Number: .
         Type: String
         Description: "Variant call Sequence ontology ID"
-        From:
+        From: DGVa
+variant_region_description:
+    INFO:
+        FieldKey: VARREGDESC
+        Number: .
+        Type: String
+        Description: "Variant Region Sequence Ontology ID"
+        From: DGVa
 ID:
     INFO:
         FieldKey: ID
