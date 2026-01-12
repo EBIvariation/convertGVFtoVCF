@@ -129,7 +129,7 @@ class VcfLineBuilder:
             else:
                 checked_reference_allele = ref_allele_to_be_checked
         else:
-            print("WARNING: Ref allele must be a string. Setting to missing value.", ref_allele_to_be_checked)
+            logger.warning(f"Ref allele must be a string: {ref_allele_to_be_checked}. Setting to missing value.")
             checked_reference_allele = "."
         return checked_reference_allele
 
