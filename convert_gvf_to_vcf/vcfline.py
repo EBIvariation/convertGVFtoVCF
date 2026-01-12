@@ -225,7 +225,7 @@ class VcfLineBuilder:
             elif symbolic_allele == "<*>":
                 info_end_value = str(pos + len(ref))
             else:
-                print("Cannot identify symbolic allele")
+                logger.warning("Cannot identify symbolic allele")
         # Set up INFO values for structural variants and store in the info_dict
         info_dict = {
             info_end_key: info_end_value,
