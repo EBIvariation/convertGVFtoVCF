@@ -498,10 +498,10 @@ parid:
 parent:
     INFO:
         FieldKey: PARENT
-        Number: A
+        Number: .
         Type: String
         Description: "Parent"
-        From: SVVCF
+        From: [SVVCF, DGVa]
 phred_likelihoods:
     FORMAT:
         FieldKey: PL
@@ -741,13 +741,6 @@ Name:
         Number: .
         Type: String
         Description: "Name"
-        From: DGVa
-Parent:
-    INFO:
-        FieldKey: PARENT
-        Number: .
-        Type: String
-        Description: "Parent"
         From: DGVa
 phenotype_description:
     INFO:
