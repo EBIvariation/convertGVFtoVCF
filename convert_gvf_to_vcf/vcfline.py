@@ -307,17 +307,28 @@ class VcfLine:
         """ Creates and formats the VCF line.
         :return: string_to_return - the VCF line as a string
         """
-        string_to_return = '\t'.join((self.chrom,
-                str(self.pos),
-                self.id,
-                self.ref,
-                self.alt,
-                self.qual,
-                self.filter,
-                self.format_info_string(),
-                ":".join(self.format_keys),
-                self.combine_format_values_by_sample_as_str()
-                ))
+        if self.format_keys == ["."]:
+            string_to_return = '\t'.join((self.chrom,
+                    str(self.pos),
+                    self.id,
+                    self.ref,
+                    self.alt,
+                    self.qual,
+                    self.filter,
+                    self.format_info_string(),
+                    ))
+        else:
+            string_to_return = '\t'.join((self.chrom,
+                    str(self.pos),
+                    self.id,
+                    self.ref,
+                    self.alt,
+                    self.qual,
+                    self.filter,
+                    self.format_info_string(),
+                    ":".join(self.format_keys),
+                    self.combine_format_values_by_sample_as_str()
+                    ))
         return string_to_return
 
     def __eq__(self, other_vcf_line):
