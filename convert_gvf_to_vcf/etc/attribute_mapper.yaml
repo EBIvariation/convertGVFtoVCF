@@ -795,7 +795,7 @@ submitter_variant_call_id:
     INFO:
         FieldKey: SVCID
         Number: .
-        Type: Integer
+        Type: String
         Description: "submitter variant call ID"
         From: DGVa
 submitter_variant_region_id:
