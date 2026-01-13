@@ -602,7 +602,7 @@ svlen:
     INFO:
         FieldKey: SVLEN
         Number: A
-        Type: String
+        Type: Integer
         Description: "Length of structural variant"
         From: SVVCF
 svtype:
