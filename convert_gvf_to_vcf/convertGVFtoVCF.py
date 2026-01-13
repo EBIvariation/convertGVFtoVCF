@@ -166,15 +166,21 @@ def convert_gvf_pragmas_for_vcf_header(gvf_pragmas,
     return unique_converted_pragmas, unique_sample_name
 
 # the function below relates to the VCF headerline (Part 2)
-def generate_vcf_header_line(samples):
+def generate_vcf_header_line(is_missing_format, samples):
     """ Generates the VCF header line using the nine mandatory headers and the sample names.
+    :param is_missing_format: boolean (False = Format + sample names, True = mandatory fields only)
     :param samples: list of samples, these will appear in the header line
     :return: vcf_header: a string
     """
-    vcf_header_fields = ["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT"]
-    for sample in samples:
-        vcf_header_fields.append(sample)
-    vcf_header = '\t'.join(vcf_header_fields)
+    if is_missing_format:
+        vcf_header_fields = ["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO"]
+        vcf_header = '\t'.join(vcf_header_fields)
+    else:
+
+        vcf_header_fields = ["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT"]
+        for sample in samples:
+            vcf_header_fields.append(sample)
+        vcf_header = '\t'.join(vcf_header_fields)
     return vcf_header
 
 # the functions below relate to the GVF header
@@ -259,6 +265,23 @@ def convert_gvf_features_to_vcf_objects(gvf_lines_obj_list, reference_lookup, or
     return standard_header_lines, list_of_vcf_objects
 
 # The functions below relate to the VCF objects
+def collect_missing_format_flags(list_of_vcf_objects):
+    """ Returns a list of booleans for each VCF object (True if format is missing, False if format keys present)
+    :params: list_of_vcf_objects: list of vcf objects
+    :return: missing_format_flags: list of booleans (True if format is missing, False if format keys present)
+    """
+    missing_format_flags = []
+    for index in range(1, len(list_of_vcf_objects)):
+        print(list_of_vcf_objects[index].format_keys)
+        if list_of_vcf_objects[index].format_keys == ['.']:
+            format_flag = True
+            missing_format_flags.append(format_flag)
+        else:
+            format_flag = False
+            missing_format_flags.append(format_flag)
+    return missing_format_flags
+
+
 def compare_vcf_objects(list_of_vcf_objects):
     """ Compares VCF objects in the list with the VCF object before it. Returns boolean values.
     :params: list_of_vcf_objects: list of vcf objects
@@ -375,8 +398,16 @@ def main():
             for header_line in header_type:
                 vcf_output.write(f"{header_line}\n")
 
-        # Part 2 of VCF file: Write the VCF header line. This is the nine mandatory fields with its sample names.
-        header_fields = generate_vcf_header_line(samples)
+        # Part 2 of VCF file: Write the VCF header line.
+        # Determine if the header is the 8 mandatory fields or 8 mandatory fields + FORMAT + sample names.
+        missing_flags = collect_missing_format_flags(list_of_vcf_objects) # True if format keys are missing, False if present
+        print(missing_flags)
+        if any(missing_flags):
+            is_missing_format_value = True
+        else:
+            is_missing_format_value = False
+        # Write the header.
+        header_fields = generate_vcf_header_line(is_missing_format=is_missing_format_value, samples=samples)
         vcf_output.write(f"{header_fields}\n")
 
         # Part 3 of VCF file: Write the VCF data lines. This will contain info about the position in the genome,
