@@ -337,6 +337,14 @@ def determine_merge_or_keep_vcf_objects(list_of_vcf_objects, comparison_results,
     merge_or_kept_objects.append(list_of_vcf_objects[-1])
     return merge_or_kept_objects
 
+def vcf_sort_key(obj):
+    """
+    Returns chromosome and position of an object. Used to help sort VCF object by chromosome name and by numeric position.
+    :params: obj : vcf line object
+    :return: obj.chrom, obj.pos
+    """
+    return (obj.chrom, int(obj.pos))
+
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
@@ -417,6 +425,9 @@ def main():
         comparison_flags = compare_vcf_objects(list_of_vcf_objects) # Identifies which VCF objects to merge
         merge_or_kept_vcf_objects = determine_merge_or_keep_vcf_objects(list_of_vcf_objects, comparison_flags, samples)
         # Write the VCF objects as data lines in the VCF file.
+        # sorting by chromosome and position
+        merge_or_kept_vcf_objects.sort(key=vcf_sort_key)
+
         for vcf_line_object in merge_or_kept_vcf_objects:
             vcf_output.write(str(vcf_line_object) + "\n")
             # vcf_output.write("\t".join(str(val) for val in line) + "\n")
