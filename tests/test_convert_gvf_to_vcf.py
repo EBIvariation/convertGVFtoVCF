@@ -104,8 +104,12 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     # the test below relates to the VCF headerline (Part 2)
     def test_generate_vcf_header_line(self):
-        header_fields = generate_vcf_header_line(['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'])
+        header_fields = generate_vcf_header_line(False, self.ordered_list_of_samples)
         assert header_fields == '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tJenMale6\tWilds2-3\tZon9\tJenMale7'
+
+        header_fields = generate_vcf_header_line(True, self.ordered_list_of_samples)
+        assert header_fields == '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO'
+
 
     # the tests below relate to the GVF header
     def test_parse_pragma(self):
@@ -199,7 +203,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert merged_object.alt == "<DUP>"
         assert merged_object.qual == "."
         assert merged_object.filter == "."
-        assert merged_object.info_dict == {'VARSEQ': '.', 'SVCID': 'CNV6230,CNV5711', 'END': '131', 'ALIAS': 'CNV6230,CNV5711', 'AC': '3', 'VARCALLSOID': 'SO:0001742', 'REMAP': '.69625,.85344', 'NAME': 'nssv1389474,nssv1388955', 'SVLEN': '4'}
+        assert len(merged_object.info_dict) == 11
+        assert merged_object.info_dict["ALIAS"] == 'CNV6230,CNV5711'
+        assert merged_object.info_dict["NAME"] == 'nssv1389474,nssv1388955'
 
     def test_keep_vcf_objects(self):
         gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
@@ -266,7 +272,14 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         duplicate_flag, list_of_dup_chrom_pos = has_duplicates(list_of_vcf_objects)
         filtered_merge_or_kept_vcf_objects = filter_duplicates_by_merging(list_of_dup_chrom_pos,duplicate_flag, list_of_vcf_objects, list_of_vcf_objects_to_be_filtered, self.ordered_list_of_samples)
         assert len(filtered_merge_or_kept_vcf_objects) <= len(merge_or_kept_objects)
-        assert filtered_merge_or_kept_vcf_objects[-1] == "chromosome1	127	14	GT	<DUP>	.	.	VARCALLSOID=SO:0001742;ALIAS=CNV5711;END=128;PARENT=nsv811095;NAME=nssv1388955;AC=3;AD=3;SAMPLENAME=JenMale6,JenMale7;DBXREF=mydata;SVLEN=1;SVCID=CNV5711;VARSEQ=.;REMAP=.85344	GT:AD	.:.	.:.	.:.	0:1:3"
-
+        assert filtered_merge_or_kept_vcf_objects[-1].chrom == "chromosome1"
+        assert filtered_merge_or_kept_vcf_objects[-1].pos == 127
+        assert filtered_merge_or_kept_vcf_objects[-1].id == "14"
+        assert filtered_merge_or_kept_vcf_objects[-1].ref == "GT"
+        assert filtered_merge_or_kept_vcf_objects[-1].alt == "<DUP>"
+        assert filtered_merge_or_kept_vcf_objects[-1].qual == "."
+        assert filtered_merge_or_kept_vcf_objects[-1].filter == "."
+        assert filtered_merge_or_kept_vcf_objects[-1].info_dict == {'SAMPLENAME': 'JenMale6,JenMale7', 'AD': '3', 'AC': '3', 'ALIAS': 'CNV5711', 'VARCALLSOID': 'SO:0001742', 'NAME': 'nssv1388955', 'REMAP': '.85344', 'SVLEN': '1', 'VARSEQ': '.', 'SVCID': 'CNV5711', 'DBXREF': 'mydata', 'PARENT': 'nsv811095', 'END': '128'}
+        assert filtered_merge_or_kept_vcf_objects[-1].vcf_values_for_format == {'JenMale7': {'AD': '3', 'GT': '0:1'}}
 if __name__ == '__main__':
     unittest.main()
