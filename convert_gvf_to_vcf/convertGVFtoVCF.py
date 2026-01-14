@@ -466,9 +466,14 @@ def main():
             iteration += 1
             list_of_vcf_objects_to_be_filtered = filtered_merge_or_kept_vcf_objects
             logger.info(f"Iteration of merge (remove dups): {iteration}")
+
         # Write the VCF objects as data lines in the VCF file.
-        for vcf_line_object in filtered_merge_or_kept_vcf_objects:
-            vcf_output.write(str(vcf_line_object) + "\n")
+        if iteration != 0:
+            for vcf_line_object in filtered_merge_or_kept_vcf_objects:
+                vcf_output.write(str(vcf_line_object) + "\n")
+        else:
+            for vcf_line_object in merge_or_kept_vcf_objects:
+                vcf_output.write(str(vcf_line_object) + "\n")
     vcf_output.close()
     logger.info("GVF to VCF conversion complete")
 
