@@ -272,7 +272,6 @@ def collect_missing_format_flags(list_of_vcf_objects):
     """
     missing_format_flags = []
     for index in range(1, len(list_of_vcf_objects)):
-        print(list_of_vcf_objects[index].format_keys)
         if list_of_vcf_objects[index].format_keys == ['.']:
             format_flag = True
             missing_format_flags.append(format_flag)
@@ -337,13 +336,43 @@ def determine_merge_or_keep_vcf_objects(list_of_vcf_objects, comparison_results,
     merge_or_kept_objects.append(list_of_vcf_objects[-1])
     return merge_or_kept_objects
 
-def vcf_sort_key(obj):
+def get_chrom_pos_of_vcf_object(obj):
     """
     Returns chromosome and position of an object. Used to help sort VCF object by chromosome name and by numeric position.
     :params: obj : vcf line object
     :return: obj.chrom, obj.pos
     """
     return (obj.chrom, int(obj.pos))
+
+def has_duplicates(list_of_objects):
+    """ Checks chrom and pos of vcf line objects to see if there are duplicates. If list of vcf object has duplicates, merge again.
+    :params: list_of_objects
+    :return: duplicate_flag - boolean value (True = has duplicates so merge again, False= no duplicates)
+    """
+    duplicate_flag = False
+    list_of_duplicate_chrom_pos = []
+    seen_chrom_pos = set()
+    for obj in list_of_objects:
+        chrom_pos = (obj.chrom, int(obj.pos))
+        if chrom_pos in seen_chrom_pos:
+            # returns true to allow to merge again
+            duplicate_flag = True
+            list_of_duplicate_chrom_pos.append(chrom_pos)
+        else:
+            seen_chrom_pos.add(chrom_pos)
+    return duplicate_flag, list_of_duplicate_chrom_pos
+
+
+def get_list_of_merged_vcf_objects(list_of_vcf_objects, samples):
+    """ Compares VCF objects, merges VCF objects, sorts VCF objects. This gives a list of sorted merged vcf objects.
+    :params: list_of_vcf_objects
+    :params: samples
+    :returns: merge_or_kept_vcf_objects
+    """
+    comparison_flags = compare_vcf_objects(list_of_vcf_objects)  # Identifies which VCF objects to merge
+    merge_or_kept_vcf_objects = determine_merge_or_keep_vcf_objects(list_of_vcf_objects, comparison_flags, samples)
+    merge_or_kept_vcf_objects.sort(key=get_chrom_pos_of_vcf_object)  # sorting by chromosome and position
+    return merge_or_kept_vcf_objects
 
 def main():
     # Parse command line arguments
@@ -409,7 +438,6 @@ def main():
         # Part 2 of VCF file: Write the VCF header line.
         # Determine if the header is the 8 mandatory fields or 8 mandatory fields + FORMAT + sample names.
         missing_flags = collect_missing_format_flags(list_of_vcf_objects) # True if format keys are missing, False if present
-        print(missing_flags)
         if any(missing_flags):
             is_missing_format_value = True
         else:
@@ -422,17 +450,53 @@ def main():
         # its variants and genotype information per sample.
         logger.info("Generating the VCF datalines")
         # Each GVF feature has been converted to a VCF object so begin comparing and merging the VCF objects.
-        comparison_flags = compare_vcf_objects(list_of_vcf_objects) # Identifies which VCF objects to merge
-        merge_or_kept_vcf_objects = determine_merge_or_keep_vcf_objects(list_of_vcf_objects, comparison_flags, samples)
+        # initial merge
+        merge_or_kept_vcf_objects = get_list_of_merged_vcf_objects(list_of_vcf_objects, samples)
+        # identify if duplicates are present after merging
+        has_dups, chrom_pos_list = has_duplicates(merge_or_kept_vcf_objects)
+        # while duplicates are present, merge, then re-check for dups
+        max_iterations = 100
+        iteration = 0
+        list_of_vcf_objects_to_be_filtered = merge_or_kept_vcf_objects
+        while has_dups and iteration < max_iterations:
+            filtered_merge_or_kept_vcf_objects = filter_duplicates_by_merging(chrom_pos_list, has_dups,
+                                                                              list_of_vcf_objects,
+                                                                              list_of_vcf_objects_to_be_filtered, samples)
+            has_dups, chrom_pos_list = has_duplicates(filtered_merge_or_kept_vcf_objects)
+            iteration += 1
+            list_of_vcf_objects_to_be_filtered = filtered_merge_or_kept_vcf_objects
+            logger.info(f"Iteration of merge (remove dups): {iteration}")
         # Write the VCF objects as data lines in the VCF file.
-        # sorting by chromosome and position
-        merge_or_kept_vcf_objects.sort(key=vcf_sort_key)
-
-        for vcf_line_object in merge_or_kept_vcf_objects:
+        for vcf_line_object in filtered_merge_or_kept_vcf_objects:
             vcf_output.write(str(vcf_line_object) + "\n")
-            # vcf_output.write("\t".join(str(val) for val in line) + "\n")
     vcf_output.close()
     logger.info("GVF to VCF conversion complete")
+
+
+def filter_duplicates_by_merging(chrom_pos_list, has_dups, list_of_vcf_objects,
+                                 list_of_vcf_objects_to_be_filtered, samples):
+    """
+    :params: chrom_pos_list: list of tuples - this represents duplicate positions
+    :params: has_dups: boolean - True if it contains duplicates
+    :params: list_of_vcf_objects: list of VCF objects (GVF converted to VCF; with no merging/remove dups)
+    :params: list_of_vcf_objects_to_be_filtered: list of VCF objects from a previous merge
+    :params: samples: names
+    :returns: filtered_merge_or_kept_vcf_objects - list of vcf objects with duplicates from this iteration removed
+    """
+    if has_dups:
+        for chrom_pos in chrom_pos_list:
+            chrom_to_search = chrom_pos[0]
+            pos_to_search = chrom_pos[1]
+            vcf_objects_to_merge = []
+            for vcf_object in list_of_vcf_objects:
+                if vcf_object.chrom == chrom_to_search and vcf_object.pos == pos_to_search:
+                    vcf_objects_to_merge.append(vcf_object)
+
+    merge_duplicates = get_list_of_merged_vcf_objects(vcf_objects_to_merge, samples)
+    filtered_merge_or_kept_vcf_objects = [x for x in list_of_vcf_objects_to_be_filtered if x not in vcf_objects_to_merge]
+    filtered_merge_or_kept_vcf_objects.extend(merge_duplicates)
+    filtered_merge_or_kept_vcf_objects.sort(key=get_chrom_pos_of_vcf_object)
+    return filtered_merge_or_kept_vcf_objects
 
 
 if __name__ == "__main__":
