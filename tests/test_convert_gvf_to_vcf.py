@@ -8,7 +8,8 @@ from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_
     compare_vcf_objects, \
     determine_merge_or_keep_vcf_objects, merge_vcf_objects, parse_pragma, get_pragma_name_and_value, get_pragma_tokens, \
     keep_vcf_objects, get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
-    convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines
+    convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, get_chrom_pos_of_vcf_object, \
+    has_duplicates, get_list_of_merged_vcf_objects, filter_duplicates_by_merging
 
 
 class TestConvertGVFtoVCF(unittest.TestCase):
@@ -221,6 +222,51 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # check variant 13 and 14 have been merged
         assert merged_or_kept_objects[3].id == "13;14"
         assert merged_or_kept_objects[3].info_dict["NAME"] == "nssv1389474,nssv1388955"
+
+    def test_get_chrom_pos_of_vcf_object(self):
+        gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        header_standard_lines_dictionary, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
+            gvf_lines_obj_list,  self.reference_lookup, self.ordered_list_of_samples
+        )
+        obj = list_of_vcf_objects[0]
+        chrom_pos = get_chrom_pos_of_vcf_object(obj)
+        assert chrom_pos == ('chromosome1', 1)
+
+    def test_has_duplicates(self):
+        gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        header_standard_lines_dictionary, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
+            gvf_lines_obj_list,  self.reference_lookup, self.ordered_list_of_samples
+        )
+        duplicate_flag, list_of_dup_chrom_pos = has_duplicates(list_of_vcf_objects)
+        assert duplicate_flag is True
+        assert list_of_dup_chrom_pos == [('chromosome1', 127), ('chromosome1', 127), ('chromosome1', 127)]
+
+    def test_get_list_of_merged_vcf_objects(self):
+        gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        header_standard_lines_dictionary, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
+            gvf_lines_obj_list,  self.reference_lookup, self.ordered_list_of_samples
+        )
+        merge_or_kept_objects = get_list_of_merged_vcf_objects(list_of_vcf_objects, self.ordered_list_of_samples)
+        assert len(merge_or_kept_objects) == 5
+        assert str(merge_or_kept_objects[0]) == "chromosome1	1	1	AC	<DEL>	.	.	ID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;PARENT=nsv811094;SVCID=CNV28955;SAMPLENAME=Wilds2-3;REMAP=.98857;VARSEQ=.;END=1;SVLEN=1"
+
+    def test_filter_duplicates_by_merging(self):
+        gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
+        header_standard_lines_dictionary, list_of_vcf_objects = convert_gvf_features_to_vcf_objects(
+            gvf_lines_obj_list,  self.reference_lookup, self.ordered_list_of_samples
+        )
+        # deliberately adding duplicates here
+        list_of_vcf_objects.append(list_of_vcf_objects[0])
+        list_of_vcf_objects.append(list_of_vcf_objects[1])
+        list_of_vcf_objects.append(list_of_vcf_objects[-1])
+
+        merge_or_kept_objects = get_list_of_merged_vcf_objects(list_of_vcf_objects, self.ordered_list_of_samples)
+
+        list_of_vcf_objects_to_be_filtered = merge_or_kept_objects
+        duplicate_flag, list_of_dup_chrom_pos = has_duplicates(list_of_vcf_objects)
+        filtered_merge_or_kept_vcf_objects = filter_duplicates_by_merging(list_of_dup_chrom_pos,duplicate_flag, list_of_vcf_objects, list_of_vcf_objects_to_be_filtered, self.ordered_list_of_samples)
+        assert len(filtered_merge_or_kept_vcf_objects) <= len(merge_or_kept_objects)
+        assert filtered_merge_or_kept_vcf_objects[-1] == "chromosome1	127	14	GT	<DUP>	.	.	VARCALLSOID=SO:0001742;ALIAS=CNV5711;END=128;PARENT=nsv811095;NAME=nssv1388955;AC=3;AD=3;SAMPLENAME=JenMale6,JenMale7;DBXREF=mydata;SVLEN=1;SVCID=CNV5711;VARSEQ=.;REMAP=.85344	GT:AD	.:.	.:.	.:.	0:1:3"
 
 if __name__ == '__main__':
     unittest.main()
