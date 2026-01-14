@@ -118,6 +118,38 @@ class TestVcfLineBuilder(unittest.TestCase):
         assert output_lines_standard_alt == ['##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DEL,Description="Deletion">']
         assert output_lines_standard_info == ['##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">']
 
+    def test_has_svclaim_abundance_evidence(self):
+        # full values
+        vcf_value_from_gvf_attribute= {'ID': '94', 'Name': 'essv7098719', 'Alias': 'TD_DGRP_795_RAL-357',
+                                       'variant_call_so_id': 'SO:1000173', 'parent': 'esv2825690',
+                                       'submitter_variant_call_id': 'TD_DGRP_795_RAL-357', 'sample_name': 'RAL-357',
+                                       'Variant_seq': '.'}
+        alt = "<DUP:TANDEM>"
+        info_dict = {'END': '118289', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '187'}
+        is_abundant = self.vcf_builder.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute, alt, info_dict)
+        assert is_abundant is True
+        #testing each value individually because if any of these values are True, the function returns True
+        vcf_value_from_gvf_attribute = {'Variant_Method': 'Array_CGH'}
+        is_abundant = self.vcf_builder.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute, alt, info_dict)
+        assert is_abundant == True
+        vcf_value_from_gvf_attribute = {'variant_region_description': 'inferred something'}
+        is_abundant = self.vcf_builder.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute, alt, info_dict)
+        assert is_abundant == True
+        vcf_value_from_gvf_attribute = {'variant_call_description': 'have inferred something else'}
+        is_abundant = self.vcf_builder.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute, alt, info_dict)
+        assert is_abundant == True
+        vcf_value_from_gvf_attribute = {'Variant_seq': '.'}
+        is_abundant = self.vcf_builder.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute,alt,info_dict)
+        assert is_abundant == True
+        vcf_value_from_gvf_attribute = {'variant_region_so_id': 'SO:0001019'}
+        is_abundant = self.vcf_builder.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute,alt,info_dict)
+        assert is_abundant == True
+        vcf_value_from_gvf_attribute = {'variant_call_so_id': 'SO:0001019'}
+        is_abundant = self.vcf_builder.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute,alt,info_dict)
+        assert is_abundant == True
+        info_dict = {'IMPRECISE': True}
+        is_abundant = self.vcf_builder.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute,alt,info_dict)
+        assert is_abundant == True
 
     def test_get_alt(self):
         'chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."'

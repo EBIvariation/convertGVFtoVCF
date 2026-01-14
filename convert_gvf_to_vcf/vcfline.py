@@ -246,6 +246,41 @@ class VcfLineBuilder:
             lines_standard_info.append(all_possible_info_lines["CIEND"])
         return symbolic_allele, info_dict, lines_standard_alt, lines_standard_info
 
+    def has_svclaim_abundance_evidence(self, vcf_value_from_gvf_attribute, alt, info_dict):
+        """ This functions determines if the GVF attributes contain evidence that the SVCLAIM should be set to Abundance (D)
+        :params: vcf_value_from_gvf_attribute: dictionary of GVF attributes
+        :params: alt: alternative allele (SVCLAIM mandatory for DEL/DUP)
+        :params: info_dict: dictionary of INFO keys and their values
+        return: boolean/none
+        """
+        abundance_variant_method_keywords = ["Array_CGH", "Read_depth", "Depth_of_coverage", "SNP_Microarray", "Oligo_Microarray"]
+        abundance_variant_method_keywords_lowercase = {vm.casefold() for vm in abundance_variant_method_keywords}
+
+        abundance_variant_region_description_keywords = ["Inferred", "Copy_number_variation", "CNV", "Gain", "Loss", "Dosage_sensitive", "Relative_copy_number"]
+        abundance_variant_region_description_keywords_lowercase = {vrd.casefold() for vrd in abundance_variant_region_description_keywords}
+
+        abundance_variant_call_description_keywords = ["Inferred", "Copy_number_variation", "CNV", "Gain", "Loss", "Dosage_sensitive", "Relative_copy_number"]
+        abundance_variant_call_description_keywords_lowercase = {vcd.casefold() for vcd in abundance_variant_call_description_keywords}
+
+        abundance_variant_seq_keywords = ["."]
+        abundance_variant_region_so_id_keywords = ["SO:0001019", "SO:0001742", "SO:0001743", "SO:0001744", "SO:0001460"]
+        abundance_variant_call_so_id_keywords =   ["SO:0001019", "SO:0001742", "SO:0001743"]
+        abundance_imprecise_keywords = [True]
+
+        if "DEL" in alt or "DUP" in alt:
+            has_abundance_variant_method = vcf_value_from_gvf_attribute.get("Variant_Method", "").casefold() in abundance_variant_method_keywords_lowercase
+            has_abundance_variant_region_description = any(i in vcf_value_from_gvf_attribute.get("variant_region_description", "").casefold() for i in abundance_variant_region_description_keywords_lowercase)
+            has_abundance_call_description = any(i in vcf_value_from_gvf_attribute.get("variant_call_description", "").casefold() for i in abundance_variant_call_description_keywords_lowercase)
+            has_abundance_variant_seq = vcf_value_from_gvf_attribute.get("Variant_seq") in abundance_variant_seq_keywords
+            has_abundance_variant_region_so_id_keyword = vcf_value_from_gvf_attribute.get("variant_region_so_id") in abundance_variant_region_so_id_keywords
+            has_abundance_variant_call_so_id_keyword = vcf_value_from_gvf_attribute.get("variant_call_so_id") in abundance_variant_call_so_id_keywords
+            has_abundance_imprecise = info_dict.get("IMPRECISE") in abundance_imprecise_keywords
+            if any([has_abundance_variant_method, has_abundance_variant_region_description,has_abundance_call_description, has_abundance_variant_seq, has_abundance_variant_region_so_id_keyword, has_abundance_variant_call_so_id_keyword, has_abundance_imprecise]):
+                return True
+            else:
+                return False
+        return None
+
     def get_alt(self, vcf_value_from_gvf_attribute, chrom, pos, end, length, ref, so_type):
         """ Gets the ALT allele for the VCF file
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
@@ -274,6 +309,7 @@ class VcfLineBuilder:
         else:
             alt = "."
             logger.warning("Could not determine the alternative allele.")
+        is_abundance = self.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute, alt, info_dict)
         return pos, ref, alt, info_dict
 
 
