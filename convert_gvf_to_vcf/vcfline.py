@@ -263,8 +263,15 @@ class VcfLineBuilder:
         abundance_variant_call_description_keywords_lowercase = {vcd.casefold() for vcd in abundance_variant_call_description_keywords}
 
         abundance_variant_seq_keywords = ["."]
-        abundance_variant_region_so_id_keywords = ["SO:0001019", "SO:0001742", "SO:0001743", "SO:0001744", "SO:0001460"]
-        abundance_variant_call_so_id_keywords =   ["SO:0001019", "SO:0001742", "SO:0001743"]
+        # Region
+        # SO:0001019 = copy_number_variation
+        abundance_variant_region_so_id_keywords = ["SO:0001019"]
+
+        # Call
+        # SO:0001742 = copy_number_gain
+        # SO:0001743 = copy_number_loss
+        # SO:1000173 = tandem_duplication
+        abundance_variant_call_so_id_keywords =   ["SO:0001742", "SO:0001743", "SO:1000173"]
         abundance_imprecise_keywords = [True]
 
         if "DEL" in alt or "DUP" in alt:
