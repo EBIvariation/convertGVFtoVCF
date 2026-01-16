@@ -226,6 +226,7 @@ class VcfLineBuilder:
                 info_end_value = str(pos + len(ref))
             else:
                 logger.warning("Cannot identify symbolic allele")
+
         # Set up INFO values for structural variants and store in the info_dict
         info_dict = {
             info_end_key: info_end_value,
@@ -234,6 +235,13 @@ class VcfLineBuilder:
             info_ciend_key: info_ciend_value,
             info_svlen_key: info_svlen_value
         }
+
+        info_svclaim_key = "SVCLAIM"
+        if "DEL" and "DUP" in symbolic_allele:
+            #TODO: IMPORTANT: this should be set to the missing place holder '.' but await clarification from the spec
+            info_svclaim_value = "D"
+            info_dict.update({info_svclaim_key: info_svclaim_value})
+            lines_standard_info.append(all_possible_info_lines["SVCLAIM"])
 
         # for all variants (precise and imprecise) store INFO lines for the header
         lines_standard_info.append(all_possible_info_lines["END"])
