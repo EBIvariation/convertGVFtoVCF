@@ -106,18 +106,6 @@ class TestVcfLineBuilder(unittest.TestCase):
         assert end_range_lower_bound == "2"
         assert end_range_upper_bound == "."
 
-    def test_generate_symbolic_allele(self):
-        (output_symbolic_allele,
-         info_field,
-         output_lines_standard_alt,
-         output_lines_standard_info) = self.v.generate_symbolic_allele(self.standard_lines_dictionary,
-                                                                       self.all_possible_lines_dictionary,
-                                                                       self.reference_lookup.symbolic_allele_dictionary)
-        assert output_symbolic_allele == '<DEL>'
-        assert info_field == {'END': '78', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
-        assert output_lines_standard_alt == ['##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DEL,Description="Deletion">', '##ALT=<ID=DEL,Description="Deletion">']
-        assert output_lines_standard_info == ['##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">', '##INFO=<ID=NAME,Number=.,Type=String,Description="Name">', '##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">', '##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">', '##INFO=<ID=SVCID,Number=.,Type=Integer,Description="submitter variant call ID">', '##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">', '##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">', '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">', '##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">', '##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">']
-
     def test_has_svclaim_abundance_evidence(self):
         # full values
         vcf_value_from_gvf_attribute= {'ID': '94', 'Name': 'essv7098719', 'Alias': 'TD_DGRP_795_RAL-357',
@@ -163,14 +151,13 @@ class TestVcfLineBuilder(unittest.TestCase):
     def test_generate_symbolic_allele(self):
         # TODO: This seems incorrect
         vcf_value_from_gvf_attribute = {"Variant_seq":".", "Start_range":".,776614","End_range":"786127,."}
-        symbolic_allele, info_dict, lines_standard_alt, lines_standard_info = self.vcf_builder.generate_symbolic_allele(vcf_value_from_gvf_attribute, pos=76, length=1, ref='.', so_type='copy_number_loss')
+        symbolic_allele, info_dict, lines_standard_alt, lines_standard_info = self.vcf_builder.generate_symbolic_allele(vcf_value_from_gvf_attribute, pos=76, end=77, length=1, ref='.', so_type='copy_number_loss')
         assert symbolic_allele == '<DEL>'
-        assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
+        assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1', 'SVCLAIM': 'D'}
         assert lines_standard_alt == ['##ALT=<ID=DEL,Description="Deletion">']
-        assert lines_standard_info== [
-            '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">',
-            '##INFO=<ID=SVLEN,Number=A,Type=String,Description="Length of structural variant">'
-        ]
+        assert lines_standard_info == ['##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">']
+
+
 
     def test_check_ref(self):
         assert self.vcf_builder.check_ref('A') == 'A'
