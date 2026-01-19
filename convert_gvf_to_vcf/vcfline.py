@@ -254,6 +254,7 @@ class VcfLineBuilder:
             lines_standard_info.append(all_possible_info_lines["CIEND"])
         return symbolic_allele, info_dict, lines_standard_alt, lines_standard_info
 
+    #TODO: awaiting clarification from the specification to keep or remove this function
     def has_svclaim_abundance_evidence(self, vcf_value_from_gvf_attribute, alt, info_dict):
         """ This functions determines if the GVF attributes contain evidence that the SVCLAIM should be set to Abundance (D)
         :params: vcf_value_from_gvf_attribute: dictionary of GVF attributes
@@ -324,7 +325,8 @@ class VcfLineBuilder:
         else:
             alt = "."
             logger.warning("Could not determine the alternative allele.")
-        is_abundance = self.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute, alt, info_dict)
+        #TODO: awaiting clarification to keep or remove this for SVCLAIM
+        #is_abundance = self.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute, alt, info_dict)
         return pos, ref, alt, info_dict
 
 
