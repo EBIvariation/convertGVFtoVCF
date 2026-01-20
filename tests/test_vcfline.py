@@ -155,7 +155,7 @@ class TestVcfLineBuilder(unittest.TestCase):
         assert symbolic_allele == '<DEL>'
         assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1', 'SVCLAIM': 'D'}
         assert lines_standard_alt == ['##ALT=<ID=DEL,Description="Deletion">']
-        assert lines_standard_info == ['##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">']
+        assert lines_standard_info == ['##INFO=<ID=SVCLAIM,Number=A,Type=String,Description="Claim made by the structural variant call. Valid values are D, J, DJ for abundance, adjacency and both respectively">', '##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">', '##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">']
 
 
 
@@ -239,7 +239,7 @@ class TestVcfLineBuilder(unittest.TestCase):
             assert pos == 76
             assert ref == 'T'
             assert alt == '<DEL>'
-            assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1'}
+            assert info_dict == {'END': '76', 'IMPRECISE': None, 'CIPOS': None, 'CIEND': None, 'SVLEN': '1', 'SVCLAIM': 'D'}
 
     def test_check_ref(self):
         assert self.vcf_builder.check_ref('A') == 'A'
