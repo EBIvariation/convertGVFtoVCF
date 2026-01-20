@@ -173,7 +173,6 @@ class VcfLineBuilder:
             end_range_upper_bound = None
         return start_range_lower_bound, start_range_upper_bound, end_range_lower_bound, end_range_upper_bound
 
-
     def generate_symbolic_allele(self, vcf_value_from_gvf_attribute, pos, end, length, ref, so_type):
         """ Generates the symbolic allele and stores the corresponding metainformation lines.
         Also determines if variant is precise or imprecise.
@@ -196,7 +195,8 @@ class VcfLineBuilder:
 
         # Creating start/end co-ordinate ranges
         (start_range_lower_bound, start_range_upper_bound,
-         end_range_lower_bound, end_range_upper_bound) = self.create_coordinate_range(vcf_value_from_gvf_attribute, pos, end)
+         end_range_lower_bound, end_range_upper_bound) = self.create_coordinate_range(vcf_value_from_gvf_attribute, pos,
+                                                                                      end)
 
         # setting up fields to be inserted into INFO
         info_end_key = "END"
@@ -215,16 +215,23 @@ class VcfLineBuilder:
             is_imprecise = True
             info_imprecise_value = "IMPRECISE"
 
-            cipos_lower_bound = int(start_range_lower_bound) - pos
-            cipos_upper_bound = int(start_range_upper_bound) - pos
-            info_cipos_value = str(cipos_lower_bound) + "," + str(cipos_upper_bound)
+            if start_range_lower_bound is not None:
+                cipos_lower_bound = int(start_range_lower_bound) - pos
+            if start_range_upper_bound is not None:
+                cipos_upper_bound = int(start_range_upper_bound) - pos
 
-            ciend_lower_bound = int(start_range_lower_bound) - pos
-            ciend_upper_bound = int(start_range_upper_bound) - pos
-            info_ciend_value = str(ciend_lower_bound) + "," + str(ciend_upper_bound)
+            if end_range_lower_bound is not None:
+                ciend_lower_bound = int(end_range_lower_bound) - pos
+            if end_range_upper_bound is not None:
+                ciend_upper_bound = int(end_range_upper_bound) - pos
+
+            if start_range_lower_bound is not None and start_range_upper_bound is not None:
+                info_cipos_value = str(cipos_lower_bound) + "," + str(cipos_upper_bound)
+            if end_range_lower_bound is not None and end_range_upper_bound is not None:
+                info_ciend_value = str(ciend_lower_bound) + "," + str(ciend_upper_bound)
 
             if symbolic_allele == "<INS>":
-                info_end_value = str( pos + len(ref) - 1 )
+                info_end_value = str(pos + len(ref) - 1)
             elif symbolic_allele in {"<DEL>", "<DUP>", "<INV>", "<CNV>"}:
                 info_end_value = str(pos + length)
             elif symbolic_allele == "<*>":
@@ -242,8 +249,8 @@ class VcfLineBuilder:
         }
 
         info_svclaim_key = "SVCLAIM"
-        if "DEL" and "DUP" in symbolic_allele:
-            #TODO: IMPORTANT: this should be set to the missing place holder '.' but await clarification from the spec
+        if "DEL" or "DUP" in symbolic_allele:
+            # TODO: IMPORTANT: this should be set to the missing place holder '.' but await clarification from the spec
             info_svclaim_value = "D"
             info_dict.update({info_svclaim_key: info_svclaim_value})
             lines_standard_info.append(all_possible_info_lines["SVCLAIM"])
@@ -258,8 +265,6 @@ class VcfLineBuilder:
             lines_standard_info.append(all_possible_info_lines["CIPOS"])
             lines_standard_info.append(all_possible_info_lines["CIEND"])
         return symbolic_allele, info_dict, lines_standard_alt, lines_standard_info
-
-    #TODO: awaiting clarification from the specification to keep or remove this function
 
     def generate_info_field_symbolic_allele(self, end,
                                             end_range_lower_bound,
@@ -323,6 +328,7 @@ class VcfLineBuilder:
             info_svlen_key: info_svlen_value
         }
         return info_dict, is_imprecise
+
     def generate_info_field_for_imprecise_variant(self, end, end_range_lower_bound, end_range_upper_bound,
                                                   info_end_value,
                                                   length, pos, ref, start_range_lower_bound, start_range_upper_bound,
@@ -463,7 +469,6 @@ class VcfLineBuilder:
         if any(base in vcf_value_from_gvf_attribute["Variant_seq"] for base in ["A", "C", "G", "T", "N"]):
             alt = vcf_value_from_gvf_attribute["Variant_seq"]
         elif vcf_value_from_gvf_attribute["Variant_seq"] == '.':
-            symbolic_allele, info_dict = self.generate_symbolic_allele(vcf_value_from_gvf_attribute, pos, end, length, ref, so_type)
             symbolic_allele, info_dict, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(vcf_value_from_gvf_attribute, pos, end, length, ref, so_type)
 
             if symbolic_allele is None:
