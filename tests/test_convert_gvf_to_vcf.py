@@ -203,7 +203,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert merged_object.alt == "<DUP>"
         assert merged_object.qual == "."
         assert merged_object.filter == "."
-        assert len(merged_object.info_dict) == 11
+        assert len(merged_object.info_dict) == 12
         assert merged_object.info_dict["ALIAS"] == 'CNV6230,CNV5711'
         assert merged_object.info_dict["NAME"] == 'nssv1389474,nssv1388955'
 
@@ -254,7 +254,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         )
         merge_or_kept_objects = get_list_of_merged_vcf_objects(list_of_vcf_objects, self.ordered_list_of_samples)
         assert len(merge_or_kept_objects) == 5
-        assert str(merge_or_kept_objects[0]) == "chromosome1	1	1	AC	<DEL>	.	.	ID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;PARENT=nsv811094;SVCID=CNV28955;SAMPLENAME=Wilds2-3;REMAP=.98857;VARSEQ=.;END=1;SVLEN=1"
+        assert str(merge_or_kept_objects[0]) == "chromosome1	1	1	AC	<DEL>	.	.	ID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;PARENT=nsv811094;SVCID=CNV28955;SAMPLENAME=Wilds2-3;REMAP=.98857;VARSEQ=.;END=2;IMPRECISE;SVLEN=1;SVCLAIM=D"
 
     def test_filter_duplicates_by_merging(self):
         gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
@@ -279,7 +279,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert filtered_merge_or_kept_vcf_objects[-1].alt == "<DUP>"
         assert filtered_merge_or_kept_vcf_objects[-1].qual == "."
         assert filtered_merge_or_kept_vcf_objects[-1].filter == "."
-        assert filtered_merge_or_kept_vcf_objects[-1].info_dict == {'SAMPLENAME': 'JenMale6,JenMale7', 'AD': '3', 'AC': '3', 'ALIAS': 'CNV5711', 'VARCALLSOID': 'SO:0001742', 'NAME': 'nssv1388955', 'REMAP': '.85344', 'SVLEN': '1', 'VARSEQ': '.', 'SVCID': 'CNV5711', 'DBXREF': 'mydata', 'PARENT': 'nsv811095', 'END': '128'}
+        assert filtered_merge_or_kept_vcf_objects[-1].info_dict == {'ALIAS': 'CNV5711', 'DBXREF': 'mydata', 'NAME': 'nssv1388955', 'SVCID': 'CNV5711', 'END': '128', 'AC': '3', 'SVLEN': '1', 'VARCALLSOID': 'SO:0001742', 'SVCLAIM': 'D', 'PARENT': 'nsv811095', 'SAMPLENAME': 'JenMale6,JenMale7', 'REMAP': '.85344', 'VARSEQ': '.', 'AD': '3'}
         assert filtered_merge_or_kept_vcf_objects[-1].vcf_values_for_format == {'JenMale7': {'AD': '3', 'GT': '0:1'}}
 if __name__ == '__main__':
     unittest.main()
