@@ -465,6 +465,7 @@ def main():
         missing_flags = collect_missing_format_flags(list_of_vcf_objects) # True if format keys are missing, False if present
         if any(missing_flags):
             is_missing_format_value = True
+            logger.info("No Format Keys detected. Printing mandatory VCF headers.")
         else:
             is_missing_format_value = False
         # Write the header.
