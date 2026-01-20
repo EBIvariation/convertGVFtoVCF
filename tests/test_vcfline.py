@@ -132,7 +132,7 @@ class TestVcfLineBuilder(unittest.TestCase):
         vcf_value_from_gvf_attribute = {'variant_region_so_id': 'SO:0001019'}
         is_abundant = self.vcf_builder.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute,alt,info_dict)
         assert is_abundant == True
-        vcf_value_from_gvf_attribute = {'variant_call_so_id': 'SO:0001019'}
+        vcf_value_from_gvf_attribute = {'variant_call_so_id': 'SO:0001742'}
         is_abundant = self.vcf_builder.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute,alt,info_dict)
         assert is_abundant == True
         info_dict = {'IMPRECISE': True}
