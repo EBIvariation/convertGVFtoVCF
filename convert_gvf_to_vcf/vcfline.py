@@ -369,7 +369,7 @@ class VcfLineBuilder:
         elif symbolic_allele == "<*>":
             info_end_value = str(pos + len(ref))
         else:
-            print("Cannot identify symbolic allele")
+            logger.warning(f"Cannot identify symbolic allele: {symbolic_allele}")
         return info_ciend_value, info_cipos_value, info_end_value, info_imprecise_value, is_imprecise
 
     def generate_info_field_for_precise_variant(self, pos, ref):
