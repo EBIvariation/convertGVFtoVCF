@@ -473,32 +473,35 @@ def main():
 
         # Part 3 of VCF file: Write the VCF data lines. This will contain info about the position in the genome,
         # its variants and genotype information per sample.
-        logger.info("Generating the VCF datalines")
-        # Each GVF feature has been converted to a VCF object so begin comparing and merging the VCF objects.
-        # initial merge
-        merge_or_kept_vcf_objects = get_list_of_merged_vcf_objects(list_of_vcf_objects, samples)
-        # identify if duplicates are present after merging
-        has_dups, chrom_pos_list = has_duplicates(merge_or_kept_vcf_objects)
-        # while duplicates are present, merge, then re-check for dups
-        max_iterations = 100
-        iteration = 0
-        list_of_vcf_objects_to_be_filtered = merge_or_kept_vcf_objects
-        while has_dups and iteration < max_iterations:
-            filtered_merge_or_kept_vcf_objects = filter_duplicates_by_merging(chrom_pos_list, has_dups,
-                                                                              list_of_vcf_objects,
-                                                                              list_of_vcf_objects_to_be_filtered, samples)
-            has_dups, chrom_pos_list = has_duplicates(filtered_merge_or_kept_vcf_objects)
-            iteration += 1
-            list_of_vcf_objects_to_be_filtered = filtered_merge_or_kept_vcf_objects
-            logger.info(f"Iteration of merge (remove dups): {iteration}")
+        if (list_of_vcf_objects):
+            logger.info("Generating the VCF datalines")
+            # Each GVF feature has been converted to a VCF object so begin comparing and merging the VCF objects.
+            # initial merge
+            merge_or_kept_vcf_objects = get_list_of_merged_vcf_objects(list_of_vcf_objects, samples)
+            # identify if duplicates are present after merging
+            has_dups, chrom_pos_list = has_duplicates(merge_or_kept_vcf_objects)
+            # while duplicates are present, merge, then re-check for dups
+            max_iterations = 100
+            iteration = 0
+            list_of_vcf_objects_to_be_filtered = merge_or_kept_vcf_objects
+            while has_dups and iteration < max_iterations:
+                filtered_merge_or_kept_vcf_objects = filter_duplicates_by_merging(chrom_pos_list, has_dups,
+                                                                                  list_of_vcf_objects,
+                                                                                  list_of_vcf_objects_to_be_filtered, samples)
+                has_dups, chrom_pos_list = has_duplicates(filtered_merge_or_kept_vcf_objects)
+                iteration += 1
+                list_of_vcf_objects_to_be_filtered = filtered_merge_or_kept_vcf_objects
+                logger.info(f"Iteration of merge (remove dups): {iteration}")
 
-        # Write the VCF objects as data lines in the VCF file.
-        if iteration != 0:
-            for vcf_line_object in filtered_merge_or_kept_vcf_objects:
-                vcf_output.write(str(vcf_line_object) + "\n")
+            # Write the VCF objects as data lines in the VCF file.
+            if iteration != 0:
+                for vcf_line_object in filtered_merge_or_kept_vcf_objects:
+                    vcf_output.write(str(vcf_line_object) + "\n")
+            else:
+                for vcf_line_object in merge_or_kept_vcf_objects:
+                    vcf_output.write(str(vcf_line_object) + "\n")
         else:
-            for vcf_line_object in merge_or_kept_vcf_objects:
-                vcf_output.write(str(vcf_line_object) + "\n")
+            logger.warning("No feature lines were found for this GVF file.")
     vcf_output.close()
     logger.info("GVF to VCF conversion complete")
 
