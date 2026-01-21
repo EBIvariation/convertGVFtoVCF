@@ -254,7 +254,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         )
         merge_or_kept_objects = get_list_of_merged_vcf_objects(list_of_vcf_objects, self.ordered_list_of_samples)
         assert len(merge_or_kept_objects) == 5
-        assert str(merge_or_kept_objects[0]) == "chromosome1	1	1	AC	<DEL>	.	.	ID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;PARENT=nsv811094;SVCID=CNV28955;SAMPLENAME=Wilds2-3;REMAP=.98857;VARSEQ=.;END=1;SVLEN=1;SVCLAIM=D"
+        assert str(merge_or_kept_objects[0]) == "chromosome1	1	1	AC	<DEL>	.	.	ID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;PARENT=nsv811094;SVCID=CNV28955;SAMPLENAME=Wilds2-3;REMAP=.98857;VARSEQ=.;END=2;IMPRECISE;SVLEN=1;SVCLAIM=D"
 
     def test_filter_duplicates_by_merging(self):
         gvf_pragmas, gvf_pragma_comments, gvf_lines_obj_list = read_in_gvf_file(self.input_file)

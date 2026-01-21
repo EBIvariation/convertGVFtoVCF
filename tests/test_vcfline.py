@@ -179,10 +179,10 @@ class TestVcfLineBuilder(unittest.TestCase):
         start_range_upper_bound = 2
         symbolic_allele = "<INS>"
         info_dict, is_imprecise = self.vcf_builder.generate_info_field_symbolic_allele(
-            end, end_range_lower_bound, end_range_upper_bound,
-            length, pos, ref,
-            start_range_lower_bound, start_range_upper_bound,
-            symbolic_allele
+            end=end, end_range_lower_bound=end_range_lower_bound, end_range_upper_bound=end_range_upper_bound,
+            length=length, pos=pos, ref=ref,
+            start_range_lower_bound=start_range_lower_bound, start_range_upper_bound=start_range_upper_bound,
+            symbolic_allele=symbolic_allele
         )
         assert info_dict == {'END': '13', 'IMPRECISE': 'IMPRECISE', 'CIPOS': '0,1', 'CIEND': '0,100', 'SVLEN': '13'}
         assert is_imprecise is True
@@ -199,11 +199,11 @@ class TestVcfLineBuilder(unittest.TestCase):
         start_range_upper_bound = 2
         symbolic_allele = "<INS>"
         info_ciend_value, info_cipos_value, info_end_value, info_imprecise_value, is_imprecise = self.vcf_builder.generate_info_field_for_imprecise_variant(
-            end, end_range_lower_bound, end_range_upper_bound,
-            info_end_value,
-            length, pos, ref,
-            start_range_lower_bound, start_range_upper_bound,
-            symbolic_allele
+            end=end, end_range_lower_bound=end_range_lower_bound, end_range_upper_bound=end_range_upper_bound,
+            # info_end_value,
+            length=length, pos=pos, ref=ref,
+            start_range_lower_bound=start_range_lower_bound, start_range_upper_bound=start_range_upper_bound,
+            symbolic_allele=symbolic_allele
         )
         assert info_ciend_value == "0,100"
         assert info_cipos_value == "0,1"
