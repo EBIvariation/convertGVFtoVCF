@@ -5,7 +5,8 @@ The purpose of this file is to populate for each field of a VCF line (and perfor
 from Bio import SeqIO
 from convert_gvf_to_vcf.assistingconverter import convert_gvf_attributes_to_vcf_values
 from convert_gvf_to_vcf.logger import logger
-
+from dataclasses import dataclass
+from typing import Optional,Union
 
 
 def extract_reference_allele(fasta_file, chromosome_name, position, end):
@@ -25,6 +26,25 @@ def extract_reference_allele(fasta_file, chromosome_name, position, end):
         reference_allele = reference_allele + records_dictionary[chromosome_name].seq[position]
     records_dictionary.close()
     return reference_allele
+
+@dataclass
+class VariantRange:
+    """
+    This is responsible for representing the co-ordinate ranges of a structural variant.
+    Attributes:
+        pos: start
+        start_range_lower_bound: can be int "." or None
+        start_range_upper_bound: can be int "." or None
+        end: end
+        end_range_lower_bound: can be int "." or None
+        end_range_upper_bound: can be int "." or None
+    """
+    pos: int
+    start_range_lower_bound: Optional[Union[int, str]] #value can be int, "." or None
+    start_range_upper_bound: Optional[Union[int, str]] #value can be int, "." or None
+    end: int
+    end_range_lower_bound: Optional[Union[int, str]] #value can be int, "." or None
+    end_range_upper_bound: Optional[Union[int, str]] #value can be int, "." or None
 
 class VcfLineBuilder:
     """
@@ -173,27 +193,19 @@ class VcfLineBuilder:
             end_range_upper_bound = None
         return start_range_lower_bound, start_range_upper_bound, end_range_lower_bound, end_range_upper_bound
 
-    def generate_info_field_symbolic_allele(self, end,
-                                            end_range_lower_bound,
-                                            end_range_upper_bound,
-                                            length, pos, ref,
-                                            start_range_lower_bound,
-                                            start_range_upper_bound, symbolic_allele):
+    def generate_info_field_symbolic_allele(self,
+                                            variant_range_coordinates,
+                                            length, ref, symbolic_allele):
         """ Generate the dictionary INFO field values for the symbolic allele.
-        :param end: gvf_feature_line_object.end
-        :param end_range_lower_bound: end range co-ordinate first number
-        :param end_range_upper_bound: end range co-ordinate second number
-        :param info_end_value: INFO field called "END" - default set to None
+        :param variant_range_coordinates: object with attribues:pos, start_range_lower_bound, start_range_upper_bound, end, end_range_lower_bound, end_range_upper_bound
         :param length:  end - pos
-        :param pos: gvf_feature_line_object.start
-        :param ref: refernece allele
-        :param start_range_lower_bound: start range co-ordinate first number
-        :param start_range_upper_bound: start range co-ordinate second number
+        :param ref: reference allele
         :param symbolic_allele: symbolic allele for ALT
         :return:
             info_dict: dict of key-value pairs for INFO field (END, IMPRECISE, CIPOS, CIEND, SVLEN),
             is_imprecise: boolean
         """
+
         # Set up info dictionary
         info_dict = {}
         # Setting up the info keys with None as a default value
@@ -209,8 +221,8 @@ class VcfLineBuilder:
         # IMPRECISE variants
         else:
             info_fields_for_imprecise_variants = self.generate_info_field_for_imprecise_variant(
-                end, end_range_lower_bound, end_range_upper_bound,
-                length, pos, ref, start_range_lower_bound, start_range_upper_bound,
+                variant_range_coordinates,
+                length, ref,
                 symbolic_allele
             )
             info_dict.update({
@@ -222,19 +234,14 @@ class VcfLineBuilder:
             is_imprecise = info_fields_for_imprecise_variants[4]
         return info_dict, is_imprecise
 
-    def generate_info_field_for_imprecise_variant(self, end, end_range_lower_bound, end_range_upper_bound,
-                                                  length, pos, ref, start_range_lower_bound, start_range_upper_bound,
+    def generate_info_field_for_imprecise_variant(self,
+                                                  variant_range_coordinates,
+                                                  length, ref,
                                                   symbolic_allele):
         """ Generate the INFO field values for an imprecise variant.
-        :param end: gvf_feature_line_object.end
-        :param end_range_lower_bound: end range co-ordinate first number
-        :param end_range_upper_bound: end range co-ordinate second number
-        :param info_end_value: INFO field called "END" - default set to None
+        :param variant_range_coordinates: object with attribues:pos, start_range_lower_bound, start_range_upper_bound, end, end_range_lower_bound, end_range_upper_bound
         :param length:  end - pos
-        :param pos: gvf_feature_line_object.start
         :param ref: refernece allele
-        :param start_range_lower_bound: start range co-ordinate first number
-        :param start_range_upper_bound: start range co-ordinate second number
         :param symbolic_allele: symbolic allele for ALT
         :return:
             info_ciend_value(string i.e "0,100"),
@@ -247,7 +254,8 @@ class VcfLineBuilder:
         is_imprecise = True
         info_imprecise_value = "IMPRECISE"
         ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound = self.calculate_CIPOS_and_CIEND(
-            end, end_range_lower_bound, end_range_upper_bound, pos, start_range_lower_bound, start_range_upper_bound)
+            variant_range_coordinates)
+            # end, end_range_lower_bound, end_range_upper_bound, pos, start_range_lower_bound, start_range_upper_bound)
 
         # form the CIPOS value
         info_cipos_value =  f"{str(cipos_lower_bound)},{str(cipos_upper_bound)}" if all(cipos_bound is not None for cipos_bound in (cipos_lower_bound, cipos_upper_bound)) else None
@@ -256,11 +264,11 @@ class VcfLineBuilder:
 
         # Determine the END value based on the symbolic allele
         if symbolic_allele == "<INS>":
-            info_end_value = str(pos + len(ref) - 1)
+            info_end_value = str(variant_range_coordinates.pos + len(ref) - 1)
         elif any(sym in symbolic_allele for sym in {"DEL", "DUP", "INV", "CNV"}):
-            info_end_value = str(pos + length)
+            info_end_value = str(variant_range_coordinates.pos + length)
         elif symbolic_allele == "<*>":
-            info_end_value = str(pos + len(ref))
+            info_end_value = str(variant_range_coordinates.pos + len(ref))
         else:
             logger.warning(f"Cannot identify symbolic allele: {symbolic_allele}")
         return info_ciend_value, info_cipos_value, info_end_value, info_imprecise_value, is_imprecise
@@ -275,22 +283,18 @@ class VcfLineBuilder:
         info_end_value = str(pos + len(ref) - 1)
         return info_end_value, is_imprecise
 
-    def calculate_CIPOS_and_CIEND(self, end, end_range_lower_bound, end_range_upper_bound, pos, start_range_lower_bound, start_range_upper_bound):
+    def calculate_CIPOS_and_CIEND(self,
+                                  variant_range_cordinates):
         """Converts start and end range co-ordinates into CIPOS and CIEND (for VCF info field).
-        :param end: gvf_feature_line_object.end
-        :param end_range_lower_bound: end range co-ordinate first number
-        :param end_range_upper_bound: end range co-ordinate second number
-        :param pos: gvf_feature_line_object.start
-        :param start_range_lower_bound: start range co-ordinate first number
-        :param start_range_upper_bound: start range co-ordinate second number
+        :param variant_range_cordinates:  object with attributes:pos, start_range_lower_bound, start_range_upper_bound, end, end_range_lower_bound, end_range_upper_bound
         :return: ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound
         """
         # Converting start_range co-ordinates
-        cipos_lower_bound = self.convert_to_ci_bound(pos, start_range_lower_bound)
-        cipos_upper_bound = self.convert_to_ci_bound(pos, start_range_upper_bound)
+        cipos_lower_bound = self.convert_to_ci_bound(variant_range_cordinates.pos, variant_range_cordinates.start_range_lower_bound)
+        cipos_upper_bound = self.convert_to_ci_bound(variant_range_cordinates.pos, variant_range_cordinates.start_range_upper_bound)
         # Converting End_range co-ordinates
-        ciend_lower_bound = self.convert_to_ci_bound(end, end_range_lower_bound)
-        ciend_upper_bound = self.convert_to_ci_bound(end, end_range_upper_bound)
+        ciend_lower_bound = self.convert_to_ci_bound(variant_range_cordinates.end, variant_range_cordinates.end_range_lower_bound)
+        ciend_upper_bound = self.convert_to_ci_bound(variant_range_cordinates.end, variant_range_cordinates.end_range_upper_bound)
         return ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound
 
     def convert_to_ci_bound(self, start_or_end_position, original_coordinate_bound):
@@ -330,16 +334,16 @@ class VcfLineBuilder:
         # Creating start/end co-ordinate ranges
         (start_range_lower_bound, start_range_upper_bound,
          end_range_lower_bound, end_range_upper_bound) = self.create_coordinate_range(vcf_value_from_gvf_attribute)
+        variant_range_coordinates = VariantRange(pos=pos,
+                                                 start_range_lower_bound=start_range_lower_bound,
+                                                 start_range_upper_bound=start_range_upper_bound,
+                                                 end=end,
+                                                 end_range_lower_bound=end_range_lower_bound,
+                                                 end_range_upper_bound=end_range_upper_bound)
 
         # Get the dictionary of INFO keys and their values
         info_dict, is_imprecise = self.generate_info_field_symbolic_allele(
-            end,
-            end_range_lower_bound,
-            end_range_upper_bound,
-            length, pos, ref,
-            start_range_lower_bound,
-            start_range_upper_bound, symbolic_allele
-        )
+            variant_range_coordinates, length, ref, symbolic_allele)
 
         # Set SVCLAIM depending on the symbolic allele
         info_svclaim_key = "SVCLAIM"
