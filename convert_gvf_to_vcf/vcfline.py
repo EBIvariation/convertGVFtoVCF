@@ -217,7 +217,7 @@ class VcfLineBuilder:
         range_keys = ["start_range_lower_bound", "start_range_upper_bound", "end_range_lower_bound", "end_range_upper_bound"]
         # in the case of a PRECISE variant
         if any(range_key is None for range_key in range_keys):
-            info_dict["END"], is_imprecise = self.generate_info_field_for_precise_variant(pos, ref)
+            info_dict["END"], is_imprecise = self.generate_info_field_for_precise_variant(variant_range_coordinates.pos, ref)
         # IMPRECISE variants
         else:
             info_fields_for_imprecise_variants = self.generate_info_field_for_imprecise_variant(
