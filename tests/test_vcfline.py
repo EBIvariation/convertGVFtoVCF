@@ -3,7 +3,7 @@ import unittest
 
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
-from convert_gvf_to_vcf.vcfline import VcfLine, VcfLineBuilder
+from convert_gvf_to_vcf.vcfline import VcfLine, VcfLineBuilder, VariantRange
 from convert_gvf_to_vcf.lookup import Lookup
 
 class TestVcfLineBuilder(unittest.TestCase):
@@ -178,11 +178,9 @@ class TestVcfLineBuilder(unittest.TestCase):
         start_range_lower_bound = 1
         start_range_upper_bound = 2
         symbolic_allele = "<INS>"
+        variant_range_coordinates= VariantRange(pos,start_range_lower_bound, start_range_upper_bound, end, end_range_lower_bound, end_range_upper_bound)
         info_dict, is_imprecise = self.vcf_builder.generate_info_field_symbolic_allele(
-            end=end, end_range_lower_bound=end_range_lower_bound, end_range_upper_bound=end_range_upper_bound,
-            length=length, pos=pos, ref=ref,
-            start_range_lower_bound=start_range_lower_bound, start_range_upper_bound=start_range_upper_bound,
-            symbolic_allele=symbolic_allele
+            variant_range_coordinates ,length, ref, symbolic_allele
         )
         assert info_dict == {'END': '13', 'IMPRECISE': 'IMPRECISE', 'CIPOS': '0,1', 'CIEND': '0,100', 'SVLEN': '13'}
         assert is_imprecise is True
@@ -198,13 +196,12 @@ class TestVcfLineBuilder(unittest.TestCase):
         start_range_lower_bound = 1
         start_range_upper_bound = 2
         symbolic_allele = "<INS>"
+
+        variant_range_coordinates= VariantRange(pos,start_range_lower_bound, start_range_upper_bound, end, end_range_lower_bound, end_range_upper_bound)
         info_ciend_value, info_cipos_value, info_end_value, info_imprecise_value, is_imprecise = self.vcf_builder.generate_info_field_for_imprecise_variant(
-            end=end, end_range_lower_bound=end_range_lower_bound, end_range_upper_bound=end_range_upper_bound,
-            # info_end_value,
-            length=length, pos=pos, ref=ref,
-            start_range_lower_bound=start_range_lower_bound, start_range_upper_bound=start_range_upper_bound,
-            symbolic_allele=symbolic_allele
-        )
+            variant_range_coordinates,
+            length, ref,
+            symbolic_allele)
         assert info_ciend_value == "0,100"
         assert info_cipos_value == "0,1"
         assert info_end_value == "13"
@@ -226,7 +223,8 @@ class TestVcfLineBuilder(unittest.TestCase):
         pos=1
         start_range_lower_bound=1
         start_range_upper_bound=10
-        ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound = self.vcf_builder.calculate_CIPOS_and_CIEND(end, end_range_lower_bound, end_range_upper_bound, pos, start_range_lower_bound, start_range_upper_bound)
+        variant_range_coordinates= VariantRange(pos,start_range_lower_bound, start_range_upper_bound, end, end_range_lower_bound, end_range_upper_bound)
+        ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound = self.vcf_builder.calculate_CIPOS_and_CIEND(variant_range_coordinates)
         assert (ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound) == (-11, 0, 0, 9)
         # unknown imprecise variant
         end=122
@@ -235,7 +233,8 @@ class TestVcfLineBuilder(unittest.TestCase):
         pos=1
         start_range_lower_bound="."
         start_range_upper_bound=10
-        ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound = self.vcf_builder.calculate_CIPOS_and_CIEND(end, end_range_lower_bound, end_range_upper_bound, pos, start_range_lower_bound, start_range_upper_bound)
+        variant_range_coordinates= VariantRange(pos,start_range_lower_bound, start_range_upper_bound, end, end_range_lower_bound, end_range_upper_bound)
+        ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound = self.vcf_builder.calculate_CIPOS_and_CIEND(variant_range_coordinates)
         assert (ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound) == (0, ".", ".", 9)
         # precise variant
         end=122
@@ -244,7 +243,8 @@ class TestVcfLineBuilder(unittest.TestCase):
         pos= 1
         start_range_lower_bound = None
         start_range_upper_bound = None
-        ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound = self.vcf_builder.calculate_CIPOS_and_CIEND(end, end_range_lower_bound, end_range_upper_bound, pos, start_range_lower_bound, start_range_upper_bound)
+        variant_range_coordinates= VariantRange(pos,start_range_lower_bound, start_range_upper_bound, end, end_range_lower_bound, end_range_upper_bound)
+        ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound = self.vcf_builder.calculate_CIPOS_and_CIEND(variant_range_coordinates)
         assert (ciend_lower_bound, ciend_upper_bound, cipos_lower_bound, cipos_upper_bound) == (None, None, None, None)
     def test_get_alt(self):
             'chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."'
