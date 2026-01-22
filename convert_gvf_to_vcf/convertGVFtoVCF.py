@@ -463,7 +463,7 @@ def main():
         # Part 2 of VCF file: Write the VCF header line.
         # Determine if the header is the 8 mandatory fields or 8 mandatory fields + FORMAT + sample names.
         missing_flags = collect_missing_format_flags(list_of_vcf_objects) # True if format keys are missing, False if present
-        if any(missing_flags):
+        if all(missing_flags):
             is_missing_format_value = True
             logger.info("No Format Keys detected. Printing mandatory VCF headers.")
         else:
