@@ -50,8 +50,8 @@ class VcfLineBuilder:
     """
     This class is responsible for creating VcfLine objects that contain VCF datalines.
     """
-    def __init__(self, field_lines_dictionary, all_possible_lines_dictionary, reference_lookup, ordered_list_of_samples):
-        self.field_lines_dictionary = field_lines_dictionary
+    def __init__(self, all_possible_lines_dictionary, reference_lookup, ordered_list_of_samples):
+        self.field_lines_dictionary = {"ALT": [],  "INFO": [], "FILTER": [], "FORMAT": []}
         self.all_possible_lines_dictionary = all_possible_lines_dictionary
         self.reference_lookup = reference_lookup
         self.ordered_list_of_samples = ordered_list_of_samples
@@ -258,9 +258,9 @@ class VcfLineBuilder:
             # end, end_range_lower_bound, end_range_upper_bound, pos, start_range_lower_bound, start_range_upper_bound)
 
         # form the CIPOS value
-        info_cipos_value =  f"{str(cipos_lower_bound)},{str(cipos_upper_bound)}" if all(cipos_bound is not None for cipos_bound in (cipos_lower_bound, cipos_upper_bound)) else None
+        info_cipos_value = f"{str(cipos_lower_bound)},{str(cipos_upper_bound)}" if all(cipos_bound is not None for cipos_bound in (cipos_lower_bound, cipos_upper_bound)) else None
         # form the CIEND value
-        info_ciend_value = f"{str(ciend_lower_bound)},{str(ciend_upper_bound)}" if all(ciend_bound is not None for ciend_bound in (cipos_lower_bound, cipos_upper_bound)) else None
+        info_ciend_value = f"{str(ciend_lower_bound)},{str(ciend_upper_bound)}" if all(ciend_bound is not None for ciend_bound in (ciend_lower_bound, ciend_upper_bound)) else None
 
         # Determine the END value based on the symbolic allele
         if symbolic_allele == "<INS>":
@@ -638,8 +638,8 @@ class VcfLine:
         """
         # Merging ID, ALT and FILTER first
         merged_id = self.merge_and_add(self.id, other_vcf_line.id, ";")
-        sorted_merged_id_set = sorted(set(map(int, merged_id.split(";"))))
-        sorted_merged_id = ";".join(map(str, sorted_merged_id_set))
+        sorted_merged_id_set = sorted(set(map(str, merged_id.split(";"))))
+        sorted_merged_id = ";".join(sorted_merged_id_set)
         merged_alt = self.merge_and_add(self.alt, other_vcf_line.alt, ",")
         merged_filter = self.merge_and_add(self.filter, other_vcf_line.filter, ";")
 

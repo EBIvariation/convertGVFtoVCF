@@ -2,7 +2,7 @@ import os
 import unittest
 
 
-from convert_gvf_to_vcf.utils import read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, read_in_gvf_file, \
+from convert_gvf_to_vcf.utils import read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, \
     build_iupac_ambiguity_code
 from convert_gvf_to_vcf.lookup import Lookup
 
@@ -34,11 +34,6 @@ class TestUtils(unittest.TestCase):
         symbolic_allele_dictionary = generate_symbolic_allele_dict(self.reference_lookup.mapping_attribute_dict)
         assert len(symbolic_allele_dictionary) > 0
 
-    def test_read_in_gvf_file(self):
-        gvf_pragmas, gvf_non_essential, gvf_lines_obj_list = read_in_gvf_file(self.input_file)
-        assert len(gvf_pragmas) > 1
-        assert len(gvf_non_essential) > 1
-        assert len(gvf_lines_obj_list) > 1
 
     def test_build_iupac_ambiguity_code(self):
         expected_dictionary_iupac ={

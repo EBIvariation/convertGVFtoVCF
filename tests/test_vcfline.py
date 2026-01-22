@@ -53,7 +53,7 @@ class TestVcfLineBuilder(unittest.TestCase):
             "FORMAT": all_possible_format_lines,
         }
         ordered_list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
-        self.vcf_builder = VcfLineBuilder(self.standard_lines_dictionary, self.all_possible_lines_dictionary,
+        self.vcf_builder = VcfLineBuilder(self.all_possible_lines_dictionary,
                                           self.reference_lookup, ordered_list_of_samples)
 
     def test_build_vcf_line(self):
