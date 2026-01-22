@@ -3,7 +3,7 @@ import unittest
 
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
-from convert_gvf_to_vcf.vcfline import VcfLine, VcfLineBuilder, VariantRange
+from convert_gvf_to_vcf.vcfline import VcfLine, VcfLineBuilder, VariantRange, extract_reference_allele
 from convert_gvf_to_vcf.lookup import Lookup
 
 class TestVcfLineBuilder(unittest.TestCase):
@@ -56,6 +56,15 @@ class TestVcfLineBuilder(unittest.TestCase):
         self.vcf_builder = VcfLineBuilder(self.all_possible_lines_dictionary,
                                           self.reference_lookup, ordered_list_of_samples)
 
+    def test_extract_reference_allele(self):
+        'ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTRCGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT'
+        '         |         |         |         |         |         |         |         |         |         |         |         |         |         |'
+        '        10        20        30        40        50        60        70        80        90       100       110       120       130       140'
+        assert extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chromosome_name='chromosome1', position=1, end=1) == 'A'
+        assert extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chromosome_name='chromosome1', position=1, end=2) == 'AC'
+        assert extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chromosome_name='chromosome1', position=10, end=12) == 'CGT'
+
+
     def test_build_vcf_line(self):
         # Set up GVF line object
         gvf_attributes = ('ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=.')
@@ -79,9 +88,11 @@ class TestVcfLineBuilder(unittest.TestCase):
         assert alt  == '.'
 
     def test_get_ref(self):
-        reference_allele = self.vcf_builder.get_ref(vcf_value_from_gvf_attribute={}, chrom='chromosome1', pos=1, end=2)
-        assert len(reference_allele) != 0
+        reference_allele = self.vcf_builder.get_ref(vcf_value_from_gvf_attribute={}, chrom='chromosome1', pos=1, end=1)
         assert reference_allele == 'A'
+
+        reference_allele = self.vcf_builder.get_ref(vcf_value_from_gvf_attribute={}, chrom='chromosome1', pos=1, end=3)
+        assert reference_allele == 'ACG'
 
     def test_create_coordinate_range(self):
         # with range

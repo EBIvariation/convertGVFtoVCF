@@ -2,7 +2,6 @@
 The purpose of this file is to populate for each field of a VCF line (and perform any modifications/calculations to achieve this)
 """
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
-from Bio import SeqIO
 from convert_gvf_to_vcf.assistingconverter import convert_gvf_attributes_to_vcf_values
 from dataclasses import dataclass
 from typing import Optional,Union
@@ -13,17 +12,13 @@ def extract_reference_allele(seqIo_fasta, chromosome_name, position, end):
     """ Extracts the reference allele from the assembly.
     :param fasta_file: FASTA file of the assembly
     :param chromosome_name: name of the sequence
-    :param position: position
-    :param end: end position
-    :return: reference_allele: base found at this chromosome_name at this position within this fasta_file
+    :param position: position in 1 based coordinates
+    :param end: end position included
+    :return: reference_allele: bases found at this chromosome_name between position and end in this fasta_file
     """
-
     zero_indexed_position = position - 1  # minus one because zero indexed
-    zero_indexed_end = end - 1
-    reference_allele = ""
-    for position in range(zero_indexed_position, zero_indexed_end):
-        reference_allele = reference_allele + seqIo_fasta[chromosome_name].seq[position]
-    return reference_allele
+    reference_allele = seqIo_fasta[chromosome_name].seq[zero_indexed_position:end]
+    return str(reference_allele)
 
 @dataclass
 class VariantRange:
@@ -114,11 +109,10 @@ class VcfLineBuilder:
         """
         if placed_before:
             pos = pos - 1
-            padded_base = extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chrom, pos, pos + 1)
+            padded_base = extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chrom, pos, pos)
             ref = padded_base + ref
         else:
-            end = end + 1
-            padded_base = extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chrom, end-1, end)
+            padded_base = extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chrom, end, end)
             ref = ref + padded_base
         return padded_base, pos, ref, alt
 
