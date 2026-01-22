@@ -9,7 +9,7 @@ from typing import Optional,Union
 
 logger = log_cfg.get_logger(__name__)
 
-def extract_reference_allele(fasta_file, chromosome_name, position, end):
+def extract_reference_allele(seqIo_fasta, chromosome_name, position, end):
     """ Extracts the reference allele from the assembly.
     :param fasta_file: FASTA file of the assembly
     :param chromosome_name: name of the sequence
@@ -17,14 +17,12 @@ def extract_reference_allele(fasta_file, chromosome_name, position, end):
     :param end: end position
     :return: reference_allele: base found at this chromosome_name at this position within this fasta_file
     """
-    # using .index for memory efficiency:  https://biopython.org/docs/1.76/api/Bio.SeqIO.html#input-multiple-records
-    records_dictionary = SeqIO.index(fasta_file, "fasta")
+
     zero_indexed_position = position - 1  # minus one because zero indexed
     zero_indexed_end = end - 1
     reference_allele = ""
     for position in range(zero_indexed_position, zero_indexed_end):
-        reference_allele = reference_allele + records_dictionary[chromosome_name].seq[position]
-    records_dictionary.close()
+        reference_allele = reference_allele + seqIo_fasta[chromosome_name].seq[position]
     return reference_allele
 
 @dataclass
@@ -116,11 +114,11 @@ class VcfLineBuilder:
         """
         if placed_before:
             pos = pos - 1
-            padded_base = extract_reference_allele(self.reference_lookup.assembly_file, chrom, pos, pos + 1)
+            padded_base = extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chrom, pos, pos + 1)
             ref = padded_base + ref
         else:
             end = end + 1
-            padded_base = extract_reference_allele(self.reference_lookup.assembly_file, chrom, end-1, end)
+            padded_base = extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chrom, end-1, end)
             ref = ref + padded_base
         return padded_base, pos, ref, alt
 
@@ -144,7 +142,7 @@ class VcfLineBuilder:
         :param ref_allele_to_be_checked: reference allele to check
         :return: checked_reference_allele: reference allele that meets the requirements of the VCF specification"""
         if isinstance(ref_allele_to_be_checked, str):
-            if not all(bases in ref_allele_to_be_checked for bases in ["A", "C", "G", "T", "N"]):
+            if not all(base in "ACGTN" for base in ref_allele_to_be_checked):
                 checked_reference_allele = self.convert_iupac_ambiguity_code(ref_allele_to_be_checked)
             else:
                 checked_reference_allele = ref_allele_to_be_checked
@@ -158,18 +156,11 @@ class VcfLineBuilder:
         """ Gets the reference allele from attributes column or if not found, returns "."
         :return: reference allele
         """
-        assembly_file = self.reference_lookup.assembly_file
         if "Reference_seq" in vcf_value_from_gvf_attribute.keys():
             reference_allele = vcf_value_from_gvf_attribute["Reference_seq"]
         else:
-            if assembly_file:
-                reference_allele = extract_reference_allele(assembly_file, chrom, pos, end)
-            else:
-                logger.warning("No reference provided. Placeholder inserted for Reference allele.")
-                reference_allele = "."
-        if reference_allele != ".":
-            reference_allele = self.check_ref(reference_allele)
-        return reference_allele
+            reference_allele = extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chrom, pos, end)
+        return self.check_ref(reference_allele)
 
     def create_coordinate_range(self, vcf_value_from_gvf_attribute):
         """ Create the start and end range using the dictionary of GVF attributes and the pos and end
@@ -270,6 +261,7 @@ class VcfLineBuilder:
         elif symbolic_allele == "<*>":
             info_end_value = str(variant_range_coordinates.pos + len(ref))
         else:
+            info_end_value = None
             logger.warning(f"Cannot identify symbolic allele: {symbolic_allele}")
         return info_ciend_value, info_cipos_value, info_end_value, info_imprecise_value, is_imprecise
 
