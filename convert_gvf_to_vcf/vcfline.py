@@ -1,13 +1,13 @@
 """
 The purpose of this file is to populate for each field of a VCF line (and perform any modifications/calculations to achieve this)
 """
-
+from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 from Bio import SeqIO
 from convert_gvf_to_vcf.assistingconverter import convert_gvf_attributes_to_vcf_values
-from convert_gvf_to_vcf.logger import logger
 from dataclasses import dataclass
 from typing import Optional,Union
 
+logger = log_cfg.get_logger(__name__)
 
 def extract_reference_allele(fasta_file, chromosome_name, position, end):
     """ Extracts the reference allele from the assembly.

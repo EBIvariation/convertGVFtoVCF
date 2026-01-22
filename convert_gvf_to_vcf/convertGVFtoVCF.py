@@ -1,10 +1,11 @@
 import argparse
 import os
-
-from convert_gvf_to_vcf.logger import set_up_logging, logger
+from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.utils import read_in_gvf_header, read_in_gvf_data
 from convert_gvf_to_vcf.vcfline import VcfLineBuilder
+
+logger = log_cfg.get_logger(__name__)
 
 # setting up paths to useful directories
 convert_gvf_to_vcf_folder = os.path.dirname(__file__)
@@ -253,35 +254,19 @@ def write_header(vcf_output, pragmas_for_vcf, header_lines_per_type, is_missing_
         vcf_header_output.write(f"{header_fields}\n")
     return vcf_header_file
 
-
-def main():
-    # Parse command line arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("gvf_input", help="GVF input file.")
-    parser.add_argument("vcf_output", help="VCF output file.")
-    parser.add_argument("-a", "--assembly", help="FASTA assembly file")
-    parser.add_argument("--log", help="Path to log file")
-    args = parser.parse_args()
-
-    # Set up logging functionality
-    if args.log:
-        log_path = set_up_logging(args.log)
-    else:
-        log_path = set_up_logging()
-
+def convert(gvf_input, vcf_output, assembly):
     # Log the inputs and outputs.
     logger.info("Running the GVF to VCF converter")
-    logger.info(f"The provided input file is: {args.gvf_input}")
-    logger.info(f"The provided output file is: {args.vcf_output}")
-    if args.assembly:
-        logger.info(f"The provided assembly file is: {args.assembly}")
-    assembly_file = os.path.abspath(args.assembly)
+    logger.info(f"The provided input file is: {gvf_input}")
+    logger.info(f"The provided output file is: {vcf_output}")
+    if assembly:
+        logger.info(f"The provided assembly file is: {assembly}")
+    assembly_file = os.path.abspath(assembly)
     assert os.path.isfile(assembly_file), "Assembly file does not exist"
-    logger.info(f"The log file is {log_path}")
 
     # Read input file and separate out its components
-    logger.info(f"Reading in the following GVF input: {args.gvf_input}")
-    gvf_pragmas, gvf_pragma_comments = read_in_gvf_header(args.gvf_input)
+    logger.info(f"Reading in the following GVF header from {gvf_input}")
+    gvf_pragmas, gvf_pragma_comments = read_in_gvf_header(gvf_input)
     # Creating lookup object to store important dictionaries and log what has been stored.
     reference_lookup = Lookup(assembly_file)
     logger.info("Creating the reference lookup object.")
@@ -299,7 +284,6 @@ def main():
         samples
     ) = convert_gvf_pragmas_for_vcf_header(gvf_pragmas, gvf_pragma_comments, reference_lookup)
 
-
     # TODO: place the all_header_lines_per_type_dict into the reference_lookup.
 
     # Create data structure to store all possible outcomes for header lines (for fields ALT, INFO, FILTER, FORMAT)
@@ -311,31 +295,32 @@ def main():
     is_missing_format_value = True
     # Convert each feature line in the GVF file to a VCF object (stores all the data for a line in the VCF file).
     # NOTE: Main Logic lives here.
-    vcf_data_file = args.vcf_output + '_data_lines'
-    with open(vcf_data_file, "w") as vcf_output:
+    vcf_data_file = vcf_output + '_data_lines'
+    with open(vcf_data_file, "w") as open_data_lines:
         logger.info("Generating the VCF datalines")
         previous_vcf_line = None
-        for gvf_lines_obj in  read_in_gvf_data(args.gvf_input):
+        for gvf_lines_obj in read_in_gvf_data(gvf_input):
             current_vcf_line = vcf_builder.build_vcf_line(gvf_lines_obj)
             # is_missing_format_value will only be true if all the format field are missing.
             is_missing_format_value = is_missing_format_value and current_vcf_line.format_keys == ['.']
             # Each GVF feature has been converted to a VCF object so begin comparing and merging the VCF objects.
             if previous_vcf_line:
                 if current_vcf_line == previous_vcf_line:
-                    current_vcf_line.merge(previous_vcf_line)
+                    current_vcf_line.merge(previous_vcf_line, list_of_sample_names=samples)
                 else:
-                    vcf_output.write(str(previous_vcf_line) + "\n")
-                previous_vcf_line = current_vcf_line
+                    open_data_lines.write(str(previous_vcf_line) + "\n")
+            previous_vcf_line = current_vcf_line
         if previous_vcf_line:
-            vcf_output.write(str(previous_vcf_line) + "\n")
+            open_data_lines.write(str(previous_vcf_line) + "\n")
         else:
             logger.warning("No feature lines were found for this GVF file.")
 
     header_lines_per_type = vcf_builder.build_vcf_header()
-    vcf_header_file = write_header(args.vcf_output, header_lines_per_type, header_lines_per_type, is_missing_format_value, samples)
+    vcf_header_file = write_header(vcf_output, pragmas_for_vcf, header_lines_per_type,
+                                   is_missing_format_value, samples)
 
-    logger.info(f"Combining the header and data lines to the following VCF output: {args.vcf_output}")
-    with open(args.vcf_output, "w") as vcf_output:
+    logger.info(f"Combining the header and data lines to the following VCF output: {vcf_output}")
+    with open(vcf_output, "w") as vcf_output:
         with open(vcf_header_file, "r") as vcf_header_fh:
             for line in vcf_header_fh:
                 vcf_output.write(line)
@@ -343,7 +328,31 @@ def main():
             for line in vcf_data_fh:
                 vcf_output.write(line)
     vcf_output.close()
+    logger.info("Remove the temporary files")
+    if os.path.exists(vcf_header_file):
+        os.remove(vcf_header_file)
+    if os.path.exists(vcf_data_file):
+        os.remove(vcf_data_file)
     logger.info("GVF to VCF conversion complete")
+
+def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("gvf_input", help="GVF input file.")
+    parser.add_argument("vcf_output", help="VCF output file.")
+    parser.add_argument("-a", "--assembly", help="FASTA assembly file")
+    parser.add_argument("--log", help="Path to log file")
+    args = parser.parse_args()
+
+    # Set up logging functionality
+    if args.log:
+        log_cfg.add_file_handler(args.log)
+        logger.info(f"The log file is {args.log}")
+    else:
+        log_cfg.add_stdout_handler()
+    convert(args.gvf_input, args.vcf_output, args.assembly)
+
+
 
 if __name__ == "__main__":
     main()

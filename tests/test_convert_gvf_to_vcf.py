@@ -4,9 +4,11 @@ import unittest
 
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_line, \
-     convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line, parse_pragma, get_pragma_name_and_value, get_pragma_tokens, \
-     get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
-    convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines
+    convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line, parse_pragma, get_pragma_name_and_value, \
+    get_pragma_tokens, \
+    get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
+    convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert
+
 
 class TestConvertGVFtoVCF(unittest.TestCase):
     def setUp(self):
@@ -149,7 +151,19 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.assertEqual(unexpected_pragma_tokens, pragma_tokens)
 
-
+    def test_convert(self):
+        convert(self.input_file , self.output_file, self.assembly)
+        header_lines = []
+        data_lines = []
+        with open(self.output_file) as open_file:
+            for line in open_file:
+                if line.startswith('#'):
+                    header_lines.append(line.strip())
+                else:
+                    data_lines.append(line.strip())
+        assert header_lines[0] == '##fileformat=VCFv4.4'
+        assert header_lines[-1] == '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tJenMale6\tWilds2-3\tZon9\tJenMale7'
+        assert data_lines[0].split('\t')[4] == '<DEL>'
 
 if __name__ == '__main__':
     unittest.main()
