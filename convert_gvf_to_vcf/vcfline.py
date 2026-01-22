@@ -347,7 +347,7 @@ class VcfLineBuilder:
 
         # Set SVCLAIM depending on the symbolic allele
         info_svclaim_key = "SVCLAIM"
-         if "DEL" in symbolic_allele or "DUP" in symbolic_allele:                                                                                                                                                 
+        if "DEL" in symbolic_allele or "DUP" in symbolic_allele:
             # TODO: IMPORTANT: this should be set to the missing place holder '.' but await clarification from the spec
             info_svclaim_value = "D"
             info_dict.update({info_svclaim_key: info_svclaim_value})
