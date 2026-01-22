@@ -68,30 +68,6 @@ def read_in_gvf_data(gvf_input):
                 f_list = line.rstrip().split("\t")
                 yield GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
 
-# def read_in_gvf_file(gvf_input):
-#     """ Reads in the user provided GVF file.
-#     :param gvf_input: arguments.gvf_input : The input GVF file
-#     :return:
-#         - gvf_pragmas: list of pragma lines (start with ## at the top of GVF file)
-#         - gvf_non_essential: list of non essential pragma (start with # near the top of GVF file)
-#         - gvf_lines_obj_list: list of objects where each object represents a GVF feature line
-#     """
-#     gvf_pragmas = []  # list of pragma lines starting with: ##
-#     gvf_non_essential = []  # list of non-essential lines starting with: #
-#     gvf_lines_obj_list = []  # list of objects when reading in gvf files, one object represents a gvf line
-#
-#     with open(gvf_input) as gvf_file:
-#         for line in gvf_file:
-#             if line.startswith("##"):
-#                 gvf_pragmas.append(line.rstrip())
-#             elif line.startswith("#"):
-#                 gvf_non_essential.append(line.rstrip())
-#             else:
-#                 f_list = line.rstrip().split("\t")
-#                 line_object = GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
-#                 gvf_lines_obj_list.append(line_object)
-#     return gvf_pragmas, gvf_non_essential, gvf_lines_obj_list
-
 def generate_symbolic_allele_dict(mapping_dictionary):
     """Reads in mapping dictionary and returns a symbolic allele dictionary.
     :param mapping_dictionary: mapping dictionary
