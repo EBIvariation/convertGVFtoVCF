@@ -129,8 +129,6 @@ def convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
                 list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(vcf_header_key, pragma_value))
         # populating sample headers
         sample_name = get_sample_name_from_pragma(pragma_name, pragma_value)
-        if sample_name is not None:
-            sample_names_from_pragma_comments.append(get_sample_name_from_pragma(pragma_name, pragma_value))
     return list_of_converted_pragma_comments, sample_names_from_pragma_comments
 
 
