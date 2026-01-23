@@ -8,6 +8,7 @@ from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_
     get_pragma_tokens, \
     get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
     convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert
+from convert_gvf_to_vcf.utils import read_in_gvf_header
 
 
 class TestConvertGVFtoVCF(unittest.TestCase):
