@@ -266,7 +266,6 @@ def convert(gvf_input, vcf_output, assembly):
         logger.info(f"The provided assembly file is: {assembly}")
     assembly_file = os.path.abspath(assembly)
     assert os.path.isfile(assembly_file), "Assembly file does not exist"
-
     # Read input file and separate out its components
     logger.info(f"Reading in the following GVF header from {gvf_input}")
     gvf_pragmas, gvf_pragma_comments = read_in_gvf_header(gvf_input)
@@ -281,14 +280,12 @@ def convert(gvf_input, vcf_output, assembly):
     # Preparation work:
     # Store the VCF metainformation and ensure preservation of important GVF data.
     # This information will be useful when creating the VCF header.
-    # TODO: refactor function generate_vcf_metainfo
     (
         pragmas_for_vcf,
         samples
     ) = convert_gvf_pragmas_for_vcf_header(gvf_pragmas, gvf_pragma_comments, reference_lookup)
     report = FileStatistics(gvf_file_path=gvf_input, gvf_pragmas=gvf_pragmas, samples=samples)
     print(report.__str__())
-    # TODO: place the all_header_lines_per_type_dict into the reference_lookup.
 
     # Create data structure to store all possible outcomes for header lines (for fields ALT, INFO, FILTER, FORMAT)
     all_header_lines_per_type_dict = {
@@ -299,21 +296,17 @@ def convert(gvf_input, vcf_output, assembly):
     is_missing_format_value = True
     # Convert each feature line in the GVF file to a VCF object (stores all the data for a line in the VCF file).
     # NOTE: Main Logic lives here.
-    # gvf_chromosome_counter = Counter()
-    # gvf_sv_so_term_counter = Counter()
     vcf_data_file = vcf_output + '_data_lines'
     with open(vcf_data_file, "w") as open_data_lines:
         logger.info("Generating the VCF datalines")
         previous_vcf_line = None
-        #gvf_feature_line_count = 0
-        # vcf_number_of_merges = 0
         for gvf_lines_obj in read_in_gvf_data(gvf_input):
             report.gvf_feature_line_count += 1
-            #gvf_chromosome_counter.update([gvf_lines_obj.seqid])
             report.gvf_chromosome_count.update([gvf_lines_obj.seqid])
-            # gvf_sv_so_term_counter.update([gvf_lines_obj.feature_type])
             report.gvf_sv_so_term_count.update([gvf_lines_obj.feature_type])
             current_vcf_line = vcf_builder.build_vcf_line(gvf_lines_obj)
+            print(current_vcf_line)
+            # print(current_vcf_line.vcf_values_for_format)
             # is_missing_format_value will only be true if all the format field are missing.
             is_missing_format_value = is_missing_format_value and current_vcf_line.format_keys == ['.']
             # Each GVF feature has been converted to a VCF object so begin comparing and merging the VCF objects.
@@ -323,24 +316,32 @@ def convert(gvf_input, vcf_output, assembly):
                     report.vcf_number_of_merges += 1
                 else:
                     open_data_lines.write(str(previous_vcf_line) + "\n")
+                    report.vcf_data_line_count += 1
+                    report.vcf_chromosome_count[previous_vcf_line.chrom] += 1
+                    report.vcf_alt_alleles_count[previous_vcf_line.alt] += 1
+                    # using update because of iterable
+                    report.vcf_info_counter.update(previous_vcf_line.info_dict.keys())
+                    report.vcf_sample_number_count.update(previous_vcf_line.order_sample_names)
+                    report.vcf_format_counter.update(previous_vcf_line.vcf_values_for_format)
             previous_vcf_line = current_vcf_line
+        # Process the final previous_vcf_line
         if previous_vcf_line:
             open_data_lines.write(str(previous_vcf_line) + "\n")
+            report.vcf_data_line_count += 1
+            report.vcf_chromosome_count[previous_vcf_line.chrom] += 1
+            report.vcf_alt_alleles_count[previous_vcf_line.alt] += 1
+            report.vcf_info_counter.update(previous_vcf_line.info_dict.keys()) # using update because dict_keys is iterable
+            report.vcf_sample_number_count.update(previous_vcf_line.order_sample_names)
+            report.vcf_format_counter.update(previous_vcf_line.vcf_values_for_format)
         else:
             logger.warning("No feature lines were found for this GVF file.")
 
     header_lines_per_type = vcf_builder.build_vcf_header()
     header_fields = generate_vcf_header_line(is_missing_format=is_missing_format_value, samples=samples)
-    # vcf_header_file = write_header(vcf_output, pragmas_for_vcf, header_lines_per_type,
-                                   # is_missing_format_value, samples)
     vcf_header_file = write_header(vcf_output, pragmas_for_vcf, header_lines_per_type,
                                    header_fields, samples)
 
     logger.info(f"Combining the header and data lines to the following VCF output: {vcf_output}")
-    # vcf_chromosome_counter = Counter()
-    #vcf_alt_counter = Counter()
-    # vcf_info_counter = Counter()
-    # vcf_data_line_count = 0
     with open(vcf_output, "w") as vcf_output:
         with open(vcf_header_file, "r") as vcf_header_fh:
             for line in vcf_header_fh:
@@ -348,15 +349,6 @@ def convert(gvf_input, vcf_output, assembly):
         with open(vcf_data_file, "r") as vcf_data_fh:
             for line in vcf_data_fh:
                 vcf_output.write(line)
-                # vcf_data_line_count += 1
-                report.vcf_data_line_count += 1
-                # vcf_chromosome_counter.update([line.split("\t")[0]])
-                report.vcf_chromosome_count.update([line.split("\t")[0]])
-                report.vcf_alt_alleles_count.update([line.split("\t")[4]])
-                info_keys = [info.split('=')[0] for info in line.split("\t")[7].split(';')]
-                report.vcf_info_counter.update(info_keys)
-
-
     vcf_output.close()
     logger.info("Remove the temporary files")
     if os.path.exists(vcf_header_file):
@@ -365,19 +357,7 @@ def convert(gvf_input, vcf_output, assembly):
         os.remove(vcf_data_file)
     logger.info("GVF to VCF conversion complete")
     print(report.__str__())
-    # conversion_payload = StatisticsPayload(
-    #     samples=samples,
-    #     vcf_header_fields=header_fields,
-    #     gvf_line_count= gvf_feature_line_count,
-    #     vcf_line_count= vcf_data_line_count, # after merging
-    #     vcf_merge_count= vcf_number_of_merges,
-    #     gvf_chromosome_count=dict(gvf_chromosome_counter),
-    #     vcf_chromosome_count=dict(vcf_chromosome_counter), # after merging
-    #     gvf_sv_so_term_count=dict(gvf_sv_so_term_counter),
-    #     vcf_alt_count = dict(vcf_alt_counter),
-    #     vcf_alt_missing = vcf_alt_counter["."],
-    #     vcf_info_count = dict(vcf_info_counter)
-    # )
+
 
 
 def main():

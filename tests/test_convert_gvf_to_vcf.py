@@ -153,7 +153,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             self.assertEqual(unexpected_pragma_tokens, pragma_tokens)
 
     def test_convert(self):
-        # convert_payload = convert(self.input_file , self.output_file, self.assembly)
+        convert(self.input_file , self.output_file, self.assembly)
         # print(convert_payload)
         #####VCF#####
         header_lines = []

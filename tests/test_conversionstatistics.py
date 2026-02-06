@@ -18,17 +18,7 @@ class TestConversionStatistics(unittest.TestCase):
         self.samples = unique_sample_name
         self.gvf_header = unique_pragma
         print(self.gvf_file)
-        # self.payload = StatisticsPayload(samples=['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7'],
-        #                                  vcf_header_fields='#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tJenMale6\tWilds2-3\tZon9\tJenMale7',
-        #                                  gvf_line_count=7, vcf_line_count=5, vcf_merge_count=2,
-        #                                  gvf_chromosome_count={'chromosome1': 7},
-        #                                  vcf_chromosome_count={'chromosome1': 5},
-        #                                  gvf_sv_so_term_count={'copy_number_loss': 3, 'copy_number_gain': 4},
-        #                                  vcf_alt_count={'<DEL>': 3, '<DUP>': 2}, vcf_alt_missing=0,
-        #                                  vcf_info_count = {'ID': 3, 'NAME': 5, 'ALIAS': 5, 'VARCALLSOID': 5, 'PARENT': 5, 'SVCID': 5, 'SAMPLENAME': 5,
-        #                     'REMAP': 5, 'VARSEQ': 5, 'END': 5, 'IMPRECISE': 5, 'SVLEN': 5, 'SVCLAIM': 5, 'CIPOS': 4,
-        #                     'CIEND': 4, 'AC': 2, 'AD': 1, 'DBXREF': 1}
-        #                                  )
+
 
     # def test_get_info_count(self):
     #     statistics_summariser = FileStatistics(self.vcf_file, self.payload)
@@ -150,6 +140,8 @@ class TestConversionStatistics(unittest.TestCase):
          vcf_number_of_merges,
          vcf_alt_alleles_count,
          vcf_info_counter,
+         vcf_format_counter,
+         vcf_sample_number_count,
          end_string,
          _) = statistics_summary.split("\n")
         assert gvf_line == "======GVF======"
@@ -168,6 +160,7 @@ class TestConversionStatistics(unittest.TestCase):
         assert vcf_number_of_merges == "vcf_number_of_merges = 0"
         assert vcf_alt_alleles_count == "vcf_alt_allele_count = Counter()"
         assert vcf_info_counter == "vcf_info_counter = Counter()"
+        print(vcf_sample_number_count)
         assert end_string == "====="
 
 

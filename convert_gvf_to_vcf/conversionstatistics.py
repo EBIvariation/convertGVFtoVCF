@@ -8,21 +8,6 @@ import hashlib
 from typing import Optional, Union
 from collections import Counter
 
-# @dataclass
-# class StatisticsPayload:
-#     """ Data transfer object for statistics input"""
-#     samples: list[str]
-#     vcf_header_fields: Optional[Union[str, None]]
-#     gvf_line_count: Optional[Union[int, None]]
-#     vcf_line_count: Optional[Union[int, None]]
-#     vcf_merge_count: Optional[Union[int, None]]
-#     gvf_chromosome_count: Optional[Union[dict, None]]
-#     vcf_chromosome_count: Optional[Union[dict, None]]
-#     gvf_sv_so_term_count: Optional[Union[dict, None]]
-#     vcf_alt_count: Optional[Union[dict, None]]
-#     vcf_alt_missing: Optional[Union[int, None]]
-#     vcf_info_count: Optional[Union[dict, None]]
-
 class FileStatistics:
     """
     The responsibility of this class is to determine the statistics of a GVF or VCF file.
@@ -41,6 +26,7 @@ class FileStatistics:
         self.gvf_md5 = self.get_file_md5(self.gvf_file_path)
         # biological samples
         self.sample_number = len(samples)
+        self.vcf_sample_number_count = Counter()
         # self.sample_number = self.get_sample_number(payload.samples, payload.vcf_header_fields)
         # self.sample_number_missing = self.get_sample_number_missing(payload.samples, payload.vcf_header_fields)
         # # chromsomes
@@ -63,6 +49,7 @@ class FileStatistics:
         # # TODO: observed GVF attributes (name and count)
         # # TODO: FORMAT tags (name and count)
         self.vcf_info_counter = Counter()
+        self.vcf_format_counter = Counter()
         # self.info_count = self.get_info_count(payload)
         # # TODO: dropped GVF attributes (assistingconverter.py:convert_gvf_attributes_to_vcf_values)
         # #convert > build_vcf_line> convert_gvf_attributes_to_vcf_values
@@ -178,6 +165,8 @@ class FileStatistics:
                           f"vcf_number_of_merges = {self.vcf_number_of_merges}\n"
                           f"vcf_alt_allele_count = {self.vcf_alt_alleles_count}\n"
                           f"vcf_info_counter = {self.vcf_info_counter}\n"
+                          f"vcf_format_counter = {self.vcf_format_counter}\n"
+                          f"vcf_sample_count = {self.vcf_sample_number_count}\n"
                           f"=====\n"
                           )
         return summary_string
