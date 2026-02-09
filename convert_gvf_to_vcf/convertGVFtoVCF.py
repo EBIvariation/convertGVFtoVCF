@@ -305,7 +305,7 @@ def convert(gvf_input, vcf_output, assembly):
             report.gvf_chromosome_count.update([gvf_lines_obj.seqid])
             report.gvf_sv_so_term_count.update([gvf_lines_obj.feature_type])
             current_vcf_line = vcf_builder.build_vcf_line(gvf_lines_obj)
-            print(current_vcf_line)
+            # print(current_vcf_line)
             # print(current_vcf_line.vcf_values_for_format)
             # is_missing_format_value will only be true if all the format field are missing.
             is_missing_format_value = is_missing_format_value and current_vcf_line.format_keys == ['.']
@@ -315,6 +315,8 @@ def convert(gvf_input, vcf_output, assembly):
                     current_vcf_line.merge(previous_vcf_line, list_of_sample_names=samples)
                     report.vcf_number_of_merges += 1
                 else:
+                    assert current_vcf_line > previous_vcf_line, f"current_vcf_line.pos {current_vcf_line.pos} is smaller than previous_vcf_line.pos {previous_vcf_line.pos}. Not sorted.{str(gvf_lines_obj)}"
+
                     open_data_lines.write(str(previous_vcf_line) + "\n")
                     report.vcf_data_line_count += 1
                     report.vcf_chromosome_count[previous_vcf_line.chrom] += 1

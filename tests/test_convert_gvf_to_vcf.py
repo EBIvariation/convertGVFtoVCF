@@ -182,6 +182,16 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # assert convert_payload.gvf_line_count == len(gvf_features)
         # assert convert_payload.vcf_line_count == len(data_lines)
 
+    def test_convert_500(self):
+        input_folder = os.path.join(os.path.dirname(__file__), "input")
+        # Prepare Inputs
+        input_file = os.path.join(input_folder, "drosophila_estd205_lines_500_sorted.gvf")
+        output_folder = os.path.join(os.path.dirname(__file__), "output")
+        output_file = os.path.join(output_folder, "drosophila_estd205_lines_500.vcf")
+        # Prepare References
+        assembly = os.path.join(input_folder, "drosophila_GCA_000001215.2.fa")
+        convert(input_file, output_file, assembly)
+
 
 if __name__ == '__main__':
     unittest.main()

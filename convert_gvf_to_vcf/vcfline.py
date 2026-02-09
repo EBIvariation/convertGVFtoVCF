@@ -479,6 +479,11 @@ class VcfLine:
             return (self.chrom == other_vcf_line.chrom) and (self.pos == other_vcf_line.pos) and (self.ref == other_vcf_line.ref)
         return False
 
+    def __gt__(self, other_vcf_line):
+        if isinstance(other_vcf_line, VcfLine):
+            return (self.chrom != other_vcf_line.chrom) or (self.pos > other_vcf_line.pos)
+        return False
+
     @property
     def format_keys(self):
         set_of_format_key = set([format_key
