@@ -30,10 +30,6 @@ class TestConversionStatistics(unittest.TestCase):
         assert gvf_version == "##gvf-version=1.06"
 
     def test___str__(self):
-
-        gvf_pragma = ['##gff-version 3', '##gvf-version 1.06',
-                      '##species http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955',
-                      '##file-date 2015-07-15', '##genome-build NCBI GRCz10']
         statistics_summariser = FileStatistics(self.gvf_file, gvf_pragmas=self.gvf_header, samples=self.samples)
         statistics_summary = statistics_summariser.__str__()
 
