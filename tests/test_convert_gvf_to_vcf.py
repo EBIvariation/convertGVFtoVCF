@@ -177,12 +177,15 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_convert_500(self):
         input_folder = os.path.join(os.path.dirname(__file__), "input")
+        output_folder = os.path.join(os.path.dirname(__file__), "output")
         # Prepare Inputs
         input_file = os.path.join(input_folder, "drosophila_estd205_lines_500_sorted.gvf")
-        output_folder = os.path.join(os.path.dirname(__file__), "output")
         output_file = os.path.join(output_folder, "drosophila_estd205_lines_500.vcf")
         # Prepare References
         assembly = os.path.join(input_folder, "drosophila_GCA_000001215.2_chr4.fa")
+        assert os.path.exists(input_file) == True
+        assert os.path.exists(output_file) == True
+        assert os.path.exists(assembly) == True
         convert(input_file, output_file, assembly)
 
 if __name__ == '__main__':
