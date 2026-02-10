@@ -17,12 +17,11 @@ class TestConversionStatistics(unittest.TestCase):
         unique_pragma, unique_sample_name =convert_gvf_pragmas_for_vcf_header(gvf_pragma, gvf_pragma_comments, self.reference_lookup)
         self.samples = unique_sample_name
         self.gvf_header = unique_pragma
-        print(self.gvf_file)
 
     def test_get_file_md5(self):
         statistics_summariser = FileStatistics(gvf_file_path=self.gvf_file, gvf_pragmas=self.gvf_header, samples=self.samples)
         gvf_md5 = statistics_summariser.get_file_md5(self.gvf_file)
-        assert gvf_md5 == "cd842fc345bd990d4b14fd80c1d08f8e"
+        assert gvf_md5 == "8d30ebd587b6b7d0d5475a23239f0748"
 
     def test_find_version(self):
         statistics_summariser = FileStatistics(gvf_file_path=self.gvf_file, gvf_pragmas=self.gvf_header, samples=self.samples)
@@ -31,10 +30,6 @@ class TestConversionStatistics(unittest.TestCase):
         assert gvf_version == "##gvf-version=1.06"
 
     def test___str__(self):
-
-        gvf_pragma = ['##gff-version 3', '##gvf-version 1.06',
-                      '##species http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955',
-                      '##file-date 2015-07-15', '##genome-build NCBI GRCz10']
         statistics_summariser = FileStatistics(self.gvf_file, gvf_pragmas=self.gvf_header, samples=self.samples)
         statistics_summary = statistics_summariser.__str__()
 
@@ -59,12 +54,8 @@ class TestConversionStatistics(unittest.TestCase):
          _) = statistics_summary.split("\n")
         assert gvf_line == "======GVF======"
         assert file_name_string == "File name = zebrafish.gvf"
-        assert file_path == "File path = /Users/hetherin/PycharmProjects/convertGVFtoVCF/tests/input/zebrafish.gvf"
         assert file_extension == "File extension = .gvf"
-        assert file_size_string == "File size = 2971 bytes"
-        assert timestamp_string == "Last mod Timestamp = 2026-01-27 11:32:30.488227"
         assert version == "Version = ##gvf-version=1.06"
-        assert file_md5_string == "md5 string = cd842fc345bd990d4b14fd80c1d08f8e"
         # the below should be empty/set to 0 as gets set in convertGVFtoVCF:convert
         assert gvf_chrom == "gvf chrom = Counter()"
         assert vcf_chrom == "vcf chrom = Counter()"

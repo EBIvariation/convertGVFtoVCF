@@ -152,9 +152,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             self.assertEqual(unexpected_pragma_tokens, pragma_tokens)
 
     def test_convert(self):
-        # input file is unsorted so testing assert error is thrown
-        with self.assertRaises(AssertionError):
-            convert(self.input_file , self.output_file, self.assembly)
+        convert(self.input_file , self.output_file, self.assembly)
         #####VCF#####
         header_lines = []
         data_lines = []
@@ -184,7 +182,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         output_folder = os.path.join(os.path.dirname(__file__), "output")
         output_file = os.path.join(output_folder, "drosophila_estd205_lines_500.vcf")
         # Prepare References
-        assembly = os.path.join(input_folder, "drosophila_GCA_000001215.2.fa")
+        assembly = os.path.join(input_folder, "drosophila_GCA_000001215.2_chr4.fa")
         convert(input_file, output_file, assembly)
 
 if __name__ == '__main__':

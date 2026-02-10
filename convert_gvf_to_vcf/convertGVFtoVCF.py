@@ -321,6 +321,7 @@ def convert(gvf_input, vcf_output, assembly):
                     current_vcf_line.merge(previous_vcf_line, list_of_sample_names=samples)
                     report.vcf_number_of_merges += 1
                 else:
+                    # TODO: address this in next bug fix
                     assert current_vcf_line > previous_vcf_line, f"File not sorted.\ncurrent_vcf_line.pos {current_vcf_line.pos} is smaller than previous_vcf_line.pos {previous_vcf_line.pos}. See the following line:\n{str(gvf_entry)}"
                     record_vcf_entry(open_data_lines, previous_vcf_line, report)
             previous_vcf_line = current_vcf_line
@@ -347,7 +348,6 @@ def convert(gvf_input, vcf_output, assembly):
     report.print_report(stats_summary_file)
 
     logger.info("GVF to VCF conversion complete")
-    print(report.__str__())
 
 
 #helper functions for convert
