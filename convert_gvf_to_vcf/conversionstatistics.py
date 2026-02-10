@@ -2,10 +2,8 @@
 The purpose of this file is to calculate the (conversion) statistics of the GVF and VCF file.
 """
 import os
-from dataclasses import dataclass
 from datetime import datetime
 import hashlib
-from typing import Optional, Union
 from collections import Counter
 
 class FileStatistics:
@@ -25,101 +23,28 @@ class FileStatistics:
         self.gvf_version = self.find_version("##gvf-version", gvf_pragmas)
         self.gvf_md5 = self.get_file_md5(self.gvf_file_path)
         # biological samples
-        self.sample_number = len(samples)
+        self.sample_number = len(samples) #
         self.vcf_sample_number_count = Counter()
-        # self.sample_number = self.get_sample_number(payload.samples, payload.vcf_header_fields)
-        # self.sample_number_missing = self.get_sample_number_missing(payload.samples, payload.vcf_header_fields)
-        # # chromsomes
+        #TODO: add missing samples in VCF - awaiting bug fix
+        #TODO: number of times a sample is missing in the merged vcf line, count per sample
+
+        # chromsomes
         self.gvf_chromosome_count = Counter()
         self.vcf_chromosome_count = Counter()
         # # variants
         self.gvf_feature_line_count = 0
+        self.gvf_sv_count = Counter()
         self.vcf_data_line_count = 0
-        # self.variant_lines = self.get_variant_lines(payload)
         self.vcf_number_of_merges = 0
         self.vcf_alt_alleles_count = Counter()
-        # # TODO: number of additional ALT alleles
-        # self.vcf_alt_missing = self.get_alt_alleles_missing(payload)
-        # # TODO: number of SV types
-        # self.sv_types = self.get_sv_types(payload)
-        self.gvf_sv_so_term_count = Counter()
-        # # TODO: number of precise variants
-        # # TODO: number of imprecise variants
+        self.vcf_alt_missing = self.vcf_alt_alleles_count["."]
         # # attribute mapping
-        # # TODO: observed GVF attributes (name and count)
-        # # TODO: FORMAT tags (name and count)
         self.vcf_info_counter = Counter()
+        self.vcf_imprecise_variants = self.vcf_info_counter["IMPRECISE"]
+        self.vcf_precise_variants = self.vcf_data_line_count - self.vcf_imprecise_variants
         self.vcf_format_counter = Counter()
-        # self.info_count = self.get_info_count(payload)
-        # # TODO: dropped GVF attributes (assistingconverter.py:convert_gvf_attributes_to_vcf_values)
-        # #convert > build_vcf_line> convert_gvf_attributes_to_vcf_values
-        # # TODO: number of SO terms
-
-    # def get_info_count(self, payload):
-    #     if self.extension.endswith(".gvf"):
-    #         self.info_count = None
-    #     if self.extension.endswith(".vcf"):
-    #         self.info_count = payload.vcf_info_count
-    #     return self.info_count
-    #
-    # def get_alt_alleles_missing(self, payload):
-    #     if self.extension.endswith(".gvf"):
-    #         self.vcf_alt_missing = None
-    #     if self.extension.endswith(".vcf"):
-    #         self.vcf_alt_missing = payload.vcf_alt_missing
-    #     return self.vcf_alt_missing
-    #
-    # def get_alt_alleles(self, payload):
-    #     if self.extension.endswith(".gvf"):
-    #         self.vcf_alt_alleles = None;
-    #     if self.extension.endswith(".vcf"):
-    #         self.vcf_alt_alleles = payload.vcf_alt_count
-    #     return self.vcf_alt_alleles
-    #
-    # def get_sv_types(self, payload):
-    #     if self.extension.endswith(".gvf"):
-    #         self.sv_types = payload.gvf_sv_so_term_count
-    #     if self.extension.endswith(".vcf"):
-    #         #TODO: add the SO terms
-    #         self.sv_types = None
-    #     return self.sv_types
-    #
-    # def get_merge_count(self, payload):
-    #     if self.extension.endswith(".gvf"):
-    #         self.vcf_merge_count = None
-    #     if self.extension.endswith(".vcf"):
-    #         self.vcf_merge_count = payload.vcf_merge_count
-    #     return self.vcf_merge_count
-    #
-    # def get_variant_lines(self, payload):
-    #     if self.extension.endswith(".gvf"):
-    #         self.variant_lines = payload.gvf_line_count
-    #     if self.extension.endswith(".vcf"):
-    #         self.variant_lines = payload.vcf_line_count
-    #     return self.variant_lines
-    #
-    #
-    # def get_sample_number_missing(self, samples, vcf_header_fields):
-    #     if self.extension.endswith(".gvf"):
-    #         self.sample_number_missing = None
-    #     if self.extension.endswith(".vcf"):
-    #         samples_in_vcf_header = len(vcf_header_fields.split("\t")) - 8  # eight mandatory VCF header fields
-    #         self.sample_number_missing = abs(samples_in_vcf_header - len(samples))
-    #         #TODO: number of times a sample is missing in the merged vcf line, count per sample
-    #     return self.sample_number_missing
-    #
-    # def get_sample_number(self, samples, vcf_header_fields):
-    #     # if GVF, get the output from convert_gvf_pragmas_for_vcf_header
-    #     if self.extension.endswith(".gvf"):
-    #         self.sample_number = len(samples)
-    #     # if VCF, get the header fields from generate_vcf_header_line
-    #     if self.extension.endswith(".vcf"):
-    #         header_fields = vcf_header_fields.split("\t")
-    #         if "FORMAT" not in header_fields:
-    #             self.sample_number = len(header_fields) - 8 # eight mandatory VCF header fields
-    #         else:
-    #             self.sample_number = len(header_fields) - 9 # 9 = eight mandatory VCF header fields + FORMAT
-    #     return self.sample_number
+        self.vcf_variant_region_SOID = Counter()
+        self.vcf_variant_call_SOID = Counter()
 
     @staticmethod
     def get_file_md5(path_to_file):
@@ -137,17 +62,6 @@ class FileStatistics:
             if search_term in line:
                 return line
         return None
-
-    # def get_file_version(self, file_header):
-    #     if self.extension.endswith(".gvf"):
-    #         # this comes from the pragma that starts with: ##gvf-version 1.06
-    #         self.version = self.find_version("##gvf-version", file_header)
-    #     elif self.extension.endswith(".vcf"):
-    #         # this comes from the VCF header that starts with: ##fileformat=VCFv4.4
-    #         self.version = self.find_version("##fileformat", file_header)
-    #     else:
-    #         raise ValueError(f"Unsupported file extension: {self.extension}. Expected values: .gvf or .vcf")
-    #     return self.version
 
     def __str__(self):
         summary_string = (f"======GVF======\n"
@@ -170,3 +84,36 @@ class FileStatistics:
                           f"=====\n"
                           )
         return summary_string
+
+    def print_report(self, file_to_write):
+        key_width = 30
+        text_report = f'''
+        GVF
+            {"File name":<{key_width}}\t{self.gvf_file_name:>}
+            {"File path":<{key_width}}\t{self.gvf_file_path:>}
+            {"File extension":<{key_width}}\t{self.gvf_extension:>}
+            {"File size":<{key_width}}\t{self.gvf_file_size:>}
+            {"Last modified":<{key_width}}\t{self.gvf_last_modified_timestamp}
+            {"Version":<{key_width}}\t{self.gvf_version:>}
+            {"md5":<{key_width}}\t{self.gvf_md5:>}
+            
+             {"COUNTS":^{key_width}}
+             {"GVF Chromosome counts:":<}\n\t\t\t\t{self.gvf_chromosome_count}
+             {"Number of GVF feature lines:":<{key_width}}\t{self.gvf_feature_line_count:>}
+             {"Number of samples:":<{key_width}}\t{self.sample_number}
+             {"Number of structural variants seen:":<{key_width}}\n\t\t\t\t{self.gvf_sv_count}
+        VCF
+            {"COUNTS":^{key_width}}
+            {"VCF Chromosome counts:":<{key_width}}\n\t\t\t\t{self.vcf_chromosome_count}
+            {"VCF ALT allele counts:":<{key_width}}\n\t\t\t\t{self.vcf_alt_alleles_count}
+            {"Number of VCF data lines:":<{key_width}}\t{self.vcf_data_line_count:>}
+            {"Number of VCF data line merges:":<{key_width}}\t{self.vcf_number_of_merges:>}
+            {"Number of times each VCF sample has been seen:":<{key_width}}\n\t\t\t\t{self.vcf_sample_number_count}
+            {"Number of times INFO keys seen"}\n\t\t\t\t{self.vcf_info_counter}
+            {"VCF variant region Sequence Ontology ID counts"}\n\t\t\t\t{self.vcf_variant_region_SOID}
+            {"VCF variant call Sequence Ontology ID counts"}\n\t\t\t\t{self.vcf_variant_call_SOID}
+            
+        '''
+        #
+        with open(file_to_write, "w") as stats_file:
+            stats_file.write(text_report)

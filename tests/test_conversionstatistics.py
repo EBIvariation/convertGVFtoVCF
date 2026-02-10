@@ -19,71 +19,6 @@ class TestConversionStatistics(unittest.TestCase):
         self.gvf_header = unique_pragma
         print(self.gvf_file)
 
-
-    # def test_get_info_count(self):
-    #     statistics_summariser = FileStatistics(self.vcf_file, self.payload)
-    #     # print(len(statistics_summariser.get_info_count(self.payload)))
-    #     assert len(statistics_summariser.get_info_count(self.payload)) == 18
-    #     assert statistics_summariser.get_info_count(self.payload)["ID"] == 3
-    #     assert statistics_summariser.get_info_count(self.payload)["NAME"] == 5
-    #
-    # def test_get_alt_missing(self):
-    #     statistics_summariser = FileStatistics(self.vcf_file, self.payload)
-    #     assert statistics_summariser.get_alt_alleles_missing(self.payload) == 0
-    #
-    # def test_get_variant_lines(self):
-    #     #GVF
-    #     statistics_summariser = FileStatistics(self.gvf_file, self.payload)
-    #     assert statistics_summariser.get_variant_lines(self.payload) == 7
-    #     # VCF
-    #     statistics_summariser = FileStatistics(self.vcf_file, self.payload)
-    #     assert statistics_summariser.get_variant_lines(self.payload) == 5
-    #
-    # def test_get_sample_number_missing(self):
-    #     # VCF
-    #     is_missing_format_value = True # all format fields are missing
-    #     header_fields = generate_vcf_header_line(is_missing_format=is_missing_format_value, samples=self.samples)
-    #     payload = StatisticsPayload(
-    #         samples=self.samples,
-    #         vcf_header_fields=header_fields,
-    #         gvf_line_count=None,
-    #         vcf_line_count=None,
-    #         vcf_merge_count=None,
-    #         gvf_chromosome_count=None,
-    #         vcf_chromosome_count=None,
-    #         gvf_sv_so_term_count= None,
-    #         vcf_alt_count=None,
-    #         vcf_alt_missing=None,
-    #         vcf_info_count=None
-    #     )
-    #     statistics_summariser = FileStatistics(self.vcf_file, payload)
-    #     assert statistics_summariser.get_sample_number_missing(self.samples, header_fields) == 4
-    #
-    # def test_get_sample_number(self):
-    #     # GVF: set up to get the samples
-    #     statistics_summariser = FileStatistics(self.gvf_file, self.payload)
-    #     sample_number_gvf = statistics_summariser.get_sample_number(self.samples, vcf_header_fields=self.payload.vcf_header_fields)
-    #     assert sample_number_gvf == 4
-    #     # VCF
-    #     is_missing_format_value = False # all format fields are present
-    #     # is_missing_format_value = True # all format fields are missing
-    #     header_fields = generate_vcf_header_line(is_missing_format=is_missing_format_value, samples=self.samples)
-    #     payload = StatisticsPayload(
-    #         samples=self.samples,
-    #         vcf_header_fields=header_fields,
-    #         gvf_line_count=None,
-    #         vcf_line_count=None,
-    #         vcf_merge_count=None,
-    #         gvf_chromosome_count = None,
-    #         vcf_chromosome_count=None,
-    #         gvf_sv_so_term_count=None,
-    #         vcf_alt_count=None,
-    #         vcf_alt_missing=None,
-    #         vcf_info_count=None
-    #     )
-    #     statistics_summariser = FileStatistics(self.vcf_file, payload)
-    #     assert statistics_summariser.get_sample_number(self.samples, header_fields) == 4
-
     def test_get_file_md5(self):
         statistics_summariser = FileStatistics(gvf_file_path=self.gvf_file, gvf_pragmas=self.gvf_header, samples=self.samples)
         gvf_md5 = statistics_summariser.get_file_md5(self.gvf_file)
@@ -95,34 +30,12 @@ class TestConversionStatistics(unittest.TestCase):
         gvf_version = statistics_summariser.find_version(search_term, self.gvf_header)
         assert gvf_version == "##gvf-version=1.06"
 
-    # def test_get_file_version(self):
-    #     gvf_pragma = ['##gff-version 3', '##gvf-version 1.06',
-    #                   '##species http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955',
-    #                   '##file-date 2015-07-15', '##genome-build NCBI GRCz10']
-    #     gvf_pragma_comments = ['#Study_accession: nstd62', '#Study_type: Control Set']
-    #
-    #     unique_converted_pragmas, unique_sample_name = convert_gvf_pragmas_for_vcf_header(gvf_pragma,
-    #                                                                                       gvf_pragma_comments,
-    #                                                                                       self.reference_lookup)
-    #     statistics_summariser = FileStatistics(self.gvf_file, unique_converted_pragmas)
-    #     version_gvf = statistics_summariser.get_file_version(gvf_pragma)
-    #     assert version_gvf == "##gvf-version 1.06"
-
-        # testing for VCF
-        # is_missing_format_value = False # all format fields are present
-        # header_fields = generate_vcf_header_line(is_missing_format=is_missing_format_value, samples=self.samples)
-        # statistics_summariser = FileStatistics(self.vcf_file, )
-        # version_vcf = statistics_summariser.get_file_version(unique_converted_pragmas)
-        # assert version_vcf == "##fileformat=VCFv4.4"
-
-
     def test___str__(self):
 
         gvf_pragma = ['##gff-version 3', '##gvf-version 1.06',
                       '##species http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955',
                       '##file-date 2015-07-15', '##genome-build NCBI GRCz10']
         statistics_summariser = FileStatistics(self.gvf_file, gvf_pragmas=self.gvf_header, samples=self.samples)
-        # statistics_summariser.get_file_version(gvf_pragma)
         statistics_summary = statistics_summariser.__str__()
 
         (gvf_line,
@@ -160,9 +73,8 @@ class TestConversionStatistics(unittest.TestCase):
         assert vcf_number_of_merges == "vcf_number_of_merges = 0"
         assert vcf_alt_alleles_count == "vcf_alt_allele_count = Counter()"
         assert vcf_info_counter == "vcf_info_counter = Counter()"
-        print(vcf_sample_number_count)
+        assert vcf_sample_number_count == "vcf_sample_count = Counter()"
         assert end_string == "====="
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -262,13 +262,13 @@ def convert(gvf_input, vcf_output, assembly):
     logger.info("Running the GVF to VCF converter")
     logger.info(f"The provided input file is: {gvf_input}")
     logger.info(f"The provided output file is: {vcf_output}")
+
     if assembly:
         logger.info(f"The provided assembly file is: {assembly}")
     assembly_file = os.path.abspath(assembly)
     assert os.path.isfile(assembly_file), "Assembly file does not exist"
-    # Read input file and separate out its components
-    logger.info(f"Reading in the following GVF header from {gvf_input}")
-    gvf_pragmas, gvf_pragma_comments = read_in_gvf_header(gvf_input)
+    assert os.path.isfile(gvf_input), "GVF file does not exist"
+
     # Creating lookup object to store important dictionaries and log what has been stored.
     reference_lookup = Lookup(assembly_file)
     logger.info("Creating the reference lookup object.")
@@ -276,6 +276,10 @@ def convert(gvf_input, vcf_output, assembly):
     logger.info("Storing the symbolic allele dictionary.")
     logger.info(f"Storing the assembly file: {assembly_file}")
     logger.info("Storing the IUPAC ambiguity dictionary.")
+
+    # Read input file and separate out its components
+    logger.info(f"Reading in the following GVF header from {gvf_input}")
+    gvf_pragmas, gvf_pragma_comments = read_in_gvf_header(gvf_input)
 
     # Preparation work:
     # Store the VCF metainformation and ensure preservation of important GVF data.
@@ -285,28 +289,30 @@ def convert(gvf_input, vcf_output, assembly):
         samples
     ) = convert_gvf_pragmas_for_vcf_header(gvf_pragmas, gvf_pragma_comments, reference_lookup)
     report = FileStatistics(gvf_file_path=gvf_input, gvf_pragmas=gvf_pragmas, samples=samples)
-    print(report.__str__())
+    # print(report.__str__())
 
     # Create data structure to store all possible outcomes for header lines (for fields ALT, INFO, FILTER, FORMAT)
     all_header_lines_per_type_dict = {
         htype: generate_vcf_header_structured_lines(htype, reference_lookup.mapping_attribute_dict) for htype in
         ["ALT", "INFO", "FILTER", "FORMAT"]
     }
+
     vcf_builder = VcfLineBuilder(all_header_lines_per_type_dict, reference_lookup, samples)
     is_missing_format_value = True
+    # VCF dataline generation
     # Convert each feature line in the GVF file to a VCF object (stores all the data for a line in the VCF file).
     # NOTE: Main Logic lives here.
     vcf_data_file = vcf_output + '_data_lines'
     with open(vcf_data_file, "w") as open_data_lines:
         logger.info("Generating the VCF datalines")
         previous_vcf_line = None
-        for gvf_lines_obj in read_in_gvf_data(gvf_input):
+        for gvf_entry in read_in_gvf_data(gvf_input):
+            # record GVF counts
             report.gvf_feature_line_count += 1
-            report.gvf_chromosome_count.update([gvf_lines_obj.seqid])
-            report.gvf_sv_so_term_count.update([gvf_lines_obj.feature_type])
-            current_vcf_line = vcf_builder.build_vcf_line(gvf_lines_obj)
-            # print(current_vcf_line)
-            # print(current_vcf_line.vcf_values_for_format)
+            report.gvf_chromosome_count.update([gvf_entry.seqid])
+            report.gvf_sv_count.update([gvf_entry.feature_type])
+            # create the VCF line object
+            current_vcf_line = vcf_builder.build_vcf_line(gvf_entry)
             # is_missing_format_value will only be true if all the format field are missing.
             is_missing_format_value = is_missing_format_value and current_vcf_line.format_keys == ['.']
             # Each GVF feature has been converted to a VCF object so begin comparing and merging the VCF objects.
@@ -315,35 +321,37 @@ def convert(gvf_input, vcf_output, assembly):
                     current_vcf_line.merge(previous_vcf_line, list_of_sample_names=samples)
                     report.vcf_number_of_merges += 1
                 else:
-                    assert current_vcf_line > previous_vcf_line, f"current_vcf_line.pos {current_vcf_line.pos} is smaller than previous_vcf_line.pos {previous_vcf_line.pos}. Not sorted.{str(gvf_lines_obj)}"
-
-                    open_data_lines.write(str(previous_vcf_line) + "\n")
-                    report.vcf_data_line_count += 1
-                    report.vcf_chromosome_count[previous_vcf_line.chrom] += 1
-                    report.vcf_alt_alleles_count[previous_vcf_line.alt] += 1
-                    # using update because of iterable
-                    report.vcf_info_counter.update(previous_vcf_line.info_dict.keys())
-                    report.vcf_sample_number_count.update(previous_vcf_line.order_sample_names)
-                    report.vcf_format_counter.update(previous_vcf_line.vcf_values_for_format)
+                    assert current_vcf_line > previous_vcf_line, f"File not sorted.\ncurrent_vcf_line.pos {current_vcf_line.pos} is smaller than previous_vcf_line.pos {previous_vcf_line.pos}. See the following line:\n{str(gvf_entry)}"
+                    record_vcf_entry(open_data_lines, previous_vcf_line, report)
             previous_vcf_line = current_vcf_line
         # Process the final previous_vcf_line
         if previous_vcf_line:
-            open_data_lines.write(str(previous_vcf_line) + "\n")
-            report.vcf_data_line_count += 1
-            report.vcf_chromosome_count[previous_vcf_line.chrom] += 1
-            report.vcf_alt_alleles_count[previous_vcf_line.alt] += 1
-            report.vcf_info_counter.update(previous_vcf_line.info_dict.keys()) # using update because dict_keys is iterable
-            report.vcf_sample_number_count.update(previous_vcf_line.order_sample_names)
-            report.vcf_format_counter.update(previous_vcf_line.vcf_values_for_format)
+            record_vcf_entry(open_data_lines, previous_vcf_line, report)
         else:
             logger.warning("No feature lines were found for this GVF file.")
 
+    # VCF header generation
     header_lines_per_type = vcf_builder.build_vcf_header()
     header_fields = generate_vcf_header_line(is_missing_format=is_missing_format_value, samples=samples)
-    vcf_header_file = write_header(vcf_output, pragmas_for_vcf, header_lines_per_type,
-                                   header_fields, samples)
+    vcf_header_file = write_header(vcf_output, pragmas_for_vcf, header_lines_per_type, header_fields, samples)
 
     logger.info(f"Combining the header and data lines to the following VCF output: {vcf_output}")
+    construct_vcf_output(vcf_header_file, vcf_data_file, vcf_output)
+
+    logger.info("Remove the temporary files")
+    cleanup_temp_files([vcf_header_file, vcf_data_file])
+
+    logger.info("Printing the summary of conversion report.")
+    vcf_output_directory = os.path.dirname(vcf_output)
+    stats_summary_file = os.path.join(vcf_output_directory, "summary_stats.txt")
+    report.print_report(stats_summary_file)
+
+    logger.info("GVF to VCF conversion complete")
+    print(report.__str__())
+
+
+#helper functions for convert
+def construct_vcf_output(vcf_header_file, vcf_data_file, vcf_output):
     with open(vcf_output, "w") as vcf_output:
         with open(vcf_header_file, "r") as vcf_header_fh:
             for line in vcf_header_fh:
@@ -352,15 +360,23 @@ def convert(gvf_input, vcf_output, assembly):
             for line in vcf_data_fh:
                 vcf_output.write(line)
     vcf_output.close()
-    logger.info("Remove the temporary files")
-    if os.path.exists(vcf_header_file):
-        os.remove(vcf_header_file)
-    if os.path.exists(vcf_data_file):
-        os.remove(vcf_data_file)
-    logger.info("GVF to VCF conversion complete")
-    print(report.__str__())
 
+def record_vcf_entry(open_data_lines, previous_vcf_line, report):
+    # write the VCF line and record counts (use update when iterable)
+    open_data_lines.write(str(previous_vcf_line) + "\n")
+    report.vcf_data_line_count += 1
+    report.vcf_chromosome_count[previous_vcf_line.chrom] += 1
+    report.vcf_alt_alleles_count[previous_vcf_line.alt] += 1
+    report.vcf_info_counter.update(previous_vcf_line.info_dict.keys())
+    report.vcf_variant_region_SOID.update([previous_vcf_line.info_dict.get("VARREGSOID")])
+    report.vcf_variant_call_SOID.update([previous_vcf_line.info_dict.get("VARCALLSOID")])
+    report.vcf_sample_number_count.update(previous_vcf_line.order_sample_names)
+    report.vcf_format_counter.update(previous_vcf_line.vcf_values_for_format)
 
+def cleanup_temp_files(list_of_temp_files):
+    for temp_file in list_of_temp_files:
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
 
 def main():
     # Parse command line arguments

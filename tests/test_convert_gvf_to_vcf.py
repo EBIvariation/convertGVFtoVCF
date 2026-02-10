@@ -8,7 +8,6 @@ from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_
     get_pragma_tokens, \
     get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
     convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert
-from convert_gvf_to_vcf.utils import read_in_gvf_header
 
 
 class TestConvertGVFtoVCF(unittest.TestCase):
@@ -153,8 +152,9 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             self.assertEqual(unexpected_pragma_tokens, pragma_tokens)
 
     def test_convert(self):
-        convert(self.input_file , self.output_file, self.assembly)
-        # print(convert_payload)
+        # input file is unsorted so testing assert error is thrown
+        with self.assertRaises(AssertionError):
+            convert(self.input_file , self.output_file, self.assembly)
         #####VCF#####
         header_lines = []
         data_lines = []
@@ -176,11 +176,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
                     gvf_header.append(line.strip())
                 else:
                     gvf_features.append(line.strip())
-        # checking payload
-        # assert convert_payload.samples == ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
-        # assert convert_payload.vcf_header_fields == '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tJenMale6\tWilds2-3\tZon9\tJenMale7'
-        # assert convert_payload.gvf_line_count == len(gvf_features)
-        # assert convert_payload.vcf_line_count == len(data_lines)
 
     def test_convert_500(self):
         input_folder = os.path.join(os.path.dirname(__file__), "input")
@@ -191,7 +186,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # Prepare References
         assembly = os.path.join(input_folder, "drosophila_GCA_000001215.2.fa")
         convert(input_file, output_file, assembly)
-
 
 if __name__ == '__main__':
     unittest.main()
