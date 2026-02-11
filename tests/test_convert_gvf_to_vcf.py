@@ -181,6 +181,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # Prepare Inputs
         input_file = os.path.join(input_folder, "drosophila_estd205_lines_500_sorted.gvf")
         output_file = os.path.join(output_folder, "drosophila_estd205_lines_500.vcf")
+        os.makedirs(output_folder, exist_ok=True)
         # Prepare References
         assembly = os.path.join(input_folder, "drosophila_GCA_000001215.2_chr4.fa")
         assert os.path.exists(input_file) == True
