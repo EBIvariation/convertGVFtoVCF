@@ -8,7 +8,7 @@ from collections import Counter
 
 class FileStatistics:
     """
-    The responsibility of this class is to determine the statistics of a GVF or VCF file.
+    The responsibility of this class is to accumulate counts and calculate statistics of a GVF to VCF file conversion.
     """
     def __init__(self, gvf_file_path, gvf_pragmas, samples):
         self.gvf_file_path = gvf_file_path
@@ -20,31 +20,39 @@ class FileStatistics:
         self.gvf_file_size = self.gvf_metadata_stats.st_size
         gvf_last_modified_timestamp_raw = self.gvf_metadata_stats.st_mtime
         self.gvf_last_modified_timestamp = datetime.fromtimestamp(gvf_last_modified_timestamp_raw)
-        self.gvf_version = self.find_version("##gvf-version", gvf_pragmas)
+        self.gvf_version = self.find_version(gvf_pragmas)
         self.gvf_md5 = self.get_file_md5(self.gvf_file_path)
         # biological samples
         self.sample_number = len(samples) #
         self.vcf_sample_number_count = Counter()
         #TODO: add missing samples in VCF - awaiting bug fix
         #TODO: number of times a sample is missing in the merged vcf line, count per sample
-
         # chromsomes
         self.gvf_chromosome_count = Counter()
         self.vcf_chromosome_count = Counter()
         # # variants
         self.gvf_feature_line_count = 0
         self.gvf_sv_count = Counter()
-        self.vcf_data_line_count = 0
+        self.vcf_data_line_count = 0 # used in property
         self.vcf_number_of_merges = 0
-        self.vcf_alt_alleles_count = Counter()
-        self.vcf_alt_missing = self.vcf_alt_alleles_count["."]
+        self.vcf_alt_alleles_count = Counter() #used in property
         # # attribute mapping
-        self.vcf_info_counter = Counter()
-        self.vcf_imprecise_variants = self.vcf_info_counter["IMPRECISE"]
-        self.vcf_precise_variants = self.vcf_data_line_count - self.vcf_imprecise_variants
+        self.vcf_info_counter = Counter() # used in property
         self.vcf_format_counter = Counter()
         self.vcf_variant_region_SOID = Counter()
         self.vcf_variant_call_SOID = Counter()
+
+    @property
+    def vcf_alt_missing(self):
+        return self.vcf_alt_alleles_count['.']
+
+    @property
+    def vcf_imprecise_variants(self):
+        return self.vcf_info_counter["IMPRECISE"]
+
+    @property
+    def vcf_precise_variants(self):
+        return self.vcf_data_line_count - self.vcf_imprecise_variants
 
     @staticmethod
     def get_file_md5(path_to_file):
@@ -57,10 +65,17 @@ class FileStatistics:
         return md5
 
     @staticmethod
-    def find_version(search_term, header_list):
+    def find_version(header_list):
+        """ Finds the gvf version in the header.
+        :params: header_list
+        :return: gvf version or if not found None
+        """
         for line in header_list:
-            if search_term in line:
-                return line
+            if "##gvf-version" in line:
+                try:
+                    return line.split('=')[1].strip()
+                except IndexError:
+                    return f"GVF version unknown: {line}"
         return None
 
     def __str__(self):
@@ -81,6 +96,9 @@ class FileStatistics:
                           f"vcf_info_counter = {self.vcf_info_counter}\n"
                           f"vcf_format_counter = {self.vcf_format_counter}\n"
                           f"vcf_sample_count = {self.vcf_sample_number_count}\n"
+                          f"vcf_alt_missing = {self.vcf_alt_missing}\n"
+                          f"vcf_imprecise_variants = {self.vcf_imprecise_variants}\n"
+                          f"vcf_precise_variants = {self.vcf_precise_variants}\n"
                           f"=====\n"
                           )
         return summary_string

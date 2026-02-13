@@ -171,9 +171,27 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         with open(self.input_file) as input:
             for gvfline in input:
                 if gvfline.startswith("#"):
-                    gvf_header.append(line.strip())
+                    gvf_header.append(gvfline.strip())
                 else:
-                    gvf_features.append(line.strip())
+                    gvf_features.append(gvfline.strip())
+        assert gvf_header[1] == "##gvf-version 1.06"
+        assert gvf_features[0] == "chromosome1	DGVa	copy_number_loss	1	2	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
+        # check statistics file exists and what is inside it
+        test_dir = os.path.dirname(__file__)
+        vcf_output_directory = os.path.join(test_dir, "input")
+        stats_file = os.path.join(vcf_output_directory, "summary_stats.txt")
+        assert os.path.exists(stats_file) == True
+        stats_lines = []
+        with open(stats_file, 'r') as file:
+            for stats_line in file:
+                stats_lines.append(stats_line.strip())
+        assert stats_lines[12] == "Counter({'chromosome1': 7})"
+        assert stats_lines[13] == "Number of GVF feature lines:  	7"
+        assert stats_lines[16] == "Counter({'copy_number_gain': 4, 'copy_number_loss': 3})"
+        assert stats_lines[20] == "Counter({'chromosome1': 4})"
+        assert stats_lines[22] == "Counter({'<DEL>': 3, '<DUP>': 1})"
+
+
 
     def test_convert_500(self):
         input_folder = os.path.join(os.path.dirname(__file__), "input")

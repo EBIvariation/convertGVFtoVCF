@@ -289,7 +289,6 @@ def convert(gvf_input, vcf_output, assembly):
         samples
     ) = convert_gvf_pragmas_for_vcf_header(gvf_pragmas, gvf_pragma_comments, reference_lookup)
     report = FileStatistics(gvf_file_path=gvf_input, gvf_pragmas=gvf_pragmas, samples=samples)
-    # print(report.__str__())
 
     # Create data structure to store all possible outcomes for header lines (for fields ALT, INFO, FILTER, FORMAT)
     all_header_lines_per_type_dict = {
@@ -309,7 +308,7 @@ def convert(gvf_input, vcf_output, assembly):
         for gvf_entry in read_in_gvf_data(gvf_input):
             # record GVF counts
             report.gvf_feature_line_count += 1
-            report.gvf_chromosome_count.update([gvf_entry.seqid])
+            report.gvf_chromosome_count[gvf_entry.seqid] += 1
             report.gvf_sv_count.update([gvf_entry.feature_type])
             # create the VCF line object
             current_vcf_line = vcf_builder.build_vcf_line(gvf_entry)

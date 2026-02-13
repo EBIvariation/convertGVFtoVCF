@@ -25,14 +25,13 @@ class TestConversionStatistics(unittest.TestCase):
 
     def test_find_version(self):
         statistics_summariser = FileStatistics(gvf_file_path=self.gvf_file, gvf_pragmas=self.gvf_header, samples=self.samples)
-        search_term = "##gvf-version"
-        gvf_version = statistics_summariser.find_version(search_term, self.gvf_header)
-        assert gvf_version == "##gvf-version=1.06"
+        gvf_version = statistics_summariser.find_version(self.gvf_header)
+        assert gvf_version == "1.06"
 
     def test___str__(self):
         statistics_summariser = FileStatistics(self.gvf_file, gvf_pragmas=self.gvf_header, samples=self.samples)
         statistics_summary = statistics_summariser.__str__()
-
+        print(statistics_summary)
         (gvf_line,
          file_name_string,
          file_path,
@@ -50,12 +49,15 @@ class TestConversionStatistics(unittest.TestCase):
          vcf_info_counter,
          vcf_format_counter,
          vcf_sample_number_count,
+         vcf_alt_missing,
+         vcf_imprecise_variants,
+         self.vcf_precise_variants,
          end_string,
          _) = statistics_summary.split("\n")
         assert gvf_line == "======GVF======"
         assert file_name_string == "File name = zebrafish.gvf"
         assert file_extension == "File extension = .gvf"
-        assert version == "Version = ##gvf-version=1.06"
+        assert version == "Version = 1.06"
         # the below should be empty/set to 0 as gets set in convertGVFtoVCF:convert
         assert gvf_chrom == "gvf chrom = Counter()"
         assert vcf_chrom == "vcf chrom = Counter()"
@@ -66,7 +68,3 @@ class TestConversionStatistics(unittest.TestCase):
         assert vcf_info_counter == "vcf_info_counter = Counter()"
         assert vcf_sample_number_count == "vcf_sample_count = Counter()"
         assert end_string == "====="
-
-if __name__ == '__main__':
-    unittest.main()
-
