@@ -8,7 +8,6 @@ from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_
     get_pragma_tokens, \
     get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
     convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert
-from convert_gvf_to_vcf.utils import read_in_gvf_header
 
 
 class TestConvertGVFtoVCF(unittest.TestCase):
@@ -154,6 +153,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_convert(self):
         convert(self.input_file , self.output_file, self.assembly)
+        #####VCF#####
         header_lines = []
         data_lines = []
         with open(self.output_file) as open_file:
@@ -165,6 +165,46 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert header_lines[0] == '##fileformat=VCFv4.4'
         assert header_lines[-1] == '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tJenMale6\tWilds2-3\tZon9\tJenMale7'
         assert data_lines[0].split('\t')[4] == '<DEL>'
+        #####GVF#####
+        gvf_header = []
+        gvf_features = []
+        with open(self.input_file) as input:
+            for gvfline in input:
+                if gvfline.startswith("#"):
+                    gvf_header.append(gvfline.strip())
+                else:
+                    gvf_features.append(gvfline.strip())
+        assert gvf_header[1] == "##gvf-version 1.06"
+        assert gvf_features[0] == "chromosome1	DGVa	copy_number_loss	1	2	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
+        # check statistics file exists and what is inside it
+        test_dir = os.path.dirname(__file__)
+        vcf_output_directory = os.path.join(test_dir, "input")
+        stats_file = os.path.join(vcf_output_directory, "summary_stats.txt")
+        assert os.path.exists(stats_file) == True
+        stats_lines = []
+        with open(stats_file, 'r') as file:
+            for stats_line in file:
+                stats_lines.append(stats_line.strip())
+        assert stats_lines[12] == "Counter({'chromosome1': 7})"
+        assert stats_lines[13] == "Number of GVF feature lines:  	7"
+        assert stats_lines[16] == "Counter({'copy_number_gain': 4, 'copy_number_loss': 3})"
+        assert stats_lines[20] == "Counter({'chromosome1': 4})"
+        assert stats_lines[22] == "Counter({'<DEL>': 3, '<DUP>': 1})"
+
+
+
+    def test_convert_500(self):
+        input_folder = os.path.join(os.path.dirname(__file__), "input")
+        output_folder = os.path.join(os.path.dirname(__file__), "output")
+        # Prepare Inputs
+        input_file = os.path.join(input_folder, "drosophila_estd205_lines_500_sorted.gvf")
+        output_file = os.path.join(output_folder, "drosophila_estd205_lines_500.vcf")
+        os.makedirs(output_folder, exist_ok=True)
+        # Prepare References
+        assembly = os.path.join(input_folder, "drosophila_GCA_000001215.2_chr4.fa")
+        assert os.path.exists(input_file) == True
+        assert os.path.exists(assembly) == True
+        convert(input_file, output_file, assembly)
 
 if __name__ == '__main__':
     unittest.main()

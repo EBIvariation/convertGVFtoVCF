@@ -479,6 +479,16 @@ class VcfLine:
             return (self.chrom == other_vcf_line.chrom) and (self.pos == other_vcf_line.pos) and (self.ref == other_vcf_line.ref)
         return False
 
+    def __gt__(self, other_vcf_line):
+        """ This checks ordering by pos within the SAME chromosome for the merging algorithm.
+        Order is not enforced between different chromosomes to avoid cross-chromosome ordering.
+        :param: other_vcf_line: VcfLine object to compare against.
+        :return: boolean - True if position comes after the previous vcf line on the same chromosome.
+        """
+        if isinstance(other_vcf_line, VcfLine):
+            return (self.chrom != other_vcf_line.chrom) or (self.pos > other_vcf_line.pos)
+        return False
+
     @property
     def format_keys(self):
         set_of_format_key = set([format_key
