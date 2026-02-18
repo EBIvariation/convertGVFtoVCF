@@ -23,18 +23,19 @@ class DGVaMetadataRetriever:
         cfg.load_config_file(path_to_config_yaml)  # cfg is a dictionary
         # db connection setup
         self._connection = None
-        self._host = self._get_validated_value(cfg, ("DGVA","key_to_host"), str, default_value=None) # get information from the config dictionary
-        self._port = self._get_validated_value(cfg, ("DGVA", "key_to_port"), str, default_value=None)
-        self._username = self._get_validated_value(cfg, ("DGVA", "key_to_user"), str, default_value=None)
-        self._password = self._get_validated_value(cfg, ("DGVA", "key_to_pw"), str, default_value=None)
-        print(f"{self._host} {self._port} {self._username} {self._password}")
+        self._host = self._get_validated_value(cfg, ("DGVA","host"), str, default_value=None) # get information from the config dictionary
+        self._port = self._get_validated_value(cfg, ("DGVA", "port"), str, default_value=None)
+        self._username = self._get_validated_value(cfg, ("DGVA", "user"), str, default_value=None)
+        self._password = self._get_validated_value(cfg, ("DGVA", "password"), str, default_value=None)
+        self._service_name = self._get_validated_value(cfg, ("DGVA", "service_name"), str, default_value=None)
+
         # db parameters
         self._max_retries = 3
 
     def __enter__(self):
         # enables the "with" context manager
         _ = self.connection
-        logger.info("open connection")
+        logger.info("Opening connection using a context manager - SUCCESS")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -42,7 +43,7 @@ class DGVaMetadataRetriever:
         if self._connection:
             self._connection.close()
             self._connection = None
-            logger.info("Connection closed safely - SUCCESS")
+            logger.info("Closing connection safely using a context manager - SUCCESS")
 
     @property
     def connection(self):
@@ -67,7 +68,7 @@ class DGVaMetadataRetriever:
             try:
                 logger.info("Connecting to the database.")
                 self._connection = oracledb.connect(host=self._host, port=self._port,
-                                                    user=self._username, password=self._password)
+                                                    user=self._username, password=self._password, service_name=self._service_name)
                 return self._connection
             except Exception as e:
                 logger.error(f"Failed to connect. {e}")
@@ -75,7 +76,8 @@ class DGVaMetadataRetriever:
                     logger.error(f"Max connection retries reached: {self._max_retries}.")
                     raise
 
-    def load_from_db(self, query_to_load, query_place_holder_to_load):
+    # def load_from_db(self, query_to_load, query_place_holder_to_load):
+    def load_from_db(self, query_to_load):
         try:
             # create the iterator to process queries
             with self.connection.cursor() as cur:
@@ -83,34 +85,37 @@ class DGVaMetadataRetriever:
                 ###############################################################################
                 # WARNING: do not use f-strings or % formatting here, use placeholders instead
                 query = query_to_load
-                query_placeholders = query_place_holder_to_load
+                # query_placeholders = query_place_holder_to_load
                 ###############################################################################
                 # run the sql query
-                cur.execute(query, query_placeholders)
+                # cur.execute(query, query_placeholders)
+                logger.info(f"Executing the following query: {query}")
+                cur.execute(query)
                 # fetch the data from the cursor
+                logger.info(f"Fetching the data....")
                 row = cur.fetchall()
+                logger.info(f" row fetched: {row}")
                 if row:
-                    logger.info(f"Fetching metadata query - SUCCESS - {len(dict)} records found")
+                    logger.info(f"Fetching metadata query - SUCCESS - {len(row)} records found")
                     # sql row object is converted to python dict
-                    return dict(row)
+                    row_dict = dict(enumerate(row))
+                    # row_dict = [{i: val[0] for i, val in enumerate(row)}]
+                    return row_dict
                 else:
                     logger.info("Fetching metadata query - SUCCESS - 0 records found")
                     return {}
         except Exception as e:
             logger.warning(f"Database error: {e}")
+            logger.warning("Rolling back")
             # rollback failed transaction
             self.connection.rollback()
             return {}
-        finally:
-            self.connection.close()
+        # finally:
+        #     self.connection.close()
 
     def create_json_file(self, json_file_path, study_accession):
         # determine if project new or pre-registered (most projects will be new)
-        is_project_preregistered = self._determine_project_pre_registered()
-        if is_project_preregistered:
-            project_metadata = self._get_project_pre_registered()
-        else:
-            project_metadata = self._get_project_new()
+        project_metadata = self._get_project_new()
 
         # determine if sample new or pre-registered
         is_sample_preregistered = self._determine_sample_pre_registered()
@@ -152,38 +157,29 @@ class DGVaMetadataRetriever:
         sc = Table("STUDY_CONTACT", schema=db).as_("sc")
         ds = Table("DGVA_STUDY", schema=db).as_("ds")
         # programmatically create the queries, using named placeholders for readability
-        first_name_query = (
+        submitter_details_query = (
             Query.from_(sc)
             .join(ds)
-            .on(sc.STUDY_ACCESION == ds.STUDY_ACCESSION)
-            .select(sc.FIRST_NAME)
-            .where(ds.S_ACC == Parameter(':study_acc'))
+            .on(sc.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            # .select(sc.FIRST_NAME)
+            .select(sc.FIRST_NAME, sc.LAST_NAME, sc.CONTACT_EMAIL, sc.AFFILIATION_NAME)
+            .where(ds.STUDY_ACCESSION == study_accession)
         )
-        first_name_query_placeholders = {'study_acc': study_accession}
-        # submitter detail SQL queries and query placeholders.
-        last_name_query = "SELECT * FROM table WHERE x = ? AND y = ? AND z > ?"
-        last_name_query_placeholders = ("value3", "value4", study_accession)
-        email_query = "SELECT * FROM table WHERE x = ? AND y = ? AND z > ?"
-        email_query_placeholders = ("value5", "value6", study_accession)
-        centre_query = "SELECT * FROM table WHERE x = ? AND y = ? AND z > ?"
-        centre_query_placeholders = ("value7", "value8", study_accession)
         # load metadata
-        # expected values in form of {'A': 101, 'B': 102}
-        first_name_rows = self.load_from_db(first_name_query.get_sql(), first_name_query_placeholders)
-        last_name_rows = self.load_from_db(last_name_query, last_name_query_placeholders)
-        email_rows = self.load_from_db(email_query, email_query_placeholders)
-        self.laboratory = "PLACEHOLDER VALUE"
-        centre_rows = self.load_from_db(centre_query, centre_query_placeholders)
+        # expected values in form of DICTIONARY OF ENUMERATED TUPLES {INDEX: (TUPLE)}
+        # {0: ("FIRST_NAME", "LAST_NAME", "EMAIL", "CENTRE"), 1: ("FIRST_NAME", "LAST_NAME", "EMAIL", "CENTRE")}
+        submitter_details_dict = self.load_from_db(submitter_details_query.get_sql(quote_char=None))
+        self.laboratory = "UNSPECIFIED LABORATORY" # because this is not found in dgva
         # store list of submitters
-        keys = first_name_rows.keys() # assume keys are the same
+        keys = submitter_details_dict.keys() # assume keys are the same
         submitter_details_array = []
-        for k in keys:
+        for key in keys:
             submitter_object = {
-                "lastName": first_name_rows[k],
-                "firstName": last_name_rows[k],
-                "email": email_rows[k],
+                "lastName": submitter_details_dict[key][1],
+                "firstName": submitter_details_dict[key][0],
+                "email": submitter_details_dict[key][2],
                 "laboratory": self.laboratory,
-                "centre": centre_rows[k]
+                "centre": submitter_details_dict[key][3]
             }
             submitter_details_array.append(submitter_object)
         return submitter_details_array
@@ -223,18 +219,20 @@ class DGVaMetadataRetriever:
 
     def _determine_project_pre_registered(self):
         # (most projects will be new)
-        if self.project_accession:
-            is_project_preregistered = True
-        else:
-            is_project_preregistered = False
-        return is_project_preregistered
+        # if self.project_accession:
+        #     is_project_preregistered = True
+        # else:
+        #     is_project_preregistered = False
+        # return is_project_preregistered
+        pass
 
     def _determine_sample_pre_registered(self):
-        if self.biosample_accession:
-            is_sample_preregistered = True
-        else:
-            is_sample_preregistered = False
-        return is_sample_preregistered
+        # if self.biosample_accession:
+        #     is_sample_preregistered = True
+        # else:
+        #     is_sample_preregistered = False
+        # return is_sample_preregistered
+        pass
 
 
 # def main():
@@ -249,7 +247,7 @@ class DGVaMetadataRetriever:
 #     retrieved_dgva_metadata = DGVaMetadataRetriever(config_file)
 #     # using with to manage the connection
 #     with retrieved_dgva_metadata:
-#         retrieved_dgva_metadata.create_json_file(json_file_path="", study_accession="estd22")
+#         retrieved_dgva_metadata.create_json_file(json_file_path=json_file, study_accession="estd22")
 #
 #
 #
