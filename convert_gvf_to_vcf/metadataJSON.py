@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 import oracledb
 from pypika import Query, Table, Schema, Parameter
@@ -28,7 +29,6 @@ class DGVaMetadataRetriever:
         self._username = self._get_validated_value(cfg, ("DGVA", "user"), str, default_value=None)
         self._password = self._get_validated_value(cfg, ("DGVA", "password"), str, default_value=None)
         self._service_name = self._get_validated_value(cfg, ("DGVA", "service_name"), str, default_value=None)
-
         # db parameters
         self._max_retries = 3
 
@@ -115,7 +115,11 @@ class DGVaMetadataRetriever:
 
     def create_json_file(self, json_file_path, study_accession):
         # determine if project new or pre-registered (most projects will be new)
-        project_metadata = self._get_project_new()
+        is_project_preregistered, project_accession = self._determine_project_pre_registered(study_accession)
+        if is_project_preregistered:
+            project_metadata = self._get_project_pre_registered(project_accession)
+        else:
+            project_metadata = self._get_project_new(study_accession)
 
         # determine if sample new or pre-registered
         is_sample_preregistered = self._determine_sample_pre_registered()
@@ -156,12 +160,11 @@ class DGVaMetadataRetriever:
         # create the table objects
         sc = Table("STUDY_CONTACT", schema=db).as_("sc")
         ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        # programmatically create the queries, using named placeholders for readability
+        # programmatically create the queries
         submitter_details_query = (
             Query.from_(sc)
             .join(ds)
             .on(sc.STUDY_ACCESSION == ds.STUDY_ACCESSION)
-            # .select(sc.FIRST_NAME)
             .select(sc.FIRST_NAME, sc.LAST_NAME, sc.CONTACT_EMAIL, sc.AFFILIATION_NAME)
             .where(ds.STUDY_ACCESSION == study_accession)
         )
@@ -184,17 +187,63 @@ class DGVaMetadataRetriever:
             submitter_details_array.append(submitter_object)
         return submitter_details_array
 
-    def _get_project_pre_registered(self):
-        # return project_object
-        # requires a project accession
+    def _get_project_pre_registered(self, project_accession):
         # check project accession meets the regex
-        pass
+        project_accession_pattern = r"^PRJ(E|D|N)[A-Z][0-9]+$"
+        assert re.fullmatch(project_accession_pattern, project_accession), f"Project accession does not meet the regex: {project_accession_pattern}"
+        project_object = {
+            "projectAccesion" : project_accession
+        }
+        return project_object
 
-    def _get_project_new(self):
-        # return project object
-        # requries title, description, taxID, centre
+    def _get_project_new(self, study_accession):
+        MAX_PROJECT_DESCRIPTION_LENGTH = 5000
+        MAX_PROJECT_TITLE_LENGTH = 500
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        stc = Table("STUDY_TYPE_CV", schema=db).as_("stc")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sub = Table("DGVA_SUBMISSION", schema=db).as_("sub")
+        # programmatically create the queries
+        project_title_query = (
+            Query.from_(ds)
+            .join(sub)
+            .on(ds.STUDY_ACCESSION == sub.STUDY_ACCESSION)
+            .select(ds.DISPLAY_NAME)
+            .where(ds.STUDY_ACCESSION == 'estd22')
+
+        )
+        project_title_dict = self.load_from_db(project_title_query.get_sql(quote_char=None))
+        project_title = next(iter(project_title_dict.values()))[0]
+
+        project_description_query = (
+            Query.from_(ds)
+            .join(stc)
+            .on(ds.STUDY_TYPE == stc.STUDY_TYPE)
+            .select(ds.STUDY_DESCRIPTION)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        project_description_dict = self.load_from_db(project_description_query.get_sql(quote_char=None))
+        project_description = next(iter(project_description_dict.values()))[0]
+
+        # performing checks
+        assert len(project_description) <= MAX_PROJECT_DESCRIPTION_LENGTH, f"Project description exceeded length: {MAX_PROJECT_DESCRIPTION_LENGTH}"
+        assert len(project_title) <= MAX_PROJECT_TITLE_LENGTH, f"Project title exceeded length: {MAX_PROJECT_TITLE_LENGTH}"
+
         # check taxID is int
-        pass
+
+
+        # not required: publications, parentProject, childProject, peerProjects, hold-date, links
+        # check publications meet regex"pattern": "^[^:,]+?:[^:,]+?$"
+        # check parent/child/peer projects meet regex
+
+        # required: title, description, taxID, centre
+        project_object = {
+            "title": project_title,
+            "description": project_description
+        }
+        return project_object
 
     def _get_analysis(self):
         # return analysis_array
@@ -217,14 +266,27 @@ class DGVaMetadataRetriever:
         # requires analysisAlias, fileName
         pass
 
-    def _determine_project_pre_registered(self):
-        # (most projects will be new)
-        # if self.project_accession:
-        #     is_project_preregistered = True
-        # else:
-        #     is_project_preregistered = False
-        # return is_project_preregistered
-        pass
+    def _determine_project_pre_registered(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        # create the query
+        project_accession_query = (Query
+                                   .from_(ds)
+                                   .select(ds.BIOPROJECT_ACCESSION)
+                                   .where(ds.STUDY_ACCESSION == study_accession)
+                                   )
+        project_accession_dict = self.load_from_db(project_accession_query.get_sql(quote_char=None))
+        is_project_preregistered = False
+        for value in project_accession_dict.values():
+            if isinstance(value, tuple):
+                if not None in value:
+                    is_project_preregistered = True
+                    project_accession = next(iter(project_accession_dict.values()))[0]
+                    return is_project_preregistered, project_accession
+                else:
+                    return is_project_preregistered, None
 
     def _determine_sample_pre_registered(self):
         # if self.biosample_accession:
@@ -248,6 +310,8 @@ class DGVaMetadataRetriever:
 #     # using with to manage the connection
 #     with retrieved_dgva_metadata:
 #         retrieved_dgva_metadata.create_json_file(json_file_path=json_file, study_accession="estd22")
+#         # project pre-reg
+#         # retrieved_dgva_metadata.create_json_file(json_file_path=json_file, study_accession="estd199")
 #
 #
 #
