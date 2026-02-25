@@ -130,9 +130,10 @@ class DGVaMetadataRetriever:
             if sample_status.is_sample_preregistered:
                 sample_metadata = self._get_sample_pre_registered(study_accession, sample_status.accession)
                 sample_metadata_array.append(sample_metadata)
-            else:
-                sample_metadata = self._get_sample_new(study_accession)
-                sample_metadata_array.append(sample_metadata)
+
+        # assuming all samples are not pre-registered
+        sample_metadata = self._get_sample_new(study_accession)
+        sample_metadata_array.extend(sample_metadata)
         json_in_eva_format = {
             "submitterDetails": self._get_submitter_details(study_accession),
             "project": project_metadata,
@@ -260,7 +261,7 @@ class DGVaMetadataRetriever:
         sample_analysis_alias = self._fetch_analysis_alias(study_accession)
         sample_sampleinvcf = "UNSPECIFIED_SAMPLE_IN_VCF"
         sample_object = {
-            "analysisAlias": [].append(sample_analysis_alias),
+            "analysisAlias": sample_analysis_alias,
             "sampleInVCF": sample_sampleinvcf,
             "bioSampleAccession": biosample_accession
         }
@@ -271,28 +272,33 @@ class DGVaMetadataRetriever:
         # requires analysisAlias, sampleinVCF, bioSampleObject
         # bioSampleObject requires = name, taxID, scientific_name, release (hold-date) which can be found in DGVA
         # bioSampleObject requires = collection date, geo loc which can be set to unknown/not collected
-        sample_analysis_alias = self._fetch_analysis_alias(study_accession)
+        sample_analysis_alias_list = self._fetch_analysis_alias_list(study_accession)
+        if not sample_analysis_alias_list:
+            sample_analysis_alias_list.append("UNSPECIFIED_analysisAlias")
         sample_sampleinvcf = "UNSPECIFIED_SAMPLE_IN_VCF"
         # TODO: fix the error, as there multiple sample names,
-        sample_name = self._fetch_sample_id(study_accession)
+        sample_name_list = self._fetch_sample_id_list(study_accession)
         sample_tax_id = self._fetch_tax_id(study_accession)
         scientific_name = self._fetch_scientific_name(study_accession)
         hold_date = self._fetch_hold_date(study_accession)
         collection_date = "not provided"
         geographic_location_country_and_or_sea = "not provided"
-        biosample_object = {
-            "sample_title": sample_name,
-            "scientific_name": scientific_name,
-            "tax_id": sample_tax_id,
-            "collection date": collection_date,
-            "geographic location (country and/or sea)": geographic_location_country_and_or_sea
-        }
-        sample_object = {
-            "analysisAlias": sample_analysis_alias,
-            "sampleInVCF": sample_sampleinvcf,
-            "bioSampleObject": biosample_object
-        }
-        return sample_object
+        all_sample_objects = []
+        for sample_name in sample_name_list:
+            biosample_object = {
+                "sample_title": sample_name,
+                "scientific_name": scientific_name,
+                "tax_id": sample_tax_id,
+                "collection date": collection_date,
+                "geographic location (country and/or sea)": geographic_location_country_and_or_sea
+            }
+            sample_object = {
+                "analysisAlias": sample_analysis_alias_list,
+                "sampleInVCF": sample_sampleinvcf,
+                "bioSampleObject": biosample_object
+            }
+            all_sample_objects.append(sample_object)
+        return all_sample_objects
 
     def _get_files(self, study_accession, vcf_output):
         # return files_array
@@ -522,7 +528,26 @@ class DGVaMetadataRetriever:
         # TODO: reference genome is not in GCA needs converting
         pass
     # SAMPLE SECTION
-    def _fetch_sample_id(self, study_accession):
+    def _fetch_analysis_alias_list(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sa = Table("STUDY_ALIAS", schema=db).as_("sa")
+        # ANALYSIS ALIAS
+        analysis_alias_query = (
+            Query.from_(ds)
+            .join(sa)
+            .on(sa.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(sa.STUDY_ALIAS_NAME)
+            .where(ds.STUDY_ACCESSION == study_accession)
+
+        )
+        analysis_alias_dict = self.load_from_db(analysis_alias_query.get_sql(quote_char=None))
+        analysis_alias_list = [v[0] for v in analysis_alias_dict.values()]
+        return analysis_alias_list
+
+    def _fetch_sample_id_list(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -533,8 +558,9 @@ class DGVaMetadataRetriever:
             .where(dsamp.STUDY_ACCESSION == study_accession)
         )
         sample_id_dict = self.load_from_db(sample_id_query.get_sql(quote_char=None))
-        sample_id = next(iter(sample_id_dict.values()))[0]
-        return sample_id
+        # sample_id = next(iter(sample_id_dict.values()))[0]
+        sample_id_list = [v[0] for v in sample_id_dict.values()]
+        return sample_id_list
 
     def _fetch_hold_date(self, study_accession):
         # create the schema objects
