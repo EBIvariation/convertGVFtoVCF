@@ -2,8 +2,8 @@ import json
 import os
 import re
 from collections import namedtuple
-
 import oracledb
+
 
 from pypika import Query, Table, Schema
 
@@ -33,7 +33,6 @@ class DGVaMetadataRetriever:
         self._service_name = self._get_validated_value(cfg, ("DGVA", "service_name"), str, default_value=None)
         # db parameters
         self._max_retries = 3
-
     def __enter__(self):
         # enables the "with" context manager
         _ = self.connection
@@ -115,7 +114,7 @@ class DGVaMetadataRetriever:
         # finally:
         #     self.connection.close()
 
-    def create_json_file(self, json_file_path, study_accession):
+    def create_json_file(self, json_file_path, study_accession, vcf_output):
         # determine if project new or pre-registered (most projects will be new)
         is_project_preregistered, project_accession = self._determine_project_pre_registered(study_accession)
         if is_project_preregistered:
@@ -132,16 +131,14 @@ class DGVaMetadataRetriever:
                 sample_metadata = self._get_sample_pre_registered(study_accession, sample_status.accession)
                 sample_metadata_array.append(sample_metadata)
             else:
-                print("NEW SAMPLE")
                 sample_metadata = self._get_sample_new(study_accession)
                 sample_metadata_array.append(sample_metadata)
-
         json_in_eva_format = {
             "submitterDetails": self._get_submitter_details(study_accession),
             "project": project_metadata,
-            "analysis": self._get_analysis(),
+            "analysis": self._get_analysis(study_accession),
             "sample": sample_metadata_array,
-            "files": self._get_files()
+            "files": self._get_files(study_accession, vcf_output)
         }
         with open(json_file_path, 'w') as f:
             json.dump(json_in_eva_format, f, indent=4)
@@ -163,24 +160,29 @@ class DGVaMetadataRetriever:
 
     # THESE GETTERS GET THE RELEVANT JSON OBJECT
     def _get_submitter_details(self, study_accession):
+        """ Formats the submitter details from the DGVa database. Creates a submitter object for each submitter.
+        :param: study_accession - expected format ^(estd|nstd)\d+$
+        :return: submitter_details_array
+        """
+        logger.info("Fetching submitter details.")
         submitter_details_query = self._fetch_submitter_details(study_accession)
         # load metadata
         # expected values in form of DICTIONARY OF ENUMERATED TUPLES {INDEX: (TUPLE)}
         # {0: ("FIRST_NAME", "LAST_NAME", "EMAIL", "CENTRE"), 1: ("FIRST_NAME", "LAST_NAME", "EMAIL", "CENTRE")}
         submitter_details_dict = self.load_from_db(submitter_details_query.get_sql(quote_char=None))
-        self.laboratory = "UNSPECIFIED LABORATORY" # because this is not found in dgva
         # store list of submitters
         keys = submitter_details_dict.keys() # assume keys are the same
         submitter_details_array = []
         for key in keys:
             submitter_object = {
-                "lastName": submitter_details_dict[key][1],
-                "firstName": submitter_details_dict[key][0],
-                "email": submitter_details_dict[key][2],
-                "laboratory": self.laboratory,
-                "centre": submitter_details_dict[key][3]
+                "lastName": submitter_details_dict[key][1] or "UNSPECIFIED-LASTNAME",
+                "firstName": submitter_details_dict[key][0] or "UNSPECIFIED-FIRSTNAME",
+                "email": submitter_details_dict[key][2] or "UNSPECIFIED-EMAIL",
+                "laboratory": "UNSPECIFIED-LABORATORY", # because this is not found in dgva
+                "centre": submitter_details_dict[key][3] or "UNSPECIFIED-CENTRE"
             }
             submitter_details_array.append(submitter_object)
+        # TODO: add a check to determine if a placeholder was used and print to log if placeholder used
         return submitter_details_array
 
     def _get_project_pre_registered(self, project_accession):
@@ -209,7 +211,7 @@ class DGVaMetadataRetriever:
         assert len(project_title) <= MAX_PROJECT_TITLE_LENGTH, f"Project title exceeded length: {MAX_PROJECT_TITLE_LENGTH}"
         assert isinstance(project_tax_id, int), f"Project Tax ID must be an int: {project_tax_id} is {type(project_tax_id)}"
 
-        #TODO: QUERY- should non-required metadata be added?
+        #TODO: add non-EVA-required metadata to improve metadata completeness.
 
         # not required: publications, parentProject, childProject, peerProjects, hold-date, links
         # check publications meet regex"pattern": "^[^:,]+?:[^:,]+?$"
@@ -224,16 +226,35 @@ class DGVaMetadataRetriever:
         }
         return project_object
 
-    def _get_analysis(self):
+
+    def _get_analysis(self, study_accession):
         # return analysis_array
-        pass
+        # required: analysisTitle, analysisAlias, description, experimentType, reference_genome
+        logger.info("Fetching Analysis details.")
+        analysis_analysis_alias = self._fetch_analysis_alias(study_accession)
+        analysis_analysis_title = "UNSPECIFIED-TITLE"
+        analysis_analysis_description = self._fetch_analysis_description(study_accession)
+        analysis_experiment_type = self._fetch_experiment_type(study_accession)
+        # TODO: DISCUSSION: turning reference into genbank accessions: the reference in DGVA is not GCA (example values: NCBI35, MGSCv37). Also, how to handle null value here?
+        analysis_reference_genome = self._fetch_reference_genome(study_accession)
+        analysis_array = []
+        analysis_object = {
+            "analysisTitle": analysis_analysis_title,
+            "analysisAlias": analysis_analysis_alias,
+            "description": analysis_analysis_description,
+            "experimentType": analysis_experiment_type,
+            "referenceGenome": analysis_reference_genome
+        }
+        placeholder_keys = [k for k,v in analysis_object.items() if v is None or "UNSPECIFIED" in v]
+        for placeholder_key in placeholder_keys:
+            logger.info(f"{placeholder_key} not found. Adding placeholder: {analysis_object[placeholder_key]}")
+        analysis_array.append(analysis_object)
+        return analysis_array
 
     def _get_sample_pre_registered(self, study_accession, biosample_accession):
         # requires analysisAlias, sampleinVCF, biosample_accession
-        #TODO: DECISION TO BE MADE FOR OBTAINING THE ANALYSIS_ALIAS + THE SAMPLE_IN_VCF. ALSO, HOW TO HANDLE ANALYSIS_ALIAS AS A LIST?
-
         sample_analysis_alias = self._fetch_analysis_alias(study_accession)
-        sample_sampleinvcf = "PLACEHOLDER_SAMPLE_IN_VCF"
+        sample_sampleinvcf = "UNSPECIFIED_SAMPLE_IN_VCF"
         sample_object = {
             "analysisAlias": [].append(sample_analysis_alias),
             "sampleInVCF": sample_sampleinvcf,
@@ -246,12 +267,10 @@ class DGVaMetadataRetriever:
         # requires analysisAlias, sampleinVCF, bioSampleObject
         # bioSampleObject requires = name, taxID, scientific_name, release (hold-date) which can be found in DGVA
         # bioSampleObject requires = collection date, geo loc which can be set to unknown/not collected
-        #TODO: DECISION TO BE MADE FOR OBTAINING THE ANALYSIS_ALIAS + THE SAMPLE_IN_VCF
         sample_analysis_alias = self._fetch_analysis_alias(study_accession)
-        sample_sampleinvcf = "PLACEHOLDER_SAMPLE_IN_VCF"
-        # TODO: fix the error, as multiple sample names
+        sample_sampleinvcf = "UNSPECIFIED_SAMPLE_IN_VCF"
+        # TODO: fix the error, as there multiple sample names,
         sample_name = self._fetch_sample_id(study_accession)
-        print(sample_name)
         sample_tax_id = self._fetch_tax_id(study_accession)
         scientific_name = self._fetch_scientific_name(study_accession)
         hold_date = self._fetch_hold_date(study_accession)
@@ -265,18 +284,31 @@ class DGVaMetadataRetriever:
             "geographic location (country and/or sea)": geographic_location_country_and_or_sea
         }
         sample_object = {
-            "analysisAlias": [].append(sample_analysis_alias),
+            "analysisAlias": sample_analysis_alias,
             "sampleInVCF": sample_sampleinvcf,
             "bioSampleObject": biosample_object
         }
         return sample_object
-    def _get_files(self):
+
+    def _get_files(self, study_accession, vcf_output):
         # return files_array
         # requires analysisAlias, fileName
-        pass
+        files_analysis_alias = self._fetch_analysis_alias(study_accession)
+        files_file_name = self._fetch_file_name(study_accession, vcf_output)
+        files_array = []
+        files_object = {
+            "analysisAlias": files_analysis_alias,
+            "fileName": files_file_name
+        }
+        files_array.append(files_object)
+        return files_array
 
     # THESE DETERMINE IF NEW OR PRE_REG
     def _determine_project_pre_registered(self, study_accession):
+        """ Determines if the project is new or pre-registered.
+        :param: study_accession - expected format ^(estd|nstd)\d+$
+        :return is_project_preregistered, project_accession : boolean and string format ^(PRJ)[A-Z]{2}\d+$
+        """
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -294,8 +326,10 @@ class DGVaMetadataRetriever:
                 if not None in value:
                     is_project_preregistered = True
                     project_accession = next(iter(project_accession_dict.values()))[0]
+                    logger.info(f"Determining if the project is pre-registered - SUCCESS - Project found: {project_accession}.")
                     return is_project_preregistered, project_accession
                 else:
+                    logger.info(f"Determining if the project is pre-registered - FAILURE - No project found.")
                     return is_project_preregistered, None
 
     def _determine_sample_pre_registered(self, study_accession):
@@ -312,21 +346,178 @@ class DGVaMetadataRetriever:
         sample_accession_dict = self.load_from_db(sample_accession_query.get_sql(quote_char=None))
         sample_accession_and_status_list = []
         SampleStatus = namedtuple('SampleStatus', ['is_sample_preregistered', 'sample_accession'])
-
         is_sample_preregistered = False
         for value in sample_accession_dict.values():
             if isinstance(value, tuple):
                 if not None in value:
+                    # DGVa does not have any samples with a BioSample accession. We do not expect this to be populated.
                     is_sample_preregistered = True
                     sample_accession = next(iter(sample_accession_dict.values()))[0]
                     sample_accession_and_status_list.append(SampleStatus(is_sample_preregistered, sample_accession))
                     # return is_sample_preregistered, sample_accession
+                    logger.info(f"Determining if sample is pre-registered - SUCCESS - Sample found: {SampleStatus(is_sample_preregistered, sample_accession)}.")
                 else:
                     sample_accession_and_status_list.append(SampleStatus(is_sample_preregistered, None))
                     # return is_sample_preregistered, None
+                    logger.info(f"Determining if sample is pre-registered - FAILURE - Sample not found.")
         return sample_accession_and_status_list
 
-    # THESE FETCH FIELDS FROM THE DB
+    # VALIDATING FETCH RESULTS OR USING PLACEHOLDER
+    def validate_fetch_result(self, eva_field_name, fetch_result_dict):
+        if fetch_result_dict != {}:
+            fetch_result = next(iter(fetch_result_dict.values()))[0]
+            logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found: {fetch_result}.")
+        else:
+            fetch_result = f"UNSPECIFIED_{eva_field_name}"
+            logger.info(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. Adding placeholder.")
+        return fetch_result
+
+    #### THESE FETCH FIELDS FROM THE DB
+    # SUBMITTER DETAILS SECTION
+    def _fetch_submitter_details(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        # programmatically create the queries
+        submitter_details_query = (
+            Query.from_(sc)
+            .join(ds)
+            .on(sc.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(sc.FIRST_NAME, sc.LAST_NAME, sc.CONTACT_EMAIL, sc.AFFILIATION_NAME)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        return submitter_details_query
+    # PROJECT SECTION
+    def _fetch_project_title(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sub = Table("DGVA_SUBMISSION", schema=db).as_("sub")
+        project_title_query = (
+            Query.from_(ds)
+            .join(sub)
+            .on(ds.STUDY_ACCESSION == sub.STUDY_ACCESSION)
+            .select(ds.DISPLAY_NAME)
+            .where(ds.STUDY_ACCESSION == study_accession)
+
+        )
+        project_title_dict = self.load_from_db(project_title_query.get_sql(quote_char=None))
+        project_title = next(iter(project_title_dict.values()))[0]
+        return project_title
+
+    def _fetch_project_description(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        stc = Table("STUDY_TYPE_CV", schema=db).as_("stc")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        project_description_query = (
+            Query.from_(ds)
+            .join(stc)
+            .on(ds.STUDY_TYPE == stc.STUDY_TYPE)
+            .select(ds.STUDY_DESCRIPTION)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        project_description_dict = self.load_from_db(project_description_query.get_sql(quote_char=None))
+        project_description = next(iter(project_description_dict.values()))[0]
+        return project_description
+
+    def _fetch_tax_id(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        so = Table("STUDY_ORGANISM", schema=db).as_("so")
+        tax_id_query = (
+            Query.from_(ds)
+            .join(so)
+            .on(so.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(so.TAXONOMY_ID)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        tax_id_dict = self.load_from_db(tax_id_query.get_sql(quote_char=None))
+        tax_id = next(iter(tax_id_dict.values()))[0]
+        return tax_id
+
+    def _fetch_centre(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
+        project_centre_query = (
+            Query.from_(sc)
+            .join(ds)
+            .on(sc.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(sc.AFFILIATION_NAME)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        project_centre_dict = self.load_from_db(project_centre_query.get_sql(quote_char=None))
+        project_centre = next(iter(project_centre_dict.values()))[0]
+        return project_centre
+    # ANALYSIS SECTION
+    def _fetch_analysis_alias(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sa = Table("STUDY_ALIAS", schema=db).as_("sa")
+        # ANALYSIS ALIAS
+        analysis_alias_query = (
+            Query.from_(ds)
+            .join(sa)
+            .on(sa.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(sa.STUDY_ALIAS_NAME)
+            .where(ds.STUDY_ACCESSION == study_accession)
+
+        )
+        analysis_alias_dict = self.load_from_db(analysis_alias_query.get_sql(quote_char=None))
+        analysis_alias = self.validate_fetch_result("analysisAlias", analysis_alias_dict)
+        return analysis_alias
+
+    def _fetch_analysis_description(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        dss = Table("DGVA_SAMPLESET", schema=db).as_("dss")
+        da = Table("DGVA_ANALYSIS", schema=db).as_("da")
+        rsa = Table("REFERENCE_SAMPLESET_ANALYSIS", schema=db).as_("rsa")
+        analysis_description_query = (
+            Query.from_(dss)
+            .join(ds).on(dss.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .join(rsa).on(dss.SAMPLESET_ID == rsa.SAMPLESET_ID)
+            .join(da).on(rsa.ANALYSIS_ID == da.ANALYSIS_ID)
+            .select(da.ANALYSIS_DESCRIPTION)
+            .where(dss.STUDY_ACCESSION == study_accession)
+        )
+        analysis_description_dict = self.load_from_db(analysis_description_query.get_sql(quote_char=None))
+        analysis_description = self.validate_fetch_result("description", analysis_description_dict)
+        return analysis_description
+
+    def _fetch_experiment_type(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        experiment_type_query = (
+            Query.from_(de)
+            .join(ds).on(de.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(de.EXPERIMENT_TYPE)
+            .where(de.STUDY_ACCESSION == study_accession)
+        )
+        experiment_type_dict = self.load_from_db(experiment_type_query.get_sql(quote_char=None))
+        experiment_type = next(iter(experiment_type_dict.values()))[0]
+        return experiment_type
+
+    def _fetch_reference_genome(self, study_accession):
+        # TODO: reference genome is not in GCA needs converting
+        pass
+    # SAMPLE SECTION
     def _fetch_sample_id(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
@@ -339,8 +530,6 @@ class DGVaMetadataRetriever:
         )
         sample_id_dict = self.load_from_db(sample_id_query.get_sql(quote_char=None))
         sample_id = next(iter(sample_id_dict.values()))[0]
-        #TODO: two sample names are present, how to
-        print(sample_id_dict)
         return sample_id
 
     def _fetch_hold_date(self, study_accession):
@@ -372,137 +561,26 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         scientific_name_dict = self.load_from_db(scientific_name_query.get_sql(quote_char=None))
-        print(scientific_name_dict)
         scientific_name = next(iter(scientific_name_dict.values()))[0]
-        #TODO: error in the query, fix this
         return scientific_name
-
-    def _fetch_project_description(self, study_accession):
+    # FILES SECTION
+    def _fetch_file_name(self, study_accession, vcf_output):
         # create the schema objects
-        db = Schema("DGVA")
+        # db = Schema("DGVA")
+        stage_1 = Schema('STAGE_1')
+        stage_10 = Schema('STAGE_10')
         # create the table objects
-        stc = Table("STUDY_TYPE_CV", schema=db).as_("stc")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        project_description_query = (
-            Query.from_(ds)
-            .join(stc)
-            .on(ds.STUDY_TYPE == stc.STUDY_TYPE)
-            .select(ds.STUDY_DESCRIPTION)
-            .where(ds.STUDY_ACCESSION == study_accession)
+        study = stage_1.STUDY.as_('study')
+        vsf = stage_10.VW_STUDY_FILE.as_('vsf')
+        file_name_query = (
+            Query.from_(study)
+            .join(vsf).on(study.STUDY_ACCESSION == vsf.STUDY_ACCESSION)
+            .select(vsf.FILE_NAME)
+            .where(study.STUDY_ACCESSION == study_accession)
         )
-        project_description_dict = self.load_from_db(project_description_query.get_sql(quote_char=None))
-        project_description = next(iter(project_description_dict.values()))[0]
-        return project_description
-
-
-    def _fetch_project_title(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
-        # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        sub = Table("DGVA_SUBMISSION", schema=db).as_("sub")
-        project_title_query = (
-            Query.from_(ds)
-            .join(sub)
-            .on(ds.STUDY_ACCESSION == sub.STUDY_ACCESSION)
-            .select(ds.DISPLAY_NAME)
-            .where(ds.STUDY_ACCESSION == study_accession)
-
-        )
-        project_title_dict = self.load_from_db(project_title_query.get_sql(quote_char=None))
-        project_title = next(iter(project_title_dict.values()))[0]
-        return project_title
-
-    def _fetch_submitter_details(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
-        # create the table objects
-        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        # programmatically create the queries
-        submitter_details_query = (
-            Query.from_(sc)
-            .join(ds)
-            .on(sc.STUDY_ACCESSION == ds.STUDY_ACCESSION)
-            .select(sc.FIRST_NAME, sc.LAST_NAME, sc.CONTACT_EMAIL, sc.AFFILIATION_NAME)
-            .where(ds.STUDY_ACCESSION == study_accession)
-        )
-        return submitter_details_query
-
-    def _fetch_analysis_alias(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
-        # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        sa = Table("STUDY_ALIAS", schema=db).as_("sa")
-        # ANALYSIS ALIAS
-        analysis_alias_query = (
-            Query.from_(ds)
-            .join(sa)
-            .on(sa.STUDY_ACCESSION == ds.STUDY_ACCESSION)
-            .select(sa.STUDY_ALIAS_NAME)
-            .where(ds.STUDY_ACCESSION == study_accession)
-
-        )
-        analysis_alias_dict = self.load_from_db(analysis_alias_query.get_sql(quote_char=None))
-        if analysis_alias_dict != {}:
-            analysis_alias = next(iter(analysis_alias_dict.values()))[0]
+        file_name_dict = self.load_from_db(file_name_query.get_sql(quote_char=None))
+        if file_name_dict != {}:
+            file_name = next(iter(file_name_dict.values()))[0]
         else:
-            analysis_alias = "PLACEHOLDER_ANALYSIS_ALIAS"
-        return analysis_alias
-
-    def _fetch_centre(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
-        # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
-        project_centre_query = (
-            Query.from_(sc)
-            .join(ds)
-            .on(sc.STUDY_ACCESSION == ds.STUDY_ACCESSION)
-            .select(sc.AFFILIATION_NAME)
-            .where(ds.STUDY_ACCESSION == study_accession)
-        )
-        project_centre_dict = self.load_from_db(project_centre_query.get_sql(quote_char=None))
-        project_centre = next(iter(project_centre_dict.values()))[0]
-        return project_centre
-
-    def _fetch_tax_id(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
-        # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        so = Table("STUDY_ORGANISM", schema=db).as_("so")
-        tax_id_query = (
-            Query.from_(ds)
-            .join(so)
-            .on(so.STUDY_ACCESSION == ds.STUDY_ACCESSION)
-            .select(so.TAXONOMY_ID)
-            .where(ds.STUDY_ACCESSION == study_accession)
-        )
-        tax_id_dict = self.load_from_db(tax_id_query.get_sql(quote_char=None))
-        tax_id = next(iter(tax_id_dict.values()))[0]
-        return tax_id
-
-
-def main():
-    # Set up logging functionality
-    ####################################
-    # set path to log and config_file
-
-    #####################################
-    log_cfg.add_file_handler(log_file)
-    logger.info(f"The log file is {log_file}")
-
-    retrieved_dgva_metadata = DGVaMetadataRetriever(config_file)
-    # using with to manage the connection
-    with retrieved_dgva_metadata:
-        retrieved_dgva_metadata.create_json_file(json_file_path=json_file, study_accession="estd22")
-        # project pre-reg
-        # retrieved_dgva_metadata.create_json_file(json_file_path=json_file, study_accession="estd199")
-
-
-
-if __name__ == "__main__":
-    main()
+            file_name = os.path.basename(vcf_output)
+        return file_name
