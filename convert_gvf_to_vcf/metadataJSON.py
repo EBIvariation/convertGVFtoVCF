@@ -240,7 +240,6 @@ class DGVaMetadataRetriever:
         analysis_analysis_title = "UNSPECIFIED-TITLE"
         analysis_analysis_description = self._fetch_analysis_description(study_accession)
         analysis_experiment_type = self._fetch_experiment_type(study_accession)
-        # TODO: DISCUSSION: turning reference into genbank accessions: the reference in DGVA is not GCA (example values: NCBI35, MGSCv37). Also, how to handle null value here?
         analysis_reference_genome = self._fetch_reference_genome(study_accession)
         analysis_array = []
         analysis_object = {
