@@ -181,8 +181,13 @@ class DGVaMetadataRetriever:
                 "laboratory": "UNSPECIFIED-LABORATORY", # because this is not found in dgva
                 "centre": submitter_details_dict[key][3] or "UNSPECIFIED-CENTRE"
             }
+            for eva_field_name,value in submitter_object.items():
+                if "UNSPECIFIED" in str(value):
+                    logger.info(f"Fetching {eva_field_name} - FAILURE - {eva_field_name} not found: {value}.")
+                else:
+                    logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found.")
             submitter_details_array.append(submitter_object)
-        # TODO: add a check to determine if a placeholder was used and print to log if placeholder used
+
         return submitter_details_array
 
     def _get_project_pre_registered(self, project_accession):
@@ -294,7 +299,7 @@ class DGVaMetadataRetriever:
         # return files_array
         # requires analysisAlias, fileName
         files_analysis_alias = self._fetch_analysis_alias(study_accession)
-        files_file_name = self._fetch_file_name(study_accession, vcf_output)
+        files_file_name = self._fetch_file_name(vcf_output)
         files_array = []
         files_object = {
             "analysisAlias": files_analysis_alias,
@@ -564,23 +569,6 @@ class DGVaMetadataRetriever:
         scientific_name = next(iter(scientific_name_dict.values()))[0]
         return scientific_name
     # FILES SECTION
-    def _fetch_file_name(self, study_accession, vcf_output):
-        # create the schema objects
-        # db = Schema("DGVA")
-        stage_1 = Schema('STAGE_1')
-        stage_10 = Schema('STAGE_10')
-        # create the table objects
-        study = stage_1.STUDY.as_('study')
-        vsf = stage_10.VW_STUDY_FILE.as_('vsf')
-        file_name_query = (
-            Query.from_(study)
-            .join(vsf).on(study.STUDY_ACCESSION == vsf.STUDY_ACCESSION)
-            .select(vsf.FILE_NAME)
-            .where(study.STUDY_ACCESSION == study_accession)
-        )
-        file_name_dict = self.load_from_db(file_name_query.get_sql(quote_char=None))
-        if file_name_dict != {}:
-            file_name = next(iter(file_name_dict.values()))[0]
-        else:
-            file_name = os.path.basename(vcf_output)
+    def _fetch_file_name(self, vcf_output):
+        file_name = os.path.basename(vcf_output)
         return file_name
