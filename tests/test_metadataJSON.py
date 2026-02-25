@@ -2,7 +2,7 @@ import json
 import os
 from unittest import TestCase
 from unittest.mock import patch, MagicMock, ANY, Mock
-
+from collections import namedtuple
 import oracledb
 from ebi_eva_common_pyutils.spreadsheet.metadata_xlsx_utils import metadata_xlsx_version
 
@@ -101,3 +101,172 @@ class TestDGVaMetadataRetriever(TestCase):
             result = metadata_client.connection
         # this should only allow 3 attempts
         assert mock_connection.call_count == 3
+
+    def test_load_from_db(self):
+        pass
+
+    def test_create_json_file(self):
+        pass
+
+    def test__get_validated_value(self):
+        pass
+
+
+    # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db                TARGET
+    # PATCH                                                                             THE PATCH
+    # mock_load                                                                         THE MOCK
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db")
+    # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details    TARGET
+    # PATCH                                                                             THE PATCH
+    # mock_fetch                                                                        THE MOCK
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details")
+    def test_get_submitter_details(self, mock_fetch, mock_load):
+        # Mock the pypika query result of _fetch_submitter_details
+        mock_query = MagicMock()
+        mock_query.get_sql.return_value = "SELECT * FROM table"
+        mock_fetch.return_value = mock_query
+
+        # create mock data from load_from_db
+        mock_data = {
+            "user_1": ["John", "Smith", "e1@mail.com", "centre1"],
+            "user_2": ["Jane", None, "e2@mail.com", "centre2"],     # Test Case: Last Name - None
+            "user_3": ["Bob", "", "e3@mail.com" , "centre3"],       # Test Case: Last Name - empty string
+            "user_4": ["Mike", "Jones", None , "centre4"],          # Test Case: Email Add - None
+            "user_5": ["Dave", "Smith", "" , "centre4"],            # Test Case: Email Add - empty string
+            "user_6": ["Bobby", "Jones", "e4@mail.com" , None],     # Test Case: Centre - None
+        }
+        mock_load.return_value = mock_data
+
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._get_submitter_details("STUDY123")
+
+        # 3. ASSERT: Verify the default values were applied
+        expected = [
+            {
+                'firstName': 'John',
+                'lastName': 'Smith',
+                'laboratory': 'UNSPECIFIED-LABORATORY',
+                'email': 'e1@mail.com',
+                'centre': 'centre1'
+            },
+            {
+                'firstName': 'Jane',
+                'lastName': 'UNSPECIFIED-LASTNAME',
+                'laboratory': 'UNSPECIFIED-LABORATORY',
+                'email': 'e2@mail.com',
+                'centre': 'centre2'
+             },
+            {
+                'firstName': 'Bob',
+                'lastName': 'UNSPECIFIED-LASTNAME',
+                'laboratory': 'UNSPECIFIED-LABORATORY',
+                'email': 'e3@mail.com',
+                'centre': 'centre3'
+            },
+            {
+                'firstName': 'Mike',
+                'lastName': 'Jones',
+                'centre': 'centre4',
+                'email': 'UNSPECIFIED-EMAIL',
+                'laboratory': 'UNSPECIFIED-LABORATORY'
+            },
+            {
+                'firstName': 'Dave',
+                'lastName': 'Smith',
+                'email': 'UNSPECIFIED-EMAIL',
+                'laboratory': 'UNSPECIFIED-LABORATORY',
+                'centre': 'centre4'
+            },
+            {
+                'firstName': 'Bobby',
+                'lastName': 'Jones',
+                'email': 'e4@mail.com',
+                'laboratory': 'UNSPECIFIED-LABORATORY',
+                'centre': 'UNSPECIFIED-CENTRE'
+            }
+        ]
+
+        self.assertEqual(result, expected)
+        mock_fetch.assert_called_once_with("STUDY123")
+
+    # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db                TARGET
+    # PATCH                                                                             THE PATCH
+    # mock_load                                                                         THE MOCK
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db")
+    def test__determine_project_pre_registered(self, mock_load):
+        # create mock data from load_from_db (PROJECT NOT PRE-REGISTERED)
+        mock_data = {
+            0: (None,) # not pre-registered
+        }
+        mock_load.return_value = mock_data
+
+        metadata_client = DGVaMetadataRetriever(self.config)
+        is_preregistered, accession = metadata_client._determine_project_pre_registered("STUDY123")
+        self.assertFalse(is_preregistered)
+        self.assertEqual(accession, None)
+        # create mock data from load_from_db (PROJECT PRE-REGISTERED)
+        mock_data = {
+            0: ('PRJNA28889',) # pre-registered
+        }
+        mock_load.return_value = mock_data
+        metadata_client = DGVaMetadataRetriever(self.config)
+        is_preregistered, accession =  metadata_client._determine_project_pre_registered("STUDY789")
+        self.assertTrue(is_preregistered)
+        self.assertEqual(accession, "PRJNA28889")
+
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_reference_genome")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_experiment_type")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_description")
+    # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_alias                TARGET
+    # PATCH                                                                             THE PATCH
+    # mock_alias                                                                         THE MOCK
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_alias")
+    def test__get_analysis(self, mock_alias, mock_desc, mock_experiment_type, mock_reference_genome):
+        mock_alias.return_value = "MYanalysisALIAS"
+        # mock_title.return_value = "mytitle"
+        mock_desc.return_value = "mock_desc"
+        mock_experiment_type.return_value = "mock_experiment_type"
+        mock_reference_genome.return_value = "GCA000000000"
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._get_analysis("estd123")
+        expected_result = [{
+            'analysisTitle': 'UNSPECIFIED-TITLE',
+            'analysisAlias': 'MYanalysisALIAS',
+            'description': 'mock_desc',
+            'experimentType': 'mock_experiment_type',
+            'referenceGenome': 'GCA000000000'
+        }]
+        self.assertEqual(result,expected_result)
+
+    # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db                TARGET
+    # PATCH                                                                             THE PATCH
+    # mock_load                                                                         THE MOCK
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db")
+    def test__determine_sample_pre_registered(self, mock_load):
+        # (SAMPLE NOT PRE-REGISTERED)
+        # create mock data from load_from_db (SAMPLE NOT PRE-REGISTERED)
+        mock_data = {
+            0: (None,),
+            1: (None,)  # not pre-registered
+        }
+        mock_load.return_value = mock_data
+
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._determine_sample_pre_registered("estd123")
+
+        SampleStatus = namedtuple('SampleStatus', ['is_sample_preregistered', 'sample_accession'])
+        expected_result = [SampleStatus(is_sample_preregistered=False, sample_accession=None), SampleStatus(is_sample_preregistered=False, sample_accession=None)]
+        self.assertEqual(result, expected_result)
+
+        # create mock data from load_from_db (SAMPLE PRE-REGISTERED)
+        mock_data = {
+            0: ("SAMN12345678",),
+        }
+        mock_load.return_value = mock_data
+
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._determine_sample_pre_registered("estd123")
+
+        SampleStatus = namedtuple('SampleStatus', ['is_sample_preregistered', 'sample_accession'])
+        expected_result = [SampleStatus(is_sample_preregistered=True, sample_accession="SAMN12345678")]
+        self.assertEqual(result, expected_result)
