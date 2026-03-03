@@ -336,7 +336,7 @@ class DGVaMetadataRetriever:
             if isinstance(value, tuple):
                 if not None in value:
                     is_project_preregistered = True
-                    project_accession = next(iter(project_accession_dict.values()))[0]
+                    project_accession = next(iter(project_accession_dict.values()), [None])[0]
                     logger.info(f"Determining if the project is pre-registered - SUCCESS - Project found: {project_accession}.")
                     return is_project_preregistered, project_accession
                 else:
@@ -380,9 +380,11 @@ class DGVaMetadataRetriever:
 
     # VALIDATING FETCH RESULTS OR USING PLACEHOLDER
     def validate_fetch_result(self, eva_field_name, fetch_result_dict):
-        if fetch_result_dict != {}:
-            fetch_result = next(iter(fetch_result_dict.values()))[0]
-            logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found: {fetch_result}.")
+        if fetch_result_dict:
+            value_list = next(iter(fetch_result_dict.values()), [None])
+            fetch_result = value_list[0] if value_list else None
+            if fetch_result is not None:
+                logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found: {fetch_result}.")
         else:
             fetch_result = f"UNSPECIFIED_{eva_field_name}"
             logger.info(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. Adding placeholder.")
@@ -421,7 +423,7 @@ class DGVaMetadataRetriever:
 
         )
         project_title_dict = self.load_from_db(project_title_query.get_sql(quote_char=None))
-        project_title = next(iter(project_title_dict.values()))[0]
+        project_title = next(iter(project_title_dict.values()), [None])[0]
         return project_title
 
     def _fetch_project_description(self, study_accession):
@@ -438,7 +440,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         project_description_dict = self.load_from_db(project_description_query.get_sql(quote_char=None))
-        project_description = next(iter(project_description_dict.values()))[0]
+        project_description = self.validate_fetch_result("description", project_description_dict)
         return project_description
 
     def _fetch_tax_id(self, study_accession):
@@ -455,7 +457,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         tax_id_dict = self.load_from_db(tax_id_query.get_sql(quote_char=None))
-        tax_id = next(iter(tax_id_dict.values()))[0]
+        tax_id = self.validate_fetch_result("taxId", tax_id_dict)
         return tax_id
 
     def _fetch_centre(self, study_accession):
@@ -472,7 +474,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         project_centre_dict = self.load_from_db(project_centre_query.get_sql(quote_char=None))
-        project_centre = next(iter(project_centre_dict.values()))[0]
+        project_centre = self.validate_fetch_result("centre", project_centre_dict)
         return project_centre
     # ANALYSIS SECTION
     def _fetch_analysis_alias(self, study_accession):
@@ -527,7 +529,7 @@ class DGVaMetadataRetriever:
             .where(de.STUDY_ACCESSION == study_accession)
         )
         experiment_type_dict = self.load_from_db(experiment_type_query.get_sql(quote_char=None))
-        experiment_type = next(iter(experiment_type_dict.values()))[0]
+        experiment_type = self.validate_fetch_result("experimentType", experiment_type_dict)
         return experiment_type
 
     def _fetch_reference_genome(self, study_accession):
@@ -564,7 +566,6 @@ class DGVaMetadataRetriever:
             .where(dsamp.STUDY_ACCESSION == study_accession)
         )
         sample_id_dict = self.load_from_db(sample_id_query.get_sql(quote_char=None))
-        # sample_id = next(iter(sample_id_dict.values()))[0]
         sample_id_list = [v[0] for v in sample_id_dict.values()]
         return sample_id_list
 
@@ -579,7 +580,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         hold_date_dict = self.load_from_db(hold_date_query.get_sql(quote_char=None))
-        hold_date = next(iter(hold_date_dict.values()))[0]
+        hold_date = self.validate_fetch_result("holdDate", hold_date_dict)
         return hold_date
 
     def _fetch_scientific_name(self, study_accession):
@@ -597,7 +598,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         scientific_name_dict = self.load_from_db(scientific_name_query.get_sql(quote_char=None))
-        scientific_name = next(iter(scientific_name_dict.values()))[0]
+        scientific_name = self.validate_fetch_result("scientific_name", scientific_name_dict)
         return scientific_name
     # FILES SECTION
     def _fetch_file_name(self, vcf_output):
