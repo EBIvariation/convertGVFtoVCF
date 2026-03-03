@@ -128,7 +128,7 @@ class DGVaMetadataRetriever:
         sample_metadata_array = []
         for sample_status in sample_registration_statuses:
             if sample_status.is_sample_preregistered:
-                sample_metadata = self._get_sample_pre_registered(study_accession, sample_status.accession)
+                sample_metadata = self._get_sample_pre_registered(study_accession, sample_status.sample_accession)
                 sample_metadata_array.append(sample_metadata)
 
         # assuming all samples are not pre-registered
