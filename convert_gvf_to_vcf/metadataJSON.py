@@ -341,6 +341,7 @@ class DGVaMetadataRetriever:
                 else:
                     logger.info(f"Determining if the project is pre-registered - FAILURE - No project found.")
                     return is_project_preregistered, None
+        return is_project_preregistered, None
 
     def _determine_sample_pre_registered(self, study_accession):
         # create the schema objects
