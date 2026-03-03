@@ -131,8 +131,7 @@ class DGVaMetadataRetriever:
 
         for sample_status in sample_registration_statuses:
             if sample_status.is_sample_preregistered:
-
-                sample_metadata = self._get_sample_pre_registered(study_accession, sample_status.sample_accession)
+                sample_metadata = self._get_sample_pre_registered(study_accession, sample_status.sample_accession, sample_status.sample_id)
                 sample_metadata_array.append(sample_metadata)
             else:
                 # assuming all samples are not pre-registered
@@ -260,10 +259,11 @@ class DGVaMetadataRetriever:
         analysis_array.append(analysis_object)
         return analysis_array
 
-    def _get_sample_pre_registered(self, study_accession, biosample_accession):
+    def _get_sample_pre_registered(self, study_accession, biosample_accession, sample_id):
         # requires analysisAlias, sampleinVCF, biosample_accession
         sample_analysis_alias = self._fetch_analysis_alias(study_accession)
-        sample_sampleinvcf = "UNSPECIFIED_SAMPLE_IN_VCF"
+        # assumption the name: sampleinVCF = sample_id
+        sample_sampleinvcf = sample_id
         sample_object = {
             "analysisAlias": sample_analysis_alias,
             "sampleInVCF": sample_sampleinvcf,
