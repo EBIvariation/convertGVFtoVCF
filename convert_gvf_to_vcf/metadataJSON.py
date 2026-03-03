@@ -124,16 +124,20 @@ class DGVaMetadataRetriever:
 
         # determine if sample new or pre-registered
         # list of tuples [(is_sample_preregistered, biosample_accession)]
+        sample_ids = self._fetch_sample_id_list(study_accession)
         sample_registration_statuses = self._determine_sample_pre_registered(study_accession)
+
         sample_metadata_array = []
+
         for sample_status in sample_registration_statuses:
             if sample_status.is_sample_preregistered:
+
                 sample_metadata = self._get_sample_pre_registered(study_accession, sample_status.sample_accession)
                 sample_metadata_array.append(sample_metadata)
-
-        # assuming all samples are not pre-registered
-        sample_metadata = self._get_sample_new(study_accession)
-        sample_metadata_array.extend(sample_metadata)
+            else:
+                # assuming all samples are not pre-registered
+                sample_metadata = self._get_sample_new(study_accession, sample_status.sample_id)
+                sample_metadata_array.append(sample_metadata)
         json_in_eva_format = {
             "submitterDetails": self._get_submitter_details(study_accession),
             "project": project_metadata,
@@ -267,7 +271,7 @@ class DGVaMetadataRetriever:
         }
         return sample_object
 
-    def _get_sample_new(self, study_accession):
+    def _get_sample_new(self, study_accession, sample_id):
         # return sample object
         # requires analysisAlias, sampleinVCF, bioSampleObject
         # bioSampleObject requires = name, taxID, scientific_name, release (hold-date) which can be found in DGVA
@@ -277,28 +281,25 @@ class DGVaMetadataRetriever:
             sample_analysis_alias_list.append("UNSPECIFIED_analysisAlias")
         sample_sampleinvcf = "UNSPECIFIED_SAMPLE_IN_VCF"
         # TODO: fix the error, as there multiple sample names,
-        sample_name_list = self._fetch_sample_id_list(study_accession)
         sample_tax_id = self._fetch_tax_id(study_accession)
         scientific_name = self._fetch_scientific_name(study_accession)
         hold_date = self._fetch_hold_date(study_accession)
         collection_date = "not provided"
         geographic_location_country_and_or_sea = "not provided"
-        all_sample_objects = []
-        for sample_name in sample_name_list:
-            biosample_object = {
-                "sample_title": sample_name,
-                "scientific_name": scientific_name,
-                "tax_id": sample_tax_id,
-                "collection date": collection_date,
-                "geographic location (country and/or sea)": geographic_location_country_and_or_sea
-            }
-            sample_object = {
-                "analysisAlias": sample_analysis_alias_list,
-                "sampleInVCF": sample_sampleinvcf,
-                "bioSampleObject": biosample_object
-            }
-            all_sample_objects.append(sample_object)
-        return all_sample_objects
+        biosample_object = {
+            "sample_title": sample_id,
+            "scientific_name": scientific_name,
+            "tax_id": sample_tax_id,
+            "collection date": collection_date,
+            "geographic location (country and/or sea)": geographic_location_country_and_or_sea
+        }
+        sample_object = {
+            "analysisAlias": sample_analysis_alias_list,
+            "sampleInVCF": sample_sampleinvcf,
+            "bioSampleObject": biosample_object
+        }
+        return sample_object
+
 
     def _get_files(self, study_accession, vcf_output):
         # return files_array
@@ -351,25 +352,29 @@ class DGVaMetadataRetriever:
         # create the query
         sample_accession_query = (Query
                                    .from_(dsamp)
-                                   .select(dsamp.BIOSAMPLE_ACCESSION)
+                                   .select(dsamp.BIOSAMPLE_ACCESSION, dsamp.SUBMITTER_SAMPLE_ID)
                                    .where(dsamp.STUDY_ACCESSION == study_accession)
                                    )
+        # Index: (BiosampleAccession, SubmitterSampleID)
         sample_accession_dict = self.load_from_db(sample_accession_query.get_sql(quote_char=None))
         sample_accession_and_status_list = []
-        SampleStatus = namedtuple('SampleStatus', ['is_sample_preregistered', 'sample_accession'])
+        SampleStatus = namedtuple('SampleStatus', ['is_sample_preregistered', 'sample_accession', 'sample_id'])
+
         is_sample_preregistered = False
+        # key: index, value= Tuple(BiosampleAccession,SampleID) e.g. (None, 'NA20344')
         for value in sample_accession_dict.values():
-            if isinstance(value, tuple):
-                if not None in value:
+            if isinstance(value, tuple) and len(value) > 0:
+                current_sample_accession = value[0]
+                current_sample_id = value[1]
+                if current_sample_accession is not None:
                     # DGVa does not have any samples with a BioSample accession. We do not expect this to be populated.
                     is_sample_preregistered = True
-                    sample_accession = next(iter(sample_accession_dict.values()))[0]
-                    sample_accession_and_status_list.append(SampleStatus(is_sample_preregistered, sample_accession))
-                    # return is_sample_preregistered, sample_accession
-                    logger.info(f"Determining if sample is pre-registered - SUCCESS - Sample found: {SampleStatus(is_sample_preregistered, sample_accession)}.")
+                    sample_accession_and_status_list.append(SampleStatus(is_sample_preregistered, current_sample_accession, current_sample_id))
+                    # return is_sample_preregistered, sample_accession, sample_id
+                    logger.info(f"Determining if sample is pre-registered - SUCCESS - Sample found: {SampleStatus(is_sample_preregistered, current_sample_accession, current_sample_id)}.")
                 else:
-                    sample_accession_and_status_list.append(SampleStatus(is_sample_preregistered, None))
-                    # return is_sample_preregistered, None
+                    sample_accession_and_status_list.append(SampleStatus(is_sample_preregistered, None, current_sample_id))
+                    # return is_sample_preregistered, None, sample_id
                     logger.info(f"Determining if sample is pre-registered - FAILURE - Sample not found.")
         return sample_accession_and_status_list
 
