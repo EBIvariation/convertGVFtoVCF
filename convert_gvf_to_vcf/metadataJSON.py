@@ -423,7 +423,7 @@ class DGVaMetadataRetriever:
 
         )
         project_title_dict = self.load_from_db(project_title_query.get_sql(quote_char=None))
-        project_title = next(iter(project_title_dict.values()), [None])[0]
+        project_title = self.validate_fetch_result("title", project_title_dict)
         return project_title
 
     def _fetch_project_description(self, study_accession):
