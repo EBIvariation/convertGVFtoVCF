@@ -404,8 +404,11 @@ def main():
     else:
         log_cfg.add_stdout_handler()
     convert(args.gvf_input, args.vcf_output, args.assembly)
-    gather_metadata(args.config, args.json_output, args.study_accession, args.vcf_output)
-
+    if args.config:
+        logger.info(f"The config file is {args.config}. Gathering metadata")
+        gather_metadata(args.config, args.json_output, args.study_accession, args.vcf_output)
+    else:
+        logger.info(f"No config file provided. Unable to gather metadata.")
 
 if __name__ == "__main__":
     main()
