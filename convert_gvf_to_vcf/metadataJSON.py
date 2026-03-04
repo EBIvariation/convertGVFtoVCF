@@ -331,18 +331,14 @@ class DGVaMetadataRetriever:
                                    .where(ds.STUDY_ACCESSION == study_accession)
                                    )
         project_accession_dict = self.load_from_db(project_accession_query.get_sql(quote_char=None))
+        project_accession = self.validate_fetch_result("projectAccession", project_accession_dict)
         is_project_preregistered = False
-        for value in project_accession_dict.values():
-            if isinstance(value, tuple):
-                if not None in value:
-                    is_project_preregistered = True
-                    project_accession = next(iter(project_accession_dict.values()), [None])[0]
-                    logger.info(f"Determining if the project is pre-registered - SUCCESS - Project found: {project_accession}.")
-                    return is_project_preregistered, project_accession
-                else:
-                    logger.info(f"Determining if the project is pre-registered - FAILURE - No project found.")
-                    return is_project_preregistered, None
-        return is_project_preregistered, None
+        if project_accession is not None:
+            is_project_preregistered = True
+            logger.info(f"Determining if the project is pre-registered - SUCCESS - Project found: {project_accession}.")
+        else:
+            logger.info(f"Determining if the project is pre-registered - FAILURE - No project found.")
+        return is_project_preregistered, project_accession
 
     def _determine_sample_pre_registered(self, study_accession):
         # create the schema objects
