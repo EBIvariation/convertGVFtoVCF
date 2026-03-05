@@ -128,12 +128,12 @@ class TestDGVaMetadataRetriever(TestCase):
 
         # create mock data from load_from_db
         mock_data = {
-            "user_1": ["John", "Smith", "e1@mail.com", "centre1"],
-            "user_2": ["Jane", None, "e2@mail.com", "centre2"],     # Test Case: Last Name - None
-            "user_3": ["Bob", "", "e3@mail.com" , "centre3"],       # Test Case: Last Name - empty string
-            "user_4": ["Mike", "Jones", None , "centre4"],          # Test Case: Email Add - None
-            "user_5": ["Dave", "Smith", "" , "centre4"],            # Test Case: Email Add - empty string
-            "user_6": ["Bobby", "Jones", "e4@mail.com" , None],     # Test Case: Centre - None
+            "0": ["John", "Smith", "e1@mail.com", "centre1"],
+            "1": ["Jane", None, "e2@mail.com", "centre2"],     # Test Case: Last Name - None
+            "2": ["Bob", "", "e3@mail.com" , "centre3"],       # Test Case: Last Name - empty string
+            "3": ["Mike", "Jones", None , "centre4"],          # Test Case: Email Add - None
+            "4": ["Dave", "Smith", "" , "centre4"],            # Test Case: Email Add - empty string
+            "5": ["Bobby", "Jones", "e4@mail.com" , None],     # Test Case: Centre - None
         }
         mock_load.return_value = mock_data
 
