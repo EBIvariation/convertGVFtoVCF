@@ -279,7 +279,8 @@ class DGVaMetadataRetriever:
         sample_analysis_alias_list = self._fetch_analysis_alias_list(study_accession)
         if not sample_analysis_alias_list:
             sample_analysis_alias_list.append("UNSPECIFIED_analysisAlias")
-        sample_sampleinvcf = "UNSPECIFIED_SAMPLE_IN_VCF"
+        # assume sample in VCF = sample_id
+        sample_sampleinvcf = sample_id
         # TODO: fix the error, as there multiple sample names,
         sample_tax_id = self._fetch_tax_id(study_accession)
         scientific_name = self._fetch_scientific_name(study_accession)
