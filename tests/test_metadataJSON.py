@@ -246,27 +246,27 @@ class TestDGVaMetadataRetriever(TestCase):
         # (SAMPLE NOT PRE-REGISTERED)
         # create mock data from load_from_db (SAMPLE NOT PRE-REGISTERED)
         mock_data = {
-            0: (None,),
-            1: (None,)  # not pre-registered
+            0: (None, "NA20344"),
+            1: (None, "NA20345")  # not pre-registered
         }
         mock_load.return_value = mock_data
 
         metadata_client = DGVaMetadataRetriever(self.config)
         result = metadata_client._determine_sample_pre_registered("estd123")
 
-        SampleStatus = namedtuple('SampleStatus', ['is_sample_preregistered', 'sample_accession'])
-        expected_result = [SampleStatus(is_sample_preregistered=False, sample_accession=None), SampleStatus(is_sample_preregistered=False, sample_accession=None)]
+        SampleStatus = namedtuple('SampleStatus', ['is_sample_preregistered', 'sample_accession', 'sample_id'])
+        expected_result = [SampleStatus(is_sample_preregistered=False, sample_accession=None, sample_id="NA20344"), SampleStatus(is_sample_preregistered=False, sample_accession=None, sample_id="NA20345")]
         self.assertEqual(result, expected_result)
 
         # create mock data from load_from_db (SAMPLE PRE-REGISTERED)
         mock_data = {
-            0: ("SAMN12345678",),
+            0: ("SAMN12345678","mypreregisteredsample"),
         }
         mock_load.return_value = mock_data
 
         metadata_client = DGVaMetadataRetriever(self.config)
         result = metadata_client._determine_sample_pre_registered("estd123")
 
-        SampleStatus = namedtuple('SampleStatus', ['is_sample_preregistered', 'sample_accession'])
-        expected_result = [SampleStatus(is_sample_preregistered=True, sample_accession="SAMN12345678")]
+        SampleStatus = namedtuple('SampleStatus', ['is_sample_preregistered', 'sample_accession', 'sample_id'])
+        expected_result = [SampleStatus(is_sample_preregistered=True, sample_accession="SAMN12345678", sample_id="mypreregisteredsample")]
         self.assertEqual(result, expected_result)
