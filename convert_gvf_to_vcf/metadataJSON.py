@@ -383,8 +383,8 @@ class DGVaMetadataRetriever:
             if fetch_result is not None:
                 logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found: {fetch_result}.")
         else:
-            fetch_result = f"UNSPECIFIED_{eva_field_name}"
-            logger.info(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. Adding placeholder.")
+            logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found.")
+            raise ValueError(f"Missing data: {eva_field_name}.")
         return fetch_result
 
     #### THESE FETCH FIELDS FROM THE DB
@@ -510,6 +510,7 @@ class DGVaMetadataRetriever:
             .where(dss.STUDY_ACCESSION == study_accession)
         )
         analysis_description_dict = self.load_from_db(analysis_description_query.get_sql(quote_char=None))
+        print(analysis_description_dict)
         analysis_description = self.validate_fetch_result("description", analysis_description_dict)
         return analysis_description
 
