@@ -169,11 +169,10 @@ class DGVaMetadataRetriever:
         :return: submitter_details_array
         """
         logger.info("Fetching submitter details.")
-        submitter_details_query = self._fetch_submitter_details(study_accession)
+        submitter_details_dict = self._fetch_submitter_details_dictionary(study_accession)
         # load metadata
         # expected values in form of DICTIONARY OF ENUMERATED TUPLES {INDEX: (TUPLE)}
         # {0: ("FIRST_NAME", "LAST_NAME", "EMAIL", "CENTRE"), 1: ("FIRST_NAME", "LAST_NAME", "EMAIL", "CENTRE")}
-        submitter_details_dict = self.load_from_db(submitter_details_query.get_sql(quote_char=None))
         # store list of submitters
         keys = submitter_details_dict.keys() # assume keys are the same
         submitter_details_array = []
@@ -187,7 +186,7 @@ class DGVaMetadataRetriever:
             }
             for eva_field_name,value in submitter_object.items():
                 if "UNSPECIFIED" in str(value):
-                    logger.info(f"Fetching {eva_field_name} - FAILURE - {eva_field_name} not found: {value}.")
+                    logger.error(f"Fetching {eva_field_name} - FAILURE - {eva_field_name} not found: {value}.")
                 else:
                     logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found.")
             submitter_details_array.append(submitter_object)
@@ -389,7 +388,7 @@ class DGVaMetadataRetriever:
 
     #### THESE FETCH FIELDS FROM THE DB
     # SUBMITTER DETAILS SECTION
-    def _fetch_submitter_details(self, study_accession):
+    def _fetch_submitter_details_dictionary(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -403,7 +402,8 @@ class DGVaMetadataRetriever:
             .select(sc.FIRST_NAME, sc.LAST_NAME, sc.CONTACT_EMAIL, sc.AFFILIATION_NAME)
             .where(ds.STUDY_ACCESSION == study_accession)
         )
-        return submitter_details_query
+        submitter_details_dict = self.load_from_db(submitter_details_query.get_sql(quote_char=None))
+        return submitter_details_dict
     # PROJECT SECTION
     def _fetch_project_title(self, study_accession):
         # create the schema objects
@@ -510,7 +510,6 @@ class DGVaMetadataRetriever:
             .where(dss.STUDY_ACCESSION == study_accession)
         )
         analysis_description_dict = self.load_from_db(analysis_description_query.get_sql(quote_char=None))
-        print(analysis_description_dict)
         analysis_description = self.validate_fetch_result("description", analysis_description_dict)
         return analysis_description
 
