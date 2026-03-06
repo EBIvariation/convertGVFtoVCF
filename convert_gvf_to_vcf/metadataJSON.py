@@ -196,9 +196,10 @@ class DGVaMetadataRetriever:
     def _get_project_pre_registered(self, project_accession):
         # check project accession meets the regex
         project_accession_pattern = r"^PRJ(E|D|N)[A-Z][0-9]+$"
-        assert re.fullmatch(project_accession_pattern, project_accession), f"Project accession does not meet the regex: {project_accession_pattern}"
+        assert re.fullmatch(project_accession_pattern, project_accession), f"Project accession {project_accession} does not meet the regex: {project_accession_pattern}"
+        logger.info(f"Project accession {project_accession} has been found as pre-registered.")
         project_object = {
-            "projectAccesion" : project_accession
+            "projectAccession" : project_accession
         }
         return project_object
 
@@ -219,6 +220,7 @@ class DGVaMetadataRetriever:
         assert len(project_title) <= MAX_PROJECT_TITLE_LENGTH, f"Project title exceeded length: {MAX_PROJECT_TITLE_LENGTH}"
         assert isinstance(project_tax_id, int), f"Project Tax ID must be an int: {project_tax_id} is {type(project_tax_id)}"
 
+        logger.info(f"Project accession has not been found. Creating a new project. ")
         #TODO: add non-EVA-required metadata to improve metadata completeness.
 
         # not required: publications, parentProject, childProject, peerProjects, hold-date, links
@@ -376,14 +378,18 @@ class DGVaMetadataRetriever:
 
     # VALIDATING FETCH RESULTS OR USING PLACEHOLDER
     def validate_fetch_result(self, eva_field_name, fetch_result_dict):
-        if fetch_result_dict:
-            value_list = next(iter(fetch_result_dict.values()), [None])
-            fetch_result = value_list[0] if value_list else None
-            if fetch_result is not None:
-                logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found: {fetch_result}.")
-        else:
-            logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found.")
-            raise ValueError(f"Missing data: {eva_field_name}.")
+        try:
+            if fetch_result_dict:
+                value_list = next(iter(fetch_result_dict.values()), [None])
+                fetch_result = value_list[0] if value_list else None
+                if fetch_result:
+                    # SUCCESS if value is present or None
+                    logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found: {fetch_result}.")
+            else:
+                raise ValueError(f"Missing data: {eva_field_name}.")
+        except ValueError as e:
+            logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty string.")
+            fetch_result = ""
         return fetch_result
 
     #### THESE FETCH FIELDS FROM THE DB
@@ -410,11 +416,8 @@ class DGVaMetadataRetriever:
         db = Schema("DGVA")
         # create the table objects
         ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        sub = Table("DGVA_SUBMISSION", schema=db).as_("sub")
         project_title_query = (
             Query.from_(ds)
-            .join(sub)
-            .on(ds.STUDY_ACCESSION == sub.STUDY_ACCESSION)
             .select(ds.DISPLAY_NAME)
             .where(ds.STUDY_ACCESSION == study_accession)
 
