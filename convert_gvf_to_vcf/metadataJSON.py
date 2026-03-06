@@ -98,7 +98,7 @@ class DGVaMetadataRetriever:
                 logger.info(f" row fetched: {row}")
                 if row:
                     logger.info(f"Fetching metadata query - SUCCESS - {len(row)} records found")
-                    # sql row object is converted to python dict
+                    # sql row object is a list of tuples converted to python dict
                     row_dict = dict(enumerate(row))
                     # row_dict = [{i: val[0] for i, val in enumerate(row)}]
                     return row_dict
