@@ -4,6 +4,7 @@ from collections import Counter
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 from convert_gvf_to_vcf.conversionstatistics import FileStatistics
+from convert_gvf_to_vcf.gather_metadata import gather_metadata
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.utils import read_in_gvf_header, read_in_gvf_data
 from convert_gvf_to_vcf.vcfline import VcfLineBuilder
@@ -377,11 +378,6 @@ def cleanup_temp_files(list_of_temp_files):
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
-def gather_metadata(config_input, json_output, study_accession, vcf_output):
-
-    retrieved_dgva_metadata = DGVaMetadataRetriever(config_input)
-    with retrieved_dgva_metadata:
-        retrieved_dgva_metadata.create_json_file(json_file_path=json_output, study_accession=study_accession, vcf_output=vcf_output)
 
 
 def main():
