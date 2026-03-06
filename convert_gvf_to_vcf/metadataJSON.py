@@ -231,7 +231,7 @@ class DGVaMetadataRetriever:
         project_object = {
             "title": project_title,
             "description": project_description,
-            "taxID": project_tax_id,
+            "taxId": project_tax_id,
             "centre": project_centre
         }
         return project_object
