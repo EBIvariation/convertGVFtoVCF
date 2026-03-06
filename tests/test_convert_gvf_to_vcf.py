@@ -7,7 +7,8 @@ from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_
     convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line, parse_pragma, get_pragma_name_and_value, \
     get_pragma_tokens, \
     get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
-    convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert
+    convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert, flush_chrom_vcf_lines
+from convert_gvf_to_vcf.vcfline import VcfLine
 
 
 class TestConvertGVFtoVCF(unittest.TestCase):
@@ -205,6 +206,34 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert os.path.exists(input_file) == True
         assert os.path.exists(assembly) == True
         convert(input_file, output_file, assembly)
+
+    def test_convert_position_shift(self):
+        """
+        Two GVF records at the same GVF position (5) that produce different VCF positions:
+          - Record 1 (first in GVF): SNP, Variant_seq=G → VCF pos=5 (no padding)
+          - Record 2 (second in GVF): Del, Variant_seq=. → VCF pos=4 (padded before)
+        """
+        input_folder = os.path.join(os.path.dirname(__file__), "input")
+        output_folder = os.path.join(os.path.dirname(__file__), "output")
+        os.makedirs(output_folder, exist_ok=True)
+        input_file = os.path.join(input_folder, "zebrafish_position_shift.gvf")
+        output_file = os.path.join(output_folder, "zebrafish_position_shift.vcf")
+
+        convert(input_file, output_file, self.assembly)
+
+        data_lines = []
+        with open(output_file) as f:
+            for line in f:
+                if not line.startswith('#'):
+                    data_lines.append(line.strip().split('\t'))
+        assert len(data_lines) == 2, f"Expected 2 VCF data lines, got {len(data_lines)}"
+        # After sorting: pos=4 (DEL) must come before pos=5 (gain)
+        assert data_lines[0][1] == '4'
+        assert data_lines[0][3] == 'TACGT'
+        assert data_lines[0][4] == '<DEL>'
+        assert data_lines[1][1] == '5'
+        assert data_lines[1][3] == 'A'
+        assert data_lines[1][4] == 'G'
 
 if __name__ == '__main__':
     unittest.main()

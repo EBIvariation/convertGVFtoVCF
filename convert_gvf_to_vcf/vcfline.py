@@ -486,7 +486,11 @@ class VcfLine:
         :return: boolean - True if position comes after the previous vcf line on the same chromosome.
         """
         if isinstance(other_vcf_line, VcfLine):
-            return (self.chrom != other_vcf_line.chrom) or (self.pos > other_vcf_line.pos)
+            if self.chrom != other_vcf_line.chrom:
+                return True
+            if self.pos != other_vcf_line.pos:
+                return self.pos > other_vcf_line.pos
+            return self.ref > other_vcf_line.ref
         return False
 
     @property

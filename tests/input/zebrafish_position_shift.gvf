@@ -1,0 +1,9 @@
+##gff-version 3
+##gvf-version 1.06
+##species http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955
+##file-date 2015-07-15
+##genome-build NCBI GRCz10
+#subject: subject_name=Wilds2-3
+#sample: sample_name=Wilds2-3;subject_name=Wilds2-3
+chromosome1	DGVa	copy_number_gain	5	5	.	+	.	ID=1;variant_call_so_id=SO:0001742;sample_name=Wilds2-3;Variant_seq=G
+chromosome1	DGVa	copy_number_loss	5	8	.	+	.	ID=2;variant_call_so_id=SO:0001743;sample_name=Wilds2-3;Variant_seq=.
