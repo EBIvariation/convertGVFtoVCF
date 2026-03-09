@@ -112,19 +112,10 @@ class TestDGVaMetadataRetriever(TestCase):
         pass
 
 
-    # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db                TARGET
-    # PATCH                                                                             THE PATCH
-    # mock_load                                                                         THE MOCK
     @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db")
-    # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details    TARGET
-    # PATCH                                                                             THE PATCH
-    # mock_fetch                                                                        THE MOCK
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details_dictionary")
     def test_get_submitter_details(self, mock_fetch, mock_load):
-        # Mock the pypika query result of _fetch_submitter_details
-        mock_query = MagicMock()
-        mock_query.get_sql.return_value = "SELECT * FROM table"
-        mock_fetch.return_value = mock_query
+
 
         # create mock data from load_from_db
         mock_data = {
@@ -135,31 +126,30 @@ class TestDGVaMetadataRetriever(TestCase):
             "4": ["Dave", "Smith", "" , "centre4"],            # Test Case: Email Add - empty string
             "5": ["Bobby", "Jones", "e4@mail.com" , None],     # Test Case: Centre - None
         }
-        mock_load.return_value = mock_data
+        mock_fetch.return_value = mock_data
 
         metadata_client = DGVaMetadataRetriever(self.config)
         result = metadata_client._get_submitter_details("STUDY123")
 
         # 3. ASSERT: Verify the default values were applied
-        expected = [
-            {
+        expected = [{
                 'firstName': 'John',
                 'lastName': 'Smith',
-                'laboratory': 'UNSPECIFIED-LABORATORY',
+                'laboratory': '',
                 'email': 'e1@mail.com',
                 'centre': 'centre1'
             },
             {
                 'firstName': 'Jane',
-                'lastName': 'UNSPECIFIED-LASTNAME',
-                'laboratory': 'UNSPECIFIED-LABORATORY',
+                'lastName': '',
+                'laboratory': '',
                 'email': 'e2@mail.com',
                 'centre': 'centre2'
              },
             {
                 'firstName': 'Bob',
-                'lastName': 'UNSPECIFIED-LASTNAME',
-                'laboratory': 'UNSPECIFIED-LABORATORY',
+                'lastName': '',
+                'laboratory': '',
                 'email': 'e3@mail.com',
                 'centre': 'centre3'
             },
@@ -167,26 +157,25 @@ class TestDGVaMetadataRetriever(TestCase):
                 'firstName': 'Mike',
                 'lastName': 'Jones',
                 'centre': 'centre4',
-                'email': 'UNSPECIFIED-EMAIL',
-                'laboratory': 'UNSPECIFIED-LABORATORY'
+                'email': '',
+                'laboratory': ''
             },
             {
                 'firstName': 'Dave',
                 'lastName': 'Smith',
-                'email': 'UNSPECIFIED-EMAIL',
-                'laboratory': 'UNSPECIFIED-LABORATORY',
+                'email': '',
+                'laboratory': '',
                 'centre': 'centre4'
             },
             {
                 'firstName': 'Bobby',
                 'lastName': 'Jones',
                 'email': 'e4@mail.com',
-                'laboratory': 'UNSPECIFIED-LABORATORY',
-                'centre': 'UNSPECIFIED-CENTRE'
-            }
-        ]
+                'laboratory': '',
+                'centre': ''
+            }]
 
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
         mock_fetch.assert_called_once_with("STUDY123")
 
     # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db                TARGET
@@ -230,7 +219,7 @@ class TestDGVaMetadataRetriever(TestCase):
         metadata_client = DGVaMetadataRetriever(self.config)
         result = metadata_client._get_analysis("estd123")
         expected_result = [{
-            'analysisTitle': 'UNSPECIFIED-TITLE',
+            'analysisTitle': '',
             'analysisAlias': 'MYanalysisALIAS',
             'description': 'mock_desc',
             'experimentType': 'mock_experiment_type',
