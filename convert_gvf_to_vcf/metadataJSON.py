@@ -178,14 +178,14 @@ class DGVaMetadataRetriever:
         submitter_details_array = []
         for key in keys:
             submitter_object = {
-                "lastName": submitter_details_dict[key][1] or "UNSPECIFIED-LASTNAME",
-                "firstName": submitter_details_dict[key][0] or "UNSPECIFIED-FIRSTNAME",
-                "email": submitter_details_dict[key][2] or "UNSPECIFIED-EMAIL",
-                "laboratory": "UNSPECIFIED-LABORATORY", # because this is not found in dgva
-                "centre": submitter_details_dict[key][3] or "UNSPECIFIED-CENTRE"
+                "lastName": submitter_details_dict[key][1] or "",
+                "firstName": submitter_details_dict[key][0] or "",
+                "email": submitter_details_dict[key][2] or "",
+                "laboratory": "", # because this is not found in dgva
+                "centre": submitter_details_dict[key][3] or ""
             }
             for eva_field_name,value in submitter_object.items():
-                if "UNSPECIFIED" in str(value):
+                if str(value) == "":
                     logger.error(f"Fetching {eva_field_name} - FAILURE - {eva_field_name} not found: {value}.")
                 else:
                     logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found.")
@@ -242,7 +242,7 @@ class DGVaMetadataRetriever:
         # required: analysisTitle, analysisAlias, description, experimentType, reference_genome
         logger.info("Fetching Analysis details.")
         analysis_analysis_alias = self._fetch_analysis_alias(study_accession)
-        analysis_analysis_title = "UNSPECIFIED-TITLE"
+        analysis_analysis_title = ""
         analysis_analysis_description = self._fetch_analysis_description(study_accession)
         analysis_experiment_type = self._fetch_experiment_type(study_accession)
         analysis_reference_genome = self._fetch_reference_genome(study_accession)
@@ -254,7 +254,7 @@ class DGVaMetadataRetriever:
             "experimentType": analysis_experiment_type,
             "referenceGenome": analysis_reference_genome
         }
-        placeholder_keys = [k for k,v in analysis_object.items() if v is None or "UNSPECIFIED" in v]
+        placeholder_keys = [k for k,v in analysis_object.items() if v is None or v == ""]
         for placeholder_key in placeholder_keys:
             logger.info(f"{placeholder_key} not found. Adding placeholder: {analysis_object[placeholder_key]}")
         analysis_array.append(analysis_object)
@@ -279,7 +279,7 @@ class DGVaMetadataRetriever:
         # bioSampleObject requires = collection date, geo loc which can be set to unknown/not collected
         sample_analysis_alias_list = self._fetch_analysis_alias_list(study_accession)
         if not sample_analysis_alias_list:
-            sample_analysis_alias_list.append("UNSPECIFIED_analysisAlias")
+            sample_analysis_alias_list.append("")
         # assume sample in VCF = sample_id
         sample_sampleinvcf = sample_id
         # TODO: fix the error, as there multiple sample names,
