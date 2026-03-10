@@ -266,7 +266,7 @@ class DGVaMetadataRetriever:
         # assumption the name: sampleinVCF = sample_id
         sample_sampleinvcf = sample_id
         sample_object = {
-            "analysisAlias": sample_analysis_alias,
+            "analysisAlias": [sample_analysis_alias],
             "sampleInVCF": sample_sampleinvcf,
             "bioSampleAccession": biosample_accession
         }
