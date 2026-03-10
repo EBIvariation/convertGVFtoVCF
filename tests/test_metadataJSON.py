@@ -67,7 +67,7 @@ class TestDGVaMetadataRetriever(TestCase):
         metadata_client._connection = mock_unhealthy
         result = metadata_client.connection
         # did you close the unhealthy connection
-        mock_unhealthy.close_assert_called_once()
+        mock_unhealthy.close.assert_called_once()
         # did you get a new connection
         self.assertEqual(result, mock_new_connection)
 
