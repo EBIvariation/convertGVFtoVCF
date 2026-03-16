@@ -4,10 +4,11 @@ from collections import Counter
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 from convert_gvf_to_vcf.conversionstatistics import FileStatistics
+from convert_gvf_to_vcf.gather_metadata import gather_metadata
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.utils import read_in_gvf_header, read_in_gvf_data
 from convert_gvf_to_vcf.vcfline import VcfLineBuilder
-
+from convert_gvf_to_vcf.metadataJSON import DGVaMetadataRetriever
 
 logger = log_cfg.get_logger(__name__)
 
@@ -377,13 +378,19 @@ def cleanup_temp_files(list_of_temp_files):
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
+
+
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("gvf_input", help="GVF input file.")
     parser.add_argument("vcf_output", help="VCF output file.")
+    parser.add_argument("--json_output", help="JSON output file.")
+    parser.add_argument("--study_accession", help="DGVa Study Accession")
     parser.add_argument("-a", "--assembly", help="FASTA assembly file")
     parser.add_argument("--log", help="Path to log file")
+    parser.add_argument("--config", help="Path to config file")
+
     args = parser.parse_args()
 
     # Set up logging functionality
@@ -393,8 +400,11 @@ def main():
     else:
         log_cfg.add_stdout_handler()
     convert(args.gvf_input, args.vcf_output, args.assembly)
-
-
+    if args.config:
+        logger.info(f"The config file is {args.config}. Gathering metadata")
+        gather_metadata(args.config, args.json_output, args.study_accession, args.vcf_output)
+    else:
+        logger.info(f"No config file provided. Unable to gather metadata.")
 
 if __name__ == "__main__":
     main()
