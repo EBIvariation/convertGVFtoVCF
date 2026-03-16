@@ -305,30 +305,29 @@ def convert(gvf_input, vcf_output, assembly):
     vcf_data_file = vcf_output + '_data_lines'
     with open(vcf_data_file, "w") as open_data_lines:
         logger.info("Generating the VCF datalines")
-        previous_vcf_line = None
+        chrom_vcf_lines = []
+        current_chrom = None
+        has_any_features = False
         for gvf_entry in read_in_gvf_data(gvf_input):
             # record GVF counts
             report.gvf_feature_line_count += 1
             report.gvf_chromosome_count[gvf_entry.seqid] += 1
             report.gvf_sv_count.update([gvf_entry.feature_type])
+            has_any_features = True
             # create the VCF line object
             current_vcf_line = vcf_builder.build_vcf_line(gvf_entry)
             # is_missing_format_value will only be true if all the format field are missing.
             is_missing_format_value = is_missing_format_value and current_vcf_line.format_keys == ['.']
-            # Each GVF feature has been converted to a VCF object so begin comparing and merging the VCF objects.
-            if previous_vcf_line:
-                if current_vcf_line == previous_vcf_line:
-                    current_vcf_line.merge(previous_vcf_line, list_of_sample_names=samples)
-                    report.vcf_number_of_merges += 1
-                else:
-                    # TODO: address this in next bug fix
-                    assert current_vcf_line > previous_vcf_line, f"File not sorted.\ncurrent_vcf_line.pos {current_vcf_line.pos} is smaller than previous_vcf_line.pos {previous_vcf_line.pos}. See the following line:\n{str(gvf_entry)}"
-                    record_vcf_entry(open_data_lines, previous_vcf_line, report)
-            previous_vcf_line = current_vcf_line
-        # Process the final previous_vcf_line
-        if previous_vcf_line:
-            record_vcf_entry(open_data_lines, previous_vcf_line, report)
-        else:
+            # On chromosome change, flush the vcf_lines for the previous chromosome
+            if current_chrom is not None and current_vcf_line.chrom != current_chrom:
+                flush_chrom_vcf_lines(chrom_vcf_lines, open_data_lines, samples, report)
+                chrom_vcf_lines = []
+            current_chrom = current_vcf_line.chrom
+            chrom_vcf_lines.append(current_vcf_line)
+        # Flush the final chromosome vcf_lines
+        if chrom_vcf_lines:
+            flush_chrom_vcf_lines(chrom_vcf_lines, open_data_lines, samples, report)
+        if not has_any_features:
             logger.warning("No feature lines were found for this GVF file.")
 
     # VCF header generation
@@ -360,6 +359,22 @@ def construct_vcf_output(vcf_header_file, vcf_data_file, vcf_output):
             for line in vcf_data_fh:
                 vcf_output.write(line)
     vcf_output.close()
+
+def flush_chrom_vcf_lines(vcf_lines, open_data_lines, samples, report):
+    """Sort the per-chromosome vcf_lines by (pos, ref), then merge adjacent equal lines and write."""
+    vcf_lines.sort(key=lambda v: (v.pos, v.ref))
+    previous = None
+    for current in vcf_lines:
+        if previous:
+            if current == previous:
+                current.merge(previous, list_of_sample_names=samples)
+                report.vcf_number_of_merges += 1
+            else:
+                record_vcf_entry(open_data_lines, previous, report)
+        previous = current
+    if previous:
+        record_vcf_entry(open_data_lines, previous, report)
+
 
 def record_vcf_entry(open_data_lines, previous_vcf_line, report):
     # write the VCF line and record counts (use update when iterable)
