@@ -112,19 +112,22 @@ class TestDGVaMetadataRetriever(TestCase):
         pass
 
 
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db")
     @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details_dictionary")
-    def test_get_submitter_details(self, mock_fetch, mock_load):
+    def test_get_submitter_details(self, mock_fetch):
 
-
+        # first_name, last_name, telephone, email, laboratory, centre, address
         # create mock data from load_from_db
         mock_data = {
-            "0": ["John", "Smith", "e1@mail.com", "centre1"],
-            "1": ["Jane", None, "e2@mail.com", "centre2"],     # Test Case: Last Name - None
-            "2": ["Bob", "", "e3@mail.com" , "centre3"],       # Test Case: Last Name - empty string
-            "3": ["Mike", "Jones", None , "centre4"],          # Test Case: Email Add - None
-            "4": ["Dave", "Smith", "" , "centre4"],            # Test Case: Email Add - empty string
-            "5": ["Bobby", "Jones", "e4@mail.com" , None],     # Test Case: Centre - None
+            "0": ["John", "Smith", "0123456789", "e1@mail.com",  "centre1", "123 Road Name, City, Country"],  # Test case: positive test case, expected inputs
+            "1": ["Jane", None, "0123456789", "e2@mail.com",  "centre2","123 Road Name, City, Country"],      # Test Case: Last Name - None
+            "2": ["Bob", "", "0123456789", "e3@mail.com" , "centre3", "123 Road Name, City, Country"],       # Test Case: Last Name - empty string
+            "3": ["Mike", "Jones", "0123456789", None ,  "centre4", "123 Road Name, City, Country"],          # Test Case: Email Add - None
+            "4": ["Dave", "Smith", "0123456789", "" , "centre4", "123 Road Name, City, Country"],            # Test Case: Email Add - empty string
+            "5": ["Bobby", "Jones", "0123456789", "e4@mail.com" ,  None, "123 Road Name, City, Country"],     # Test Case: Centre - None
+            "6": ["Mary", "Smith", None, "e1@mail.com", "centre1", "123 Road Name, City, Country"],          # Test Case Telephone - None
+            "7": ["Robert", "Williams", "", "e1@mail.com", "centre1", "123 Road Name, City, Country"],       # Test Case Telephone - empty string
+            "8": ["Patricia", "Smith", "", "e1@mail.com", "centre1", None],                                  # Test Case Address - None
+            "9": ["John", "Brown", "", "e1@mail.com", "centre1", ""]                                         # Test Case Address - empty string
         }
         mock_fetch.return_value = mock_data
 
@@ -135,45 +138,94 @@ class TestDGVaMetadataRetriever(TestCase):
         expected = [{
                 'firstName': 'John',
                 'lastName': 'Smith',
+                'telephone': '0123456789',
                 'laboratory': '',
                 'email': 'e1@mail.com',
-                'centre': 'centre1'
+                'centre': 'centre1',
+                'address': '123 Road Name, City, Country'
             },
             {
                 'firstName': 'Jane',
                 'lastName': '',
+                'telephone': '0123456789',
                 'laboratory': '',
                 'email': 'e2@mail.com',
-                'centre': 'centre2'
+                'centre': 'centre2',
+                'address': '123 Road Name, City, Country'
              },
             {
                 'firstName': 'Bob',
                 'lastName': '',
+                'telephone': '0123456789',
                 'laboratory': '',
                 'email': 'e3@mail.com',
-                'centre': 'centre3'
+                'centre': 'centre3',
+                'address': '123 Road Name, City, Country'
             },
             {
                 'firstName': 'Mike',
                 'lastName': 'Jones',
+                'telephone': '0123456789',
                 'centre': 'centre4',
                 'email': '',
-                'laboratory': ''
+                'laboratory': '',
+                'address': '123 Road Name, City, Country'
             },
             {
                 'firstName': 'Dave',
                 'lastName': 'Smith',
+                'telephone': '0123456789',
                 'email': '',
                 'laboratory': '',
-                'centre': 'centre4'
+                'centre': 'centre4',
+                'address': '123 Road Name, City, Country'
             },
             {
                 'firstName': 'Bobby',
                 'lastName': 'Jones',
+                'telephone': '0123456789',
                 'email': 'e4@mail.com',
                 'laboratory': '',
-                'centre': ''
-            }]
+                'centre': '',
+                'address': '123 Road Name, City, Country'
+            },
+            {
+                'address': '123 Road Name, City, Country',
+                'centre': 'centre1',
+                'email': 'e1@mail.com',
+                'firstName': 'Mary',
+                'laboratory': '',
+                'lastName': 'Smith',
+                'telephone': ''
+            },
+            {
+                'address': '123 Road Name, City, Country',
+                'centre': 'centre1',
+                'email': 'e1@mail.com',
+                'firstName': 'Robert',
+                'laboratory': '',
+                'lastName': 'Williams',
+                'telephone': ''
+            },
+            {
+                'address': '',
+                'centre': 'centre1',
+                'email': 'e1@mail.com',
+                'firstName': 'Patricia',
+                'laboratory': '',
+                'lastName': 'Smith',
+                'telephone': ''
+            },
+            {
+                'address': '',
+                'centre': 'centre1',
+                'email': 'e1@mail.com',
+                'firstName': 'John',
+                'laboratory': '',
+                'lastName': 'Brown',
+                'telephone': ''
+            }
+        ]
 
         self.assertEqual(expected, result)
         mock_fetch.assert_called_once_with("STUDY123")
