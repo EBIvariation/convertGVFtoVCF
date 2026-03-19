@@ -242,8 +242,6 @@ class DGVaMetadataRetriever:
         project_object = {k:v for k,v in project_object_all.items() if v}
         return project_object
 
-
-
     def _get_analysis(self, study_accession, vcf_output, assembly, assembly_report):
         # return analysis_array
         # required: analysisTitle, analysisAlias, description, experimentType, reference_genome
@@ -347,11 +345,6 @@ class DGVaMetadataRetriever:
         return sample_object
 
     def _get_files(self, study_accession, vcf_output):
-        #TODO: the files mentioned in DGVA are XML files not the GVF files we are looking for.
-
-        # return files_array
-        # requires analysisAlias, fileName
-
         files_analysis_alias = self._fetch_analysis_alias(study_accession)
         files_file_name = self._get_file_name(vcf_output)
         files_file_size = self._get_file_size(vcf_output)
@@ -475,20 +468,6 @@ class DGVaMetadataRetriever:
             logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty string.")
             fetch_result = ""
         return fetch_result
-        # try:
-        #     if fetch_result_dict:
-        #         print(f"The fetch_result_dict for eva_field_name {eva_field_name}: {len(fetch_result_dict)}")
-        #         value_list = next(iter(fetch_result_dict.values()), [None])
-        #         fetch_result = value_list[0] if value_list else None
-        #         if fetch_result:
-        #             # SUCCESS if value is present or None
-        #             logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found: {fetch_result}.")
-        #     else:
-        #         raise ValueError(f"Missing data: {eva_field_name}.")
-        # except ValueError as e:
-        #     logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty string.")
-        #     fetch_result = ""
-        # return fetch_result
 
     def validate_date(self, date):
         try:
