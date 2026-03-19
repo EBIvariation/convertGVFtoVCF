@@ -1,0 +1,51 @@
+##fileformat=VCFv4.4
+##fileDate=2015-07-15
+##Journal=Proceedings of the National Academy of Sciences of the United States of America
+##genome-build=NCBIGRCz10
+##Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants
+##subject=subject_name=Zon9
+##First_author=Kim Brown
+##Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.
+##sample=sample_name=Wilds2-3;subject_name=Wilds2-3
+##sample=sample_name=JenMale6;subject_name=JenMale6
+##Assembly_name=GRCz10
+##sample=sample_name=Zon9;subject_name=Zon9
+##Study_type=Control Set
+##PMID=22203992
+##subject=subject_name=JenMale7;subject_sex=Male
+##Study_accession=nstd62
+##subject=subject_name=Wilds2-3
+##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955
+##sample=sample_name=JenMale7;subject_name=JenMale7
+##Display_name=Brown_et_al_2012
+##subject=subject_name=JenMale6;subject_sex=Male
+##Publication_year=2012
+##gff-version=3
+##gvf-version=1.06
+##ALT=<ID=DEL,Description="Deletion">
+##ALT=<ID=DUP,Description="Duplication">
+##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">
+##INFO=<ID=NAME,Number=.,Type=String,Description="Name">
+##INFO=<ID=ALIAS,Number=.,Type=String,Description="Secondary Name">
+##INFO=<ID=VARCALLSOID,Number=.,Type=String,Description="Variant call Sequence ontology ID">
+##INFO=<ID=PARENT,Number=.,Type=String,Description="Parent">
+##INFO=<ID=SVCID,Number=.,Type=String,Description="submitter variant call ID">
+##INFO=<ID=SAMPLENAME,Number=.,Type=String,Description="Sample Name">
+##INFO=<ID=REMAP,Number=.,Type=Float,Description="Remap score">
+##INFO=<ID=VARSEQ,Number=.,Type=String,Description="Alleles found in an individual (or group of individuals).">
+##INFO=<ID=SVCLAIM,Number=A,Type=String,Description="Claim made by the structural variant call. Valid values are D, J, DJ for abundance, adjacency and both respectively">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position on CHROM (used with symbolic alleles; see below) or End position of the longest variant described in this record">
+##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Length of structural variant">
+##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">
+##INFO=<ID=CIPOS,Number=.,Type=Integer,Description="Confidence interval around POS for symbolic structural variants">
+##INFO=<ID=CIEND,Number=.,Type=Integer,Description="Confidence interval around END for symbolic structural variants">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes, for each ALT allele, in the same order as listed">
+##INFO=<ID=DBXREF,Number=.,Type=String,Description="A database cross-reference">
+##INFO=<ID=AD,Number=R,Type=Integer,Description="Total read depth for each allele">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Read depth for each allele">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Zygosity">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	JenMale6	Wilds2-3	Zon9	JenMale7
+chromosome1	1	1	ACC	<DEL>	.	.	ID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;PARENT=nsv811094;SVCID=CNV28955;SAMPLENAME=Wilds2-3;REMAP=.98857;VARSEQ=.;END=2;IMPRECISE;SVLEN=1;SVCLAIM=D
+chromosome1	76	1	TAC	<DEL>	.	.	ID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;PARENT=nsv811094;SVCID=CNV28955;SAMPLENAME=Wilds2-3;REMAP=.98857;VARSEQ=.;END=78;IMPRECISE;CIPOS=776537,776837;CIEND=786049,786349;SVLEN=1;SVCLAIM=D
+chromosome1	1269	12		<DEL>	.	.	ID=12;NAME=nssv1406143;ALIAS=CNV22899;VARCALLSOID=SO:0001743;PARENT=nsv811095;SVCID=CNV22899;SAMPLENAME=Zon9;REMAP=.87402;VARSEQ=.;END=1320;IMPRECISE;CIPOS=.,1275976;CIEND=1319272,.;SVLEN=50;SVCLAIM=D
+chromosome1	1279	13;14		<DUP>	.	.	CIPOS=.,1282930,.,1282930,.,-1152;SAMPLENAME=JenMale6,JenMale7,JenMale7,JenMale6;SVLEN=40,40,10;SVCLAIM=D;REMAP=.85344,.69625,.85344;NAME=nssv1388955,nssv1389474,nssv1388955;IMPRECISE;SVCID=CNV5711,CNV6230,CNV5711;ALIAS=CNV5711,CNV6230,CNV5711;CIEND=1319272,.,1319272,.,-1161,.;END=1320,1320,1290;AC=3;DBXREF=mydata;PARENT=nsv811095;VARSEQ=.;AD=3;VARCALLSOID=SO:0001742	GT:AD	.:3	.:.	.:.	0:1:3

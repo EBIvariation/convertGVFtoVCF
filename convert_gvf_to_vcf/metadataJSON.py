@@ -1,7 +1,10 @@
+import hashlib
 import json
 import os
 import re
+from datetime import datetime
 from collections import namedtuple
+
 import oracledb
 
 
@@ -93,9 +96,8 @@ class DGVaMetadataRetriever:
                 logger.info(f"Executing the following query: {query}")
                 cur.execute(query)
                 # fetch the data from the cursor
-                logger.info(f"Fetching the data....")
                 row = cur.fetchall()
-                logger.info(f" row fetched: {row}")
+                logger.info(f"Fetching the data: {row}")
                 if row:
                     logger.info(f"Fetching metadata query - SUCCESS - {len(row)} records found")
                     # sql row object is a list of tuples converted to python dict
@@ -107,14 +109,9 @@ class DGVaMetadataRetriever:
                     return {}
         except Exception as e:
             logger.warning(f"Database error: {e}")
-            logger.warning("Rolling back")
-            # rollback failed transaction
-            self.connection.rollback()
             return {}
-        # finally:
-        #     self.connection.close()
 
-    def create_json_file(self, json_file_path, study_accession, vcf_output):
+    def create_json_file(self, json_file_path, study_accession, vcf_output, assembly, assembly_report):
         # determine if project new or pre-registered (most projects will be new)
         is_project_preregistered, project_accession = self._determine_project_pre_registered(study_accession)
         if is_project_preregistered:
@@ -140,7 +137,7 @@ class DGVaMetadataRetriever:
         json_in_eva_format = {
             "submitterDetails": self._get_submitter_details(study_accession),
             "project": project_metadata,
-            "analysis": self._get_analysis(study_accession),
+            "analysis": self._get_analysis(study_accession, vcf_output, assembly, assembly_report),
             "sample": sample_metadata_array,
             "files": self._get_files(study_accession, vcf_output)
         }
@@ -162,7 +159,7 @@ class DGVaMetadataRetriever:
                 raise TypeError(f"Key '{key_parts_to_get}' must be {expected_type.__name__}")
         return value_in_config
 
-    # THESE GETTERS GET THE RELEVANT JSON OBJECT
+    # THESE GETTERS GET THE RELEVANT JSON OBJECT FOR THE SECTION
     def _get_submitter_details(self, study_accession):
         """ Formats the submitter details from the DGVa database. Creates a submitter object for each submitter.
         :param: study_accession - expected format ^(estd|nstd)\d+$
@@ -172,7 +169,7 @@ class DGVaMetadataRetriever:
         submitter_details_dict = self._fetch_submitter_details_dictionary(study_accession)
         # load metadata
         # expected values in form of DICTIONARY OF ENUMERATED TUPLES {INDEX: (TUPLE)}
-        # {0: ("FIRST_NAME", "LAST_NAME", "EMAIL", "CENTRE"), 1: ("FIRST_NAME", "LAST_NAME", "EMAIL", "CENTRE")}
+        # {0: ("FIRST_NAME", "LAST_NAME", "TELEPHONE", "EMAIL", "CENTRE", "ADDRESS"), 1: ("FIRST_NAME", "LAST_NAME", "TELEPHONE", "EMAIL", "CENTRE", "ADDRESS")}
         # store list of submitters
         keys = submitter_details_dict.keys() # assume keys are the same
         submitter_details_array = []
@@ -180,13 +177,15 @@ class DGVaMetadataRetriever:
             submitter_object = {
                 "lastName": submitter_details_dict[key][1] or "",
                 "firstName": submitter_details_dict[key][0] or "",
-                "email": submitter_details_dict[key][2] or "",
-                "laboratory": "", # because this is not found in dgva
-                "centre": submitter_details_dict[key][3] or ""
+                "telephone": submitter_details_dict[key][2] or "",
+                "email": submitter_details_dict[key][3] or "",
+                "laboratory": "", # expected to be empty because this is not found in dgva
+                "centre": submitter_details_dict[key][4] or "",
+                "address": submitter_details_dict[key][5] or ""
             }
             for eva_field_name,value in submitter_object.items():
                 if str(value) == "":
-                    logger.error(f"Fetching {eva_field_name} - FAILURE - {eva_field_name} not found: {value}.")
+                    logger.error(f"Fetching {eva_field_name} - FAILURE - {eva_field_name} not found: Value set to empty string.")
                 else:
                     logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found.")
             submitter_details_array.append(submitter_object)
@@ -204,55 +203,98 @@ class DGVaMetadataRetriever:
         return project_object
 
     def _get_project_new(self, study_accession):
-        MAX_PROJECT_DESCRIPTION_LENGTH = 5000
-        MAX_PROJECT_TITLE_LENGTH = 500
-        # programmatically create the queries
-        # PROJECT TITLE
+        logger.info("Fetching Project details.")
         project_title = self._fetch_project_title(study_accession)
-        # PROJECT DESCRIPTION
         project_description = self._fetch_project_description(study_accession)
-        # PROJECT TAX ID
         project_tax_id = self._fetch_tax_id(study_accession)
-        #PROJECT CENTRE
-        project_centre = self._fetch_centre(study_accession)
-        # performing checks
-        assert len(project_description) <= MAX_PROJECT_DESCRIPTION_LENGTH, f"Project description exceeded length: {MAX_PROJECT_DESCRIPTION_LENGTH}"
-        assert len(project_title) <= MAX_PROJECT_TITLE_LENGTH, f"Project title exceeded length: {MAX_PROJECT_TITLE_LENGTH}"
-        assert isinstance(project_tax_id, int), f"Project Tax ID must be an int: {project_tax_id} is {type(project_tax_id)}"
+        project_centre_per_submitter = self._fetch_centre(study_accession)
+        project_centre = project_centre_per_submitter[0] # choose the first submitter's centre
+
+        project_publications = self._fetch_project_publications(study_accession)
+        project_parent_project = self._fetch_project_parent_project(study_accession)
+        project_child_project = "" # expect no child projects to exist
+        project_peer_project = "" # expect no child projects to exist
+        project_links = self._fetch_project_links(study_accession) # expect this to be only one link
+        project_hold_date = self._fetch_hold_date(study_accession)
+
+        # formatting
+        project_hold_date, project_links, project_parent_project, pubmed_publications = self._format_project(
+            project_hold_date, project_links, project_parent_project, project_publications)
+        # ensure compliance with EVA JSON schema https://github.com/EBIvariation/eva-sub-cli/blob/main/eva_sub_cli/etc/eva_schema.json
+        self.validate_project(project_description, project_hold_date, project_parent_project,
+                              project_tax_id, project_title, pubmed_publications)
 
         logger.info(f"Project accession has not been found. Creating a new project. ")
-        #TODO: add non-EVA-required metadata to improve metadata completeness.
-
-        # not required: publications, parentProject, childProject, peerProjects, hold-date, links
-        # check publications meet regex"pattern": "^[^:,]+?:[^:,]+?$"
-        # check parent/child/peer projects meet regex
-
         # required: title, description, taxID, centre
-        project_object = {
+        # not required: publications, parentProject, childProject, peerProjects, hold-date, links
+        project_object_all = {
             "title": project_title,
             "description": project_description,
             "taxId": project_tax_id,
-            "centre": project_centre
+            "centre": project_centre,
+            "publications": pubmed_publications,
+            "parentProject": project_parent_project,
+            "childProject": project_child_project,
+            "peerProject": project_peer_project,
+            "links": project_links,
+            "holdDate": project_hold_date
         }
+        project_object = {k:v for k,v in project_object_all.items() if v}
         return project_object
 
-
-    def _get_analysis(self, study_accession):
+    def _get_analysis(self, study_accession, vcf_output, assembly, assembly_report):
         # return analysis_array
         # required: analysisTitle, analysisAlias, description, experimentType, reference_genome
         logger.info("Fetching Analysis details.")
         analysis_analysis_alias = self._fetch_analysis_alias(study_accession)
-        analysis_analysis_title = ""
+        analysis_analysis_title = "" #TODO: fix this as DGVA's ANALYSIS_ID
         analysis_analysis_description = self._fetch_analysis_description(study_accession)
         analysis_experiment_type = self._fetch_experiment_type(study_accession)
         analysis_reference_genome = self._fetch_reference_genome(study_accession)
+        analysis_evidence_type = self._determine_evidence_type(vcf_output)
+        analysis_reference_fasta = assembly
+        analysis_assembly_report = assembly_report
+        analysis_platform = self._fetch_analysis_platform(study_accession)
+        analysis_software = self._fetch_analysis_software(study_accession)
+        analysis_pipeline_descriptions = self._fetch_analysis_pipeline_descriptions(study_accession)
+        analysis_imputation = False # assumption
+        analysis_phasing = False # assumption
+        analysis_date = "" # not present in DGVA
+        analysis_centre = "" # if different to project centre
+        analysis_links = self._fetch_analysis_links(study_accession) #TODO: should be [] and  match regex (DB:ID:LABEL).
+        analysis_run_accessions = self._fetch_analysis_run_accessions(study_accession)
+
+        # cleaning
+        analysis_run_accessions = [r if r else "" for r in analysis_run_accessions]
+
+        # validation
+        run_accession_pattern = "^(E|D|S)RR[0-9]{6,}$"
+        for run_accession in analysis_run_accessions:
+            if run_accession is not None and run_accession != "":
+                assert re.fullmatch(run_accession_pattern, run_accession), f"String {run_accession} does not match pattern: {run_accession_pattern}"
+
+        # required: analysisTitle, analysisAlias, description, experimentType, referenceGenome
+        # not required: evidenceType, referenceFasta, assemblyReport, platform, software, pipelineDescriptions
+        # imputation, phasing, date, links, runAccessions
         analysis_array = []
         analysis_object = {
             "analysisTitle": analysis_analysis_title,
             "analysisAlias": analysis_analysis_alias,
             "description": analysis_analysis_description,
             "experimentType": analysis_experiment_type,
-            "referenceGenome": analysis_reference_genome
+            "referenceGenome": analysis_reference_genome,
+            "evidenceType": analysis_evidence_type,
+            "referenceFasta": analysis_reference_fasta,
+            "assemblyReport": analysis_assembly_report,
+            "platform": analysis_platform,
+            "software": analysis_software,
+            "pipelineDescriptions": analysis_pipeline_descriptions,
+            "imputation": analysis_imputation,
+            "phasing": analysis_phasing,
+            "date": analysis_date,
+            "centre": analysis_centre,
+            "links":analysis_links,
+            "runAccessions": analysis_run_accessions
         }
         placeholder_keys = [k for k,v in analysis_object.items() if v is None or v == ""]
         for placeholder_key in placeholder_keys:
@@ -302,16 +344,19 @@ class DGVaMetadataRetriever:
         }
         return sample_object
 
-
     def _get_files(self, study_accession, vcf_output):
-        # return files_array
-        # requires analysisAlias, fileName
         files_analysis_alias = self._fetch_analysis_alias(study_accession)
-        files_file_name = self._fetch_file_name(vcf_output)
+        files_file_name = self._get_file_name(vcf_output)
+        files_file_size = self._get_file_size(vcf_output)
+        files_file_md5 = self._get_file_md5(vcf_output)
         files_array = []
+        # required: analysisAlias, filename
+        # not required: file size, md5
         files_object = {
             "analysisAlias": files_analysis_alias,
-            "fileName": files_file_name
+            "fileName": files_file_name,
+            "fileSize": files_file_size,
+            "md5": files_file_md5
         }
         files_array.append(files_object)
         return files_array
@@ -327,6 +372,8 @@ class DGVaMetadataRetriever:
         # create the table objects
         ds = Table("DGVA_STUDY", schema=db).as_("ds")
         # create the query
+        #TODO: change this. Discussion 18/3/26: moving towards treating BIOPROJECT_ACCESSION as a parent project. If treated as pre-registered we will add an analysis to the project.
+        #TODO: find how to identify pre-registered projects in DGVA. Will there be pre-registered projects?
         project_accession_query = (Query
                                    .from_(ds)
                                    .select(ds.BIOPROJECT_ACCESSION)
@@ -373,24 +420,92 @@ class DGVaMetadataRetriever:
                 else:
                     sample_accession_and_status_list.append(SampleStatus(is_sample_preregistered, None, current_sample_id))
                     # return is_sample_preregistered, None, sample_id
-                    logger.info(f"Determining if sample is pre-registered - FAILURE - Sample not found.")
+                    logger.info(f"Determining if sample is pre-registered - FAILURE - Sample not found: {current_sample_id}.")
         return sample_accession_and_status_list
 
-    # VALIDATING FETCH RESULTS OR USING PLACEHOLDER
+    def _determine_evidence_type(self, vcf_output):
+        with open(vcf_output, "r") as vcf:
+            for line in vcf:
+                if line.startswith("#CHROM"):
+                    header_tokens = line.split("\t")
+        number_of_header_tokens = len(header_tokens)
+        if number_of_header_tokens == 8:
+            evidence_type = "allele_frequency"
+        else:
+            evidence_type = "genotype"
+        logger.info(f"{number_of_header_tokens} tokens found in the VCF header. Determining evidence type as: {evidence_type}")
+        return evidence_type
+
+    # Formatting
+    def _format_project(self, project_hold_date, project_links, project_parent_project, project_publications):
+        if project_hold_date is None:
+            project_hold_date = ""
+        if project_links != "" and project_links is not None:
+            project_links = project_links + "| URL"
+        else:
+            project_links = ""
+        pubmed_publications = []
+        if project_parent_project is None:
+            project_parent_project = ""
+        if type(project_publications) is not list:
+            project_publications = [project_publications]
+        for pub in project_publications:
+            pubmed_string = "PubMed:" + str(pub)
+            pubmed_publications.append(pubmed_string)
+        return project_hold_date, project_links, project_parent_project, pubmed_publications
+    # VALIDATING
     def validate_fetch_result(self, eva_field_name, fetch_result_dict):
         try:
             if fetch_result_dict:
-                value_list = next(iter(fetch_result_dict.values()), [None])
-                fetch_result = value_list[0] if value_list else None
+                results = [v[0] for v in fetch_result_dict.values() if v]
+                fetch_result = results[0] if len(results) == 1 else results
                 if fetch_result:
                     # SUCCESS if value is present or None
-                    logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found: {fetch_result}.")
+                    logger.info(f"Fetching {eva_field_name} - SUCCESS - Value(s) for {eva_field_name} found: {fetch_result}.")
             else:
                 raise ValueError(f"Missing data: {eva_field_name}.")
         except ValueError as e:
             logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty string.")
             fetch_result = ""
         return fetch_result
+
+    def validate_date(self, date):
+        try:
+            datetime.strptime(date, '%Y-%m-%d')
+            return True
+        except ValueError:
+            return False
+
+    def validate_project(self, project_description, project_hold_date, project_parent_project,
+                         project_tax_id, project_title, pubmed_publications):
+        """ Asserts whether the input parameters meet the EVA JSON schema https://github.com/EBIvariation/eva-sub-cli/blob/main/eva_sub_cli/etc/eva_schema.json
+        :params: project_description: string of max 5000 chars
+        :params: project_hold_date: YYYY-MM-DD or ""
+        :params: project_parent_project: project accession matching regex "^PRJ(E|D|N)[A-Z][0-9]+$"
+        :params: project_tax_id: taxonomy ID as an integer
+        :params: project_title: string of max 500 chars
+        :params: pubmed_publications: list of pubmed ids ['Pubmed:1239234'] (can be more than one, in some studies)
+        """
+        # constants
+        MAX_PROJECT_DESCRIPTION_LENGTH = 5000
+        MAX_PROJECT_TITLE_LENGTH = 500
+        project_accession_pattern = r"^PRJ(E|D|N)[A-Z][0-9]+$"  # applies to parent/child/peer
+        publications_pattern = "^[^:,]+?:[^:,]+?$"  # e.g. PubMed:23128226
+        # performing checks
+        assert len(
+            project_description) <= MAX_PROJECT_DESCRIPTION_LENGTH, f"Project description exceeded length: {MAX_PROJECT_DESCRIPTION_LENGTH}"
+        assert len(
+            project_title) <= MAX_PROJECT_TITLE_LENGTH, f"Project title exceeded length: {MAX_PROJECT_TITLE_LENGTH}"
+        assert isinstance(project_tax_id,
+                          int), f"Project Tax ID must be an int: {project_tax_id} is {type(project_tax_id)}"
+        if project_hold_date != "":
+            assert self.validate_date(
+                project_hold_date) == True, f"Project Hold Date must be YYYY-MM-DD: {project_hold_date}"
+        if project_parent_project is not None and project_parent_project != "":
+            assert re.fullmatch(project_accession_pattern, project_parent_project), f"String {project_parent_project} does not match pattern: {project_accession_pattern}"
+        for pub in pubmed_publications:
+            assert re.fullmatch(publications_pattern,
+                                pub), f"String {pub} does not match pattern: {publications_pattern}"
 
     #### THESE FETCH FIELDS FROM THE DB
     # SUBMITTER DETAILS SECTION
@@ -405,8 +520,14 @@ class DGVaMetadataRetriever:
             Query.from_(sc)
             .join(ds)
             .on(sc.STUDY_ACCESSION == ds.STUDY_ACCESSION)
-            .select(sc.FIRST_NAME, sc.LAST_NAME, sc.CONTACT_EMAIL, sc.AFFILIATION_NAME)
-            .where(ds.STUDY_ACCESSION == study_accession)
+            .select(
+                sc.FIRST_NAME,
+                sc.LAST_NAME,
+                sc.CONTACT_PHONE,
+                sc.CONTACT_EMAIL,
+                sc.AFFILIATION_NAME,
+                sc.AFFILIATION_ADDRESS
+            ).where(ds.STUDY_ACCESSION == study_accession)
         )
         submitter_details_dict = self.load_from_db(submitter_details_query.get_sql(quote_char=None))
         return submitter_details_dict
@@ -476,6 +597,55 @@ class DGVaMetadataRetriever:
         project_centre_dict = self.load_from_db(project_centre_query.get_sql(quote_char=None))
         project_centre = self.validate_fetch_result("centre", project_centre_dict)
         return project_centre
+
+    def _fetch_project_publications(self, study_accession):
+        # some study accessions do have multiple publications e.g. estd192
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        spp = Table("STUDY_PUBMED_PUBLICATION", schema=db).as_("spp")
+        project_publications_query = (
+            Query.from_(spp)
+            .select(spp.PUBMED_ID)
+            .where(spp.STUDY_ACCESSION == study_accession)
+        )
+        project_publications_dict = self.load_from_db(project_publications_query.get_sql(quote_char=None))
+        project_publications = self.validate_fetch_result("publications", project_publications_dict)
+        return project_publications
+
+    def _fetch_project_parent_project(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        # create the query
+        parent_project_query = (Query
+                                   .from_(ds)
+                                   .select(ds.BIOPROJECT_ACCESSION)
+                                   .where(ds.STUDY_ACCESSION == study_accession)
+                                   )
+        parent_project_dict = self.load_from_db(parent_project_query.get_sql(quote_char=None))
+        parent_project = self.validate_fetch_result("projectAccession", parent_project_dict)
+        return parent_project
+
+    def _fetch_project_links(self, study_accession):
+        # study url (not experimentlinkurl - that goes in Analysis section)
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sub = Table("DGVA_SUBMISSION", schema=db).as_("sub")
+        project_links_query = (
+            Query.from_(ds)
+            .join(sub)
+            .on(ds.STUDY_ACCESSION == sub.STUDY_ACCESSION)
+            .select(ds.STUDY_URL)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        project_links_dict = self.load_from_db(project_links_query.get_sql(quote_char=None))
+        project_links = self.validate_fetch_result("links", project_links_dict)
+        return project_links
+
     # ANALYSIS SECTION
     def _fetch_analysis_alias(self, study_accession):
         # create the schema objects
@@ -490,7 +660,6 @@ class DGVaMetadataRetriever:
             .on(sa.STUDY_ACCESSION == ds.STUDY_ACCESSION)
             .select(sa.STUDY_ALIAS_NAME)
             .where(ds.STUDY_ACCESSION == study_accession)
-
         )
         analysis_alias_dict = self.load_from_db(analysis_alias_query.get_sql(quote_char=None))
         analysis_alias = self.validate_fetch_result("analysisAlias", analysis_alias_dict)
@@ -535,6 +704,93 @@ class DGVaMetadataRetriever:
     def _fetch_reference_genome(self, study_accession):
         # TODO: reference genome is not in GCA needs converting
         pass
+
+    def _fetch_analysis_platform(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        ep = Table("EXPERIMENT_PLATFORM", schema=db).as_("ep")
+        dp = Table("DGVA_PLATFORM", schema=db).as_("dp")
+        analysis_platform_query = (
+            Query.from_(de)
+            .join(ep).on(de.EXPERIMENT_ID == ep.EXPERIMENT_ID)
+            .join(dp).on(dp.PLATFORM_ID == ep.PLATFORM_ID)
+            .select(dp.PLATFORM_NAME)
+            .where(de.STUDY_ACCESSION == study_accession)
+        )
+        analysis_platform_dict = self.load_from_db(analysis_platform_query.get_sql(quote_char=None))
+        analysis_platform = self.validate_fetch_result("platform", analysis_platform_dict)
+        return analysis_platform
+
+    def _fetch_analysis_software(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        dd = Table("DGVA_DETECTION", schema=db).as_("dd")
+        ed = Table("EXPERIMENT_DETECTION", schema=db).as_("ed")
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        analysis_software_query = (
+            Query.from_(dd)
+            .join(ed).on(dd.DETECTION_ID == ed.DETECTION_ID)
+            .join(de).on(ed.EXPERIMENT_ID == de.EXPERIMENT_ID)
+            .select(dd.DETECTION_METHOD)
+            .where(de.STUDY_ACCESSION == study_accession)
+        )
+        analysis_software_dict = self.load_from_db(analysis_software_query.get_sql(quote_char=None))
+        analysis_software = self.validate_fetch_result("software", analysis_software_dict)
+        return analysis_software
+
+    def _fetch_analysis_pipeline_descriptions(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        dd = Table("DGVA_DETECTION", schema=db).as_("dd")
+        ed = Table("EXPERIMENT_DETECTION", schema=db).as_("ed")
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        analysis_pipeline_descriptions_query = (
+            Query.from_(dd)
+            .join(ed).on(dd.DETECTION_ID == ed.DETECTION_ID)
+            .join(de).on(ed.EXPERIMENT_ID == de.EXPERIMENT_ID)
+            .select(dd.DETECTION_DESCRIPTION)
+            .where(de.STUDY_ACCESSION == study_accession)
+        )
+        analysis_pipeline_descriptions_dict = self.load_from_db(analysis_pipeline_descriptions_query.get_sql(quote_char=None))
+        analysis_pipeline_descriptions = self.validate_fetch_result("pipelineDescriptions", analysis_pipeline_descriptions_dict)
+        return analysis_pipeline_descriptions
+
+    def _fetch_analysis_links(self, study_accession):
+        # (SELECT elu.URL FROM DGVA_EXPERIMENT de JOIN EXPERIMENT_LINK_URL elu ON de.EXPERIMENT_ID = elu.EXPERIMENT_ID)
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        elu = Table("EXPERIMENT_LINK_URL", schema=db).as_("elu")
+        analysis_links_query = (
+            Query.from_(de)
+            .join(elu).on(de.EXPERIMENT_ID == elu.EXPERIMENT_ID)
+            .select(elu.URL)
+            .where(de.STUDY_ACCESSION == study_accession)
+        )
+        analysis_links_dict = self.load_from_db(analysis_links_query.get_sql(quote_char=None))
+        analysis_links = self.validate_fetch_result("links", analysis_links_dict)
+        return analysis_links
+
+    def _fetch_analysis_run_accessions(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        analysis_run_accessions_query = (
+            Query.from_(de)
+            .join(ds).on(de.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(de.SRA_ACCESSION)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        analysis_run_accessions_dict = self.load_from_db(analysis_run_accessions_query.get_sql(quote_char=None))
+        analysis_run_accessions = self.validate_fetch_result("runAccessions", analysis_run_accessions_dict)
+        return analysis_run_accessions
     # SAMPLE SECTION
     def _fetch_analysis_alias_list(self, study_accession):
         # create the schema objects
@@ -600,7 +856,20 @@ class DGVaMetadataRetriever:
         scientific_name_dict = self.load_from_db(scientific_name_query.get_sql(quote_char=None))
         scientific_name = self.validate_fetch_result("scientific_name", scientific_name_dict)
         return scientific_name
+
     # FILES SECTION
-    def _fetch_file_name(self, vcf_output):
+    # THESE GETTERS GET THE RELEVANT VALUE
+    def _get_file_name(self, vcf_output):
         file_name = os.path.basename(vcf_output)
         return file_name
+
+    def _get_file_size(self, vcf_output):
+        file_size = os.path.getsize(vcf_output)
+        return file_size
+
+    def _get_file_md5(self, vcf_output):
+        hash_md5 = hashlib.md5()
+        with open(vcf_output, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
