@@ -13,6 +13,7 @@ class TestDGVaMetadataRetriever(TestCase):
     def setUp(self):
         input_folder = os.path.dirname(__file__)
         self.config = os.path.join(input_folder, "input", "test.config")
+        self.vcf_output = os.path.join(input_folder, "output", "a.vcf")
 
     def test_init(self):
         # testing the __init__ function has loaded the config correctly
@@ -269,14 +270,8 @@ class TestDGVaMetadataRetriever(TestCase):
         mock_experiment_type.return_value = "mock_experiment_type"
         mock_reference_genome.return_value = "GCA000000000"
         metadata_client = DGVaMetadataRetriever(self.config)
-        result = metadata_client._get_analysis("estd123")
-        expected_result = [{
-            'analysisTitle': '',
-            'analysisAlias': 'MYanalysisALIAS',
-            'description': 'mock_desc',
-            'experimentType': 'mock_experiment_type',
-            'referenceGenome': 'GCA000000000'
-        }]
+        result = metadata_client._get_analysis("estd123", self.vcf_output, "assemble.fasta", "assembly_report.txt")
+        expected_result = [{'analysisTitle': '', 'analysisAlias': 'MYanalysisALIAS', 'description': 'mock_desc', 'experimentType': 'mock_experiment_type', 'referenceGenome': 'GCA000000000', 'evidenceType': 'genotype', 'referenceFasta': 'assemble.fasta', 'assemblyReport': 'assembly_report.txt', 'platform': '', 'software': '', 'pipelineDescriptions': '', 'imputation': False, 'phasing': False, 'date': '', 'centre': '', 'links': '', 'runAccessions': []}]
         self.assertEqual(result,expected_result)
 
     # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db                TARGET
