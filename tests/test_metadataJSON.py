@@ -103,15 +103,25 @@ class TestDGVaMetadataRetriever(TestCase):
         # this should only allow 3 attempts
         assert mock_connection.call_count == 3
 
-    def test_load_from_db(self):
-        pass
+    @patch("convert_gvf_to_vcf.metadataJSON.oracledb.connect")
+    def test_load_from_db(self, mock_connect):
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+
+        mock_connect.return_value = mock_connection
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        expected_data = [('row1',), ('row2',)]
+        mock_cursor.fetchall.return_value = expected_data
+
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client.load_from_db("SQL_QUERY")
+        self.assertEqual(result, expected_data)
 
     def test_create_json_file(self):
         pass
 
     def test__get_validated_value(self):
         pass
-
 
     @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details_dictionary")
     def test_get_submitter_details(self, mock_fetch):
@@ -231,6 +241,38 @@ class TestDGVaMetadataRetriever(TestCase):
         self.assertEqual(expected, result)
         mock_fetch.assert_called_once_with("STUDY123")
 
+    def test__get_project_pre_registered(self):
+        pass
+    def test__get_project_new(self):
+        pass
+
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_reference_genome")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_experiment_type")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_description")
+    # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_alias                TARGET
+    # PATCH                                                                             THE PATCH
+    # mock_alias                                                                         THE MOCK
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_alias")
+    def test__get_analysis(self, mock_alias, mock_desc, mock_experiment_type, mock_reference_genome):
+        mock_alias.return_value = "MYanalysisALIAS"
+        # mock_title.return_value = "mytitle"
+        mock_desc.return_value = "mock_desc"
+        mock_experiment_type.return_value = "mock_experiment_type"
+        mock_reference_genome.return_value = "GCA000000000"
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._get_analysis("estd123", self.vcf_output, "assemble.fasta", "assembly_report.txt")
+        expected_result = [{'analysisTitle': '', 'analysisAlias': 'MYanalysisALIAS', 'description': 'mock_desc', 'experimentType': 'mock_experiment_type', 'referenceGenome': 'GCA000000000', 'evidenceType': 'genotype', 'referenceFasta': 'assemble.fasta', 'assemblyReport': 'assembly_report.txt', 'platform': '', 'software': '', 'pipelineDescriptions': '', 'imputation': False, 'phasing': False, 'date': '', 'centre': '', 'links': '', 'runAccessions': []}]
+        self.assertEqual(result,expected_result)
+
+    def test__get_sample_pre_registered(self):
+        pass
+
+    def test__get_sample_new(self):
+        pass
+
+    def test__get_files(self):
+        pass
+
     # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db                TARGET
     # PATCH                                                                             THE PATCH
     # mock_load                                                                         THE MOCK
@@ -255,24 +297,6 @@ class TestDGVaMetadataRetriever(TestCase):
         is_preregistered, accession =  metadata_client._determine_project_pre_registered("STUDY789")
         self.assertTrue(is_preregistered)
         self.assertEqual(accession, "PRJNA28889")
-
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_reference_genome")
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_experiment_type")
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_description")
-    # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_alias                TARGET
-    # PATCH                                                                             THE PATCH
-    # mock_alias                                                                         THE MOCK
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_alias")
-    def test__get_analysis(self, mock_alias, mock_desc, mock_experiment_type, mock_reference_genome):
-        mock_alias.return_value = "MYanalysisALIAS"
-        # mock_title.return_value = "mytitle"
-        mock_desc.return_value = "mock_desc"
-        mock_experiment_type.return_value = "mock_experiment_type"
-        mock_reference_genome.return_value = "GCA000000000"
-        metadata_client = DGVaMetadataRetriever(self.config)
-        result = metadata_client._get_analysis("estd123", self.vcf_output, "assemble.fasta", "assembly_report.txt")
-        expected_result = [{'analysisTitle': '', 'analysisAlias': 'MYanalysisALIAS', 'description': 'mock_desc', 'experimentType': 'mock_experiment_type', 'referenceGenome': 'GCA000000000', 'evidenceType': 'genotype', 'referenceFasta': 'assemble.fasta', 'assemblyReport': 'assembly_report.txt', 'platform': '', 'software': '', 'pipelineDescriptions': '', 'imputation': False, 'phasing': False, 'date': '', 'centre': '', 'links': '', 'runAccessions': []}]
-        self.assertEqual(result,expected_result)
 
     # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db                TARGET
     # PATCH                                                                             THE PATCH
@@ -306,3 +330,15 @@ class TestDGVaMetadataRetriever(TestCase):
         SampleStatus = namedtuple('SampleStatus', ['is_sample_preregistered', 'sample_accession', 'sample_id'])
         expected_result = [SampleStatus(is_sample_preregistered=True, sample_accession="SAMN12345678", sample_id="mypreregisteredsample")]
         self.assertEqual(result, expected_result)
+
+    def test__determine_evidence_type(self):
+        pass
+
+    def test_validate_fetch_result(self):
+        pass
+
+    def test_validate_date(self):
+        pass
+
+    def test_validate_project(self):
+        pass
