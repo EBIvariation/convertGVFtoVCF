@@ -1,27 +1,27 @@
 ##fileformat=VCFv4.4
-##fileDate=2015-07-15
-##Journal=Proceedings of the National Academy of Sciences of the United States of America
-##genome-build=NCBIGRCz10
-##Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants
-##subject=subject_name=Zon9
-##First_author=Kim Brown
-##Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.
-##sample=sample_name=Wilds2-3;subject_name=Wilds2-3
-##sample=sample_name=JenMale6;subject_name=JenMale6
-##Assembly_name=GRCz10
-##sample=sample_name=Zon9;subject_name=Zon9
-##Study_type=Control Set
 ##PMID=22203992
+##First_author=Kim Brown
+##sample=sample_name=Zon9;subject_name=Zon9
+##Assembly_name=GRCz10
 ##subject=subject_name=JenMale7;subject_sex=Male
-##Study_accession=nstd62
-##subject=subject_name=Wilds2-3
-##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955
-##sample=sample_name=JenMale7;subject_name=JenMale7
-##Display_name=Brown_et_al_2012
-##subject=subject_name=JenMale6;subject_sex=Male
-##Publication_year=2012
-##gff-version=3
 ##gvf-version=1.06
+##subject=subject_name=JenMale6;subject_sex=Male
+##sample=sample_name=JenMale6;subject_name=JenMale6
+##genome-build=NCBIGRCz10
+##Publication_year=2012
+##subject=subject_name=Wilds2-3
+##subject=subject_name=Zon9
+##Study_type=Control Set
+##fileDate=2015-07-15
+##gff-version=3
+##Journal=Proceedings of the National Academy of Sciences of the United States of America
+##Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants
+##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955
+##Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.
+##sample=sample_name=JenMale7;subject_name=JenMale7
+##sample=sample_name=Wilds2-3;subject_name=Wilds2-3
+##Display_name=Brown_et_al_2012
+##Study_accession=nstd62
 ##ALT=<ID=DEL,Description="Deletion">
 ##ALT=<ID=DUP,Description="Duplication">
 ##INFO=<ID=ID,Number=.,Type=String,Description="A unique identifier">
@@ -48,4 +48,4 @@
 chromosome1	1	1	ACC	<DEL>	.	.	ID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;PARENT=nsv811094;SVCID=CNV28955;SAMPLENAME=Wilds2-3;REMAP=.98857;VARSEQ=.;END=2;IMPRECISE;SVLEN=1;SVCLAIM=D
 chromosome1	76	1	TAC	<DEL>	.	.	ID=1;NAME=nssv1412199;ALIAS=CNV28955;VARCALLSOID=SO:0001743;PARENT=nsv811094;SVCID=CNV28955;SAMPLENAME=Wilds2-3;REMAP=.98857;VARSEQ=.;END=78;IMPRECISE;CIPOS=776537,776837;CIEND=786049,786349;SVLEN=1;SVCLAIM=D
 chromosome1	1269	12		<DEL>	.	.	ID=12;NAME=nssv1406143;ALIAS=CNV22899;VARCALLSOID=SO:0001743;PARENT=nsv811095;SVCID=CNV22899;SAMPLENAME=Zon9;REMAP=.87402;VARSEQ=.;END=1320;IMPRECISE;CIPOS=.,1275976;CIEND=1319272,.;SVLEN=50;SVCLAIM=D
-chromosome1	1279	13;14		<DUP>	.	.	CIPOS=.,1282930,.,1282930,.,-1152;SAMPLENAME=JenMale6,JenMale7,JenMale7,JenMale6;SVLEN=40,40,10;SVCLAIM=D;REMAP=.85344,.69625,.85344;NAME=nssv1388955,nssv1389474,nssv1388955;IMPRECISE;SVCID=CNV5711,CNV6230,CNV5711;ALIAS=CNV5711,CNV6230,CNV5711;CIEND=1319272,.,1319272,.,-1161,.;END=1320,1320,1290;AC=3;DBXREF=mydata;PARENT=nsv811095;VARSEQ=.;AD=3;VARCALLSOID=SO:0001742	GT:AD	.:3	.:.	.:.	0:1:3
+chromosome1	1279	13;14		<DUP>	.	.	AD=3;ALIAS=CNV5711,CNV6230,CNV5711;PARENT=nsv811095;END=1320,1320,1290;REMAP=.85344,.69625,.85344;VARSEQ=.;CIPOS=.,1282930,.,1282930,.,-1152;NAME=nssv1388955,nssv1389474,nssv1388955;SVCLAIM=D;VARCALLSOID=SO:0001742;SVCID=CNV5711,CNV6230,CNV5711;AC=3;IMPRECISE;SAMPLENAME=JenMale6,JenMale7,JenMale7,JenMale6;CIEND=1319272,.,1319272,.,-1161,.;SVLEN=40,40,10;DBXREF=mydata	GT:AD	.:3	.:.	.:.	0:1:3

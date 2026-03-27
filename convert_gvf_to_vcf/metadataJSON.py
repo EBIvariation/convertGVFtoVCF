@@ -193,12 +193,6 @@ class DGVaMetadataRetriever:
         for required_dict, not_required_dict in zip(submitter_details_array, submitter_details_array_not_required):
             required_dict.update(not_required_dict)
 
-        for submitter_object in submitter_details_array:
-            for eva_field_name,value in submitter_object.items():
-                if str(value) == "":
-                    logger.error(f"Fetching {eva_field_name} - FAILURE - {eva_field_name} not found: Value set to empty string.")
-                else:
-                    logger.info(f"Fetching {eva_field_name} - SUCCESS - {eva_field_name} found.")
         return submitter_details_array
 
     def _get_project_pre_registered(self, project_accession):
@@ -314,8 +308,6 @@ class DGVaMetadataRetriever:
         analysis_array.append(analysis_object)
         return analysis_array
 
-
-
     def _get_sample_pre_registered(self, study_accession, biosample_accession, sample_id):
         # requires analysisAlias, sampleinVCF, biosample_accession
         # analysis_alias is an array in samples
@@ -341,7 +333,7 @@ class DGVaMetadataRetriever:
         sample_sampleinvcf = sample_id
         sample_tax_id = self._fetch_tax_id(study_accession)
         scientific_name = self._fetch_scientific_name(study_accession)
-        hold_date = self._fetch_hold_date(study_accession)
+        # hold_date = self._fetch_hold_date(study_accession)
         collection_date = "not provided"
         geographic_location_country_and_or_sea = "not provided"
         biosample_object = {
@@ -400,7 +392,8 @@ class DGVaMetadataRetriever:
         project_accession_list = self.load_from_db(project_accession_query.get_sql(quote_char=None))
         project_accession = self.validate_fetch_result("projectAccession", project_accession_list, True)
         is_project_preregistered = False
-        if project_accession is not None:
+        # if project_accession is not None:
+        if project_accession:
             is_project_preregistered = True
             logger.info(f"Determining if the project is pre-registered - SUCCESS - Project found: {project_accession}.")
         else:
@@ -526,15 +519,16 @@ class DGVaMetadataRetriever:
         if type(project_publications) is not list:
             project_publications = [project_publications]
         for pub in project_publications:
-            pubmed_string = "PubMed:" + str(pub)
-            pubmed_publications.append(pubmed_string)
+            if pub:
+                pubmed_string = "PubMed:" + str(pub)
+                pubmed_publications.append(pubmed_string)
         return project_hold_date, project_links, project_parent_project, pubmed_publications
     # VALIDATING
-    def validate_fetch_result(self, eva_field_name, fetch_result_list, single_value):
+    def validate_fetch_result(self, eva_field_name, fetch_result_list, single_value_as_str):
         try:
             if fetch_result_list:
                 results = [row[0] for row in fetch_result_list if row]
-                if single_value:
+                if single_value_as_str:
                     fetch_result = results[0] if len(results) == 1 else results
                 else:
                     fetch_result = results
@@ -583,8 +577,9 @@ class DGVaMetadataRetriever:
         if project_parent_project is not None and project_parent_project != "":
             assert re.fullmatch(project_accession_pattern, project_parent_project), f"String {project_parent_project} does not match pattern: {project_accession_pattern}"
         for pub in pubmed_publications:
-            assert re.fullmatch(publications_pattern,
-                                pub), f"String {pub} does not match pattern: {publications_pattern}"
+            if pub:
+                assert re.fullmatch(publications_pattern,
+                                    pub), f"String {pub} does not match pattern: {publications_pattern}"
 
     def validate_analysis(self, analysis_pipeline_descriptions, analysis_run_accessions):
         if analysis_run_accessions is not None:
@@ -619,7 +614,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_last_names_list = self.load_from_db(all_last_names_query.get_sql(quote_char=None))
-        all_last_names = self.validate_fetch_result("lastName", all_last_names_list, True)
+        all_last_names = self.validate_fetch_result("lastName", all_last_names_list, False)
         return all_last_names
 
     def _fetch_submitter_details_all_first_names(self, study_accession):
@@ -638,7 +633,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_first_names_list = self.load_from_db(all_first_names_query.get_sql(quote_char=None))
-        all_first_names = self.validate_fetch_result("firstName", all_first_names_list, True)
+        all_first_names = self.validate_fetch_result("firstName", all_first_names_list, False)
         return all_first_names
 
     def _fetch_submitter_details_all_phone_numbers(self, study_accession):
@@ -657,7 +652,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_phone_numbers_list = self.load_from_db(all_phone_numbers_query.get_sql(quote_char=None))
-        all_phone_numbers = self.validate_fetch_result("telephone", all_phone_numbers_list, True)
+        all_phone_numbers = self.validate_fetch_result("telephone", all_phone_numbers_list, False)
         return all_phone_numbers
 
     def _fetch_submitter_details_all_email_addresses(self, study_accession):
@@ -676,7 +671,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_email_addresses_list = self.load_from_db(all_email_addresses_query.get_sql(quote_char=None))
-        all_email_addresses = self.validate_fetch_result("email", all_email_addresses_list, True)
+        all_email_addresses = self.validate_fetch_result("email", all_email_addresses_list, False)
         return all_email_addresses
 
     def _fetch_submitter_details_all_centres(self, study_accession):
@@ -695,7 +690,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_centres_list = self.load_from_db(all_centres_query.get_sql(quote_char=None))
-        all_centres = self.validate_fetch_result("firstName", all_centres_list, True)
+        all_centres = self.validate_fetch_result("firstName", all_centres_list, False)
         return all_centres
 
     def _fetch_submitter_details_all_addresses(self, study_accession):
@@ -714,7 +709,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_addresses_list = self.load_from_db(all_addresses_query.get_sql(quote_char=None))
-        all_addresses = self.validate_fetch_result("address", all_addresses_list, True)
+        all_addresses = self.validate_fetch_result("address", all_addresses_list, False)
         return all_addresses
     # PROJECT SECTION
     def _fetch_project_title(self, study_accession):
