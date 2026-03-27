@@ -281,16 +281,8 @@ class DGVaMetadataRetriever:
         analysis_run_accessions = self._fetch_analysis_run_accessions(study_accession)
 
         # cleaning and validation
-        if analysis_run_accessions is not None:
-            analysis_run_accessions = [r if r else "" for r in analysis_run_accessions]
-            run_accession_pattern = "^(E|D|S)RR[0-9]{6,}$"
-            for run_accession in analysis_run_accessions:
-                if run_accession is not None and run_accession != "":
-                    assert re.fullmatch(run_accession_pattern, run_accession), f"String {run_accession} does not match pattern: {run_accession_pattern}"
-            if all(not run_accession for run_accession in analysis_run_accessions):
-                analysis_run_accessions = ""
-        if all(not pipeline_descriptions for pipeline_descriptions in analysis_pipeline_descriptions):
-            analysis_pipeline_descriptions = ""
+        analysis_pipeline_descriptions, analysis_run_accessions = self.validate_analysis(analysis_pipeline_descriptions,
+                                                                                         analysis_run_accessions)
 
         # required: analysisTitle, analysisAlias, description, experimentType, referenceGenome
         # not required: evidenceType, referenceFasta, assemblyReport, platform, software, pipelineDescriptions
@@ -322,10 +314,12 @@ class DGVaMetadataRetriever:
         analysis_array.append(analysis_object)
         return analysis_array
 
+
+
     def _get_sample_pre_registered(self, study_accession, biosample_accession, sample_id):
         # requires analysisAlias, sampleinVCF, biosample_accession
         # analysis_alias is an array in samples
-        sample_analysis_alias_list = self._fetch_analysis_alias_list(study_accession, sample_id)
+        sample_analysis_alias_list = self._fetch_sample_analysis_alias_list(study_accession, sample_id)
         # assumption the name: sampleinVCF = sample_id
         sample_sampleinvcf = sample_id
         sample_object = {
@@ -340,7 +334,7 @@ class DGVaMetadataRetriever:
         # requires analysisAlias, sampleinVCF, bioSampleObject
         # bioSampleObject requires = name, taxID, scientific_name, release (hold-date) which can be found in DGVA
         # bioSampleObject requires = collection date, geo loc which can be set to unknown/not collected
-        sample_analysis_alias_list = self._fetch_analysis_alias_list(study_accession, sample_id)
+        sample_analysis_alias_list = self._fetch_sample_analysis_alias_list(study_accession, sample_id)
         if not sample_analysis_alias_list:
             sample_analysis_alias_list.append("")
         # assume sample in VCF = sample_id
@@ -592,6 +586,20 @@ class DGVaMetadataRetriever:
             assert re.fullmatch(publications_pattern,
                                 pub), f"String {pub} does not match pattern: {publications_pattern}"
 
+    def validate_analysis(self, analysis_pipeline_descriptions, analysis_run_accessions):
+        if analysis_run_accessions is not None:
+            analysis_run_accessions = [r if r else "" for r in analysis_run_accessions]
+            run_accession_pattern = "^(E|D|S)RR[0-9]{6,}$"
+            for run_accession in analysis_run_accessions:
+                if run_accession is not None and run_accession != "":
+                    assert re.fullmatch(run_accession_pattern,
+                                        run_accession), f"String {run_accession} does not match pattern: {run_accession_pattern}"
+            if all(not run_accession for run_accession in analysis_run_accessions):
+                analysis_run_accessions = ""
+        if all(not pipeline_descriptions for pipeline_descriptions in analysis_pipeline_descriptions):
+            analysis_pipeline_descriptions = ""
+        return analysis_pipeline_descriptions, analysis_run_accessions
+
     #_fetch_<section>_all_fields = return a list
     #_fetch_<section>_field_name = return a single value
     # SUBMITTER DETAILS SECTION
@@ -806,7 +814,6 @@ class DGVaMetadataRetriever:
         return parent_project
 
     def _fetch_project_links(self, study_accession):
-        # study url (not experimentlinkurl - that goes in Analysis section)
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -848,27 +855,6 @@ class DGVaMetadataRetriever:
         all_analysis_ids = self.validate_fetch_result("analysisID", analysis_id_list, False)
         all_analysis_ids.sort()
         return all_analysis_ids
-
-    def _fetch_analysis_ids_for_sample(self, study_accession, sample_id):
-        # create the schema objects
-        db = Schema("DGVA")
-        # create the table objects
-        da = Table("DGVA_ANALYSIS", schema=db).as_("da")
-        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
-        ds = Table("DGVA_SAMPLE", schema=db).as_("ds")
-        ea = Table("EXPERIMENT_ANALYSIS", schema=db).as_("ea")
-        analysis_id_for_sample_query = (
-            Query.from_(de)
-            .select(ea.ANALYSIS_ID)
-            .join(ea).on(ea.EXPERIMENT_ID == de.EXPERIMENT_ID )
-            .join(da).on(da.ANALYSIS_ID == ea.ANALYSIS_ID)
-            .join(ds).on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
-            .where((de.STUDY_ACCESSION == study_accession) & (ds.SUBMITTER_SAMPLE_ID == sample_id))
-        )
-        analysis_id_list = self.load_from_db(analysis_id_for_sample_query.get_sql(quote_char=None))
-        all_analysis_ids_for_sample = self.validate_fetch_result("analysisID", analysis_id_list, False)
-        all_analysis_ids_for_sample.sort()
-        return all_analysis_ids_for_sample
 
     def _fetch_analysis_alias(self, study_accession, analysis_id_list):
         if len(analysis_id_list) == 1:
@@ -951,31 +937,9 @@ class DGVaMetadataRetriever:
         return None
 
     def _fetch_analysis_reference_genome(self, study_accession):
-        # THIS CODE OBTAINS REMAPPING GENOMES AS WELL
-        # # create the schema objects
-        # db = Schema("DGVA")
-        # # create the table objects
-        # ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        # ds2 = Table("DGVA_SAMPLE", schema=db).as_("ds2")
-        # de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
-        # ea = Table("EXPERIMENT_ANALYSIS", schema=db).as_("ea")
-        # da = Table("DGVA_ANALYSIS", schema=db).as_("da")
-        # dsb = Table("DGVA_STUDY_BROWSER", schema=db).as_("dsb")
-        # sap = Table("STUDY_ASSEMBLY_PLACEMENT", schema=db).as_("sap")
-        # reference_genome_query = (
-        #     Query.from_(ds)
-        #     .join(ds2).on(ds2.STUDY_ACCESSION == ds.STUDY_ACCESSION)
-        #     .join(de).on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
-        #     .join(ea).on(de.EXPERIMENT_ID == ea.EXPERIMENT_ID)
-        #     .join(da).on(ea.ANALYSIS_ID == da.ANALYSIS_ID)
-        #     .join(dsb).on(ds.STUDY_ACCESSION == dsb.STUDY_ACCESSION)
-        #     .join(sap).on(sap.STUDY_ACCESSION == ds.STUDY_ACCESSION)
-        #     .select(sap.ASSEMBLY_ACCESSION).distinct()
-        #     .where(ds.STUDY_ACCESSION == study_accession)
-        # )
-        # # create the schema objects
+        # create the schema objects
         db = Schema("DGVA")
-        # # create the table objects
+        # create the table objects
         sap = Table("STUDY_ASSEMBLY_PLACEMENT", schema=db).as_("sap")
         reference_genome_query = (
             Query.from_(sap)
@@ -1064,7 +1028,6 @@ class DGVaMetadataRetriever:
         return analysis_pipeline_description
 
     def _fetch_analysis_links(self, study_accession):
-        # (SELECT elu.URL FROM DGVA_EXPERIMENT de JOIN EXPERIMENT_LINK_URL elu ON de.EXPERIMENT_ID = elu.EXPERIMENT_ID)
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -1097,7 +1060,28 @@ class DGVaMetadataRetriever:
         analysis_run_accessions = self.validate_fetch_result("runAccessions", analysis_run_accessions_list, True)
         return analysis_run_accessions
     # SAMPLE SECTION
-    def _fetch_analysis_alias_list(self, study_accession, sample_id):
+    def _fetch_analysis_ids_for_sample(self, study_accession, sample_id):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        da = Table("DGVA_ANALYSIS", schema=db).as_("da")
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        ds = Table("DGVA_SAMPLE", schema=db).as_("ds")
+        ea = Table("EXPERIMENT_ANALYSIS", schema=db).as_("ea")
+        analysis_id_for_sample_query = (
+            Query.from_(de)
+            .select(ea.ANALYSIS_ID)
+            .join(ea).on(ea.EXPERIMENT_ID == de.EXPERIMENT_ID )
+            .join(da).on(da.ANALYSIS_ID == ea.ANALYSIS_ID)
+            .join(ds).on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
+            .where((de.STUDY_ACCESSION == study_accession) & (ds.SUBMITTER_SAMPLE_ID == sample_id))
+        )
+        analysis_id_list = self.load_from_db(analysis_id_for_sample_query.get_sql(quote_char=None))
+        all_analysis_ids_for_sample = self.validate_fetch_result("analysisID", analysis_id_list, False)
+        all_analysis_ids_for_sample.sort()
+        return all_analysis_ids_for_sample
+
+    def _fetch_sample_analysis_alias_list(self, study_accession, sample_id):
         analysis_ids_for_sample = self._fetch_analysis_ids_for_sample(study_accession, sample_id)
         # analysis alias is a ARRAY in SAMPLE section
         analysis_alias_list = []
@@ -1116,7 +1100,6 @@ class DGVaMetadataRetriever:
             .where(dsamp.STUDY_ACCESSION == study_accession)
         )
         sample_id_list = self.load_from_db(sample_id_query.get_sql(quote_char=None))
-        print(sample_id_query.get_sql(quote_char=None))
         sample_id_keylist = [v[0] for v in sample_id_list]
         return sample_id_keylist
 
