@@ -464,7 +464,7 @@ class DGVaMetadataRetriever:
             "Read depth and paired-end mapping": "Whole genome sequencing",
             "Manual observation": "Curation",
             "de novo sequence assembly": "Whole genome sequencing",
-            "Sequence alignment": "Exome sequencing",
+            "Sequence alignment": "Whole genome sequencing",
             "Genotyping": "Genotyping by sequencing",
             "Split read mapping": "Whole genome sequencing",
             "Paired-end mapping": "Whole genome sequencing",
