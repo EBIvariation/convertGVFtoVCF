@@ -359,22 +359,20 @@ class TestDGVaMetadataRetriever(TestCase):
     # PATCH                                                                             THE PATCH
     # mock_load                                                                         THE MOCK
     @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db")
-    def test__determine_project_pre_registered(self, mock_load):
+    def test__fetch_project_peer_project(self, mock_load):
         # create mock data from load_from_db (PROJECT NOT PRE-REGISTERED)
         mock_data = [(None,) ] # not pre-registered
         mock_load.return_value = mock_data
 
         metadata_client = DGVaMetadataRetriever(self.config)
-        is_preregistered, accession = metadata_client._determine_project_pre_registered("STUDY123")
-        self.assertFalse(is_preregistered)
+        accession = metadata_client._fetch_project_peer_project("STUDY123")
         self.assertEqual(accession, None)
         # create mock data from load_from_db (PROJECT PRE-REGISTERED)
         mock_data = [('PRJNA28889',)] # pre-registered
 
         mock_load.return_value = mock_data
         metadata_client = DGVaMetadataRetriever(self.config)
-        is_preregistered, accession =  metadata_client._determine_project_pre_registered("STUDY789")
-        self.assertTrue(is_preregistered)
+        accession =  metadata_client._fetch_project_peer_project("STUDY789")
         self.assertEqual(accession, "PRJNA28889")
 
     # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db                TARGET

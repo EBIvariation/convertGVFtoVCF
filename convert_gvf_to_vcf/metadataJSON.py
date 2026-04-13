@@ -106,12 +106,7 @@ class DGVaMetadataRetriever:
             return []
 
     def create_json_file(self, json_file_path, study_accession, vcf_output, assembly, assembly_report):
-        # determine if project new or pre-registered (most projects will be new)
-        is_project_preregistered, project_accession = self._determine_project_pre_registered(study_accession)
-        if is_project_preregistered:
-            project_metadata = self._get_project_pre_registered(project_accession)
-        else:
-            project_metadata = self._get_project_new(study_accession)
+        project_metadata = self._get_project_new(study_accession) # (all projects are new projects will be new)
 
         # determine if sample new or pre-registered
         # list of tuples [(is_sample_preregistered, biosample_accession)]
@@ -216,7 +211,8 @@ class DGVaMetadataRetriever:
         project_publications = self._fetch_project_publications(study_accession)
         project_parent_project = self._fetch_project_parent_project(study_accession)
         project_child_project = "" # expect no child projects to exist
-        project_peer_project = "" # expect no child projects to exist
+        project_peer_project = self._fetch_project_peer_project(study_accession)
+        # expect no child projects to exist
         project_links = self._fetch_project_links(study_accession) # expect this to be only one link
         project_hold_date = self._fetch_hold_date(study_accession)
 
@@ -374,31 +370,8 @@ class DGVaMetadataRetriever:
         return files_array
 
     # THESE DETERMINE IF NEW OR PRE_REG OR EVIDENCE_TYPE OR EXPERIMENT_TYPE
-    def _determine_project_pre_registered(self, study_accession):
-        """ Determines if the project is new or pre-registered.
-        :param: study_accession - expected format ^(estd|nstd)\d+$
-        :return is_project_preregistered, project_accession : boolean and string format ^(PRJ)[A-Z]{2}\d+$
-        """
-        # create the schema objects
-        db = Schema("DGVA")
-        # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        # create the query
-        project_accession_query = (Query
-                                   .from_(ds)
-                                   .select(ds.BIOPROJECT_ACCESSION)
-                                   .where(ds.STUDY_ACCESSION == study_accession)
-                                   )
-        project_accession_list = self.load_from_db(project_accession_query.get_sql(quote_char=None))
-        project_accession = self.validate_fetch_result("projectAccession", project_accession_list, True)
-        is_project_preregistered = False
-        # if project_accession is not None:
-        if project_accession:
-            is_project_preregistered = True
-            logger.info(f"Determining if the project is pre-registered - SUCCESS - Project found: {project_accession}.")
-        else:
-            logger.info(f"Determining if the project is pre-registered - FAILURE - No project found.")
-        return is_project_preregistered, project_accession
+
+
 
     def _determine_sample_pre_registered(self, study_accession):
         # create the schema objects
@@ -807,6 +780,25 @@ class DGVaMetadataRetriever:
         parent_project_list = self.load_from_db(parent_project_query.get_sql(quote_char=None))
         parent_project = self.validate_fetch_result("projectAccession", parent_project_list, True)
         return parent_project
+
+    def _fetch_project_peer_project(self, study_accession):
+        """ Determines if the project is new or pre-registered.
+        :param: study_accession - expected format ^(estd|nstd)\d+$
+        :return project_accession : string format ^(PRJ)[A-Z]{2}\d+$
+        """
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        # create the query
+        project_accession_query = (Query
+                                   .from_(ds)
+                                   .select(ds.BIOPROJECT_ACCESSION)
+                                   .where(ds.STUDY_ACCESSION == study_accession)
+                                   )
+        project_accession_list = self.load_from_db(project_accession_query.get_sql(quote_char=None))
+        project_accession = self.validate_fetch_result("peerProject", project_accession_list, True)
+        return project_accession
 
     def _fetch_project_links(self, study_accession):
         # create the schema objects
