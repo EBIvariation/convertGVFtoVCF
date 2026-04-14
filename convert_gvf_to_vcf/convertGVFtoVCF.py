@@ -405,6 +405,7 @@ def main():
     parser.add_argument("-a", "--assembly", help="FASTA assembly file")
     parser.add_argument("--log", help="Path to log file")
     parser.add_argument("--config", help="Path to config file")
+    parser.add_argument("--assembly_report", help="Path to assembly report file")
 
     args = parser.parse_args()
 
@@ -417,7 +418,7 @@ def main():
     convert(args.gvf_input, args.vcf_output, args.assembly)
     if args.config:
         logger.info(f"The config file is {args.config}. Gathering metadata")
-        gather_metadata(args.config, args.json_output, args.study_accession, args.vcf_output)
+        gather_metadata(args.config, args.json_output, args.study_accession, args.vcf_output, args.assembly, args.assembly_report)
     else:
         logger.info(f"No config file provided. Unable to gather metadata.")
 

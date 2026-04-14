@@ -13,6 +13,7 @@ class TestDGVaMetadataRetriever(TestCase):
     def setUp(self):
         input_folder = os.path.dirname(__file__)
         self.config = os.path.join(input_folder, "input", "test.config")
+        self.vcf_output = os.path.join(input_folder, "output", "a.vcf")
 
     def test_init(self):
         # testing the __init__ function has loaded the config correctly
@@ -102,8 +103,19 @@ class TestDGVaMetadataRetriever(TestCase):
         # this should only allow 3 attempts
         assert mock_connection.call_count == 3
 
-    def test_load_from_db(self):
-        pass
+    @patch("convert_gvf_to_vcf.metadataJSON.oracledb.connect")
+    def test_load_from_db(self, mock_connect):
+        mock_connection = MagicMock()
+        mock_cursor = MagicMock()
+
+        mock_connect.return_value = mock_connection
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+        expected_data = [('row1',), ('row2',)]
+        mock_cursor.fetchall.return_value = expected_data
+
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client.load_from_db("SQL_QUERY")
+        self.assertEqual(result, expected_data)
 
     def test_create_json_file(self):
         pass
@@ -111,72 +123,237 @@ class TestDGVaMetadataRetriever(TestCase):
     def test__get_validated_value(self):
         pass
 
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details_all_addresses")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details_all_centres")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details_all_email_addresses")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details_all_phone_numbers")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details_all_first_names")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details_all_last_names")
+    def test_get_submitter_details(self,
+                                   mock_fetch_all_last_names,
+                                   mock_fetch_all_first_names,
+                                   mock_fetch_all_phone_numbers,
+                                   mock_fetch_all_email_addresses,
+                                   mock_fetch_all_centres,
+                                   mock_fetch_all_addresses):
 
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db")
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_submitter_details_dictionary")
-    def test_get_submitter_details(self, mock_fetch, mock_load):
-
-
+        # first_name, last_name, telephone, email, laboratory, centre, address
         # create mock data from load_from_db
-        mock_data = {
-            "0": ["John", "Smith", "e1@mail.com", "centre1"],
-            "1": ["Jane", None, "e2@mail.com", "centre2"],     # Test Case: Last Name - None
-            "2": ["Bob", "", "e3@mail.com" , "centre3"],       # Test Case: Last Name - empty string
-            "3": ["Mike", "Jones", None , "centre4"],          # Test Case: Email Add - None
-            "4": ["Dave", "Smith", "" , "centre4"],            # Test Case: Email Add - empty string
-            "5": ["Bobby", "Jones", "e4@mail.com" , None],     # Test Case: Centre - None
-        }
-        mock_fetch.return_value = mock_data
+        mock_data_all_last_names = ["Smith", None, ""] # expected_input, None value, empty string
+        mock_data_all_first_names = ["John", None, ""] # expected_input, None value, empty string
+        mock_data_all_phone_numbers = ["0123456789", None, ""] # expected_input, None value, empty string
+        mock_data_all_email_addresses = ["e1@mail.com", None, ""] # expected_input, None value, empty string
+        mock_data_all_centres = ["centre1", None, ""] # expected_input, None value, empty string
+        mock_data_all_addresses = ["123 Road Name, City, Country", None, ""] # expected_input, None value, empty string
+
+        mock_fetch_all_last_names.return_value = mock_data_all_last_names
+        mock_fetch_all_first_names.return_value = mock_data_all_first_names
+        mock_fetch_all_phone_numbers.return_value = mock_data_all_phone_numbers
+        mock_fetch_all_email_addresses.return_value = mock_data_all_email_addresses
+        mock_fetch_all_centres.return_value = mock_data_all_centres
+        mock_fetch_all_addresses.return_value = mock_data_all_addresses
 
         metadata_client = DGVaMetadataRetriever(self.config)
         result = metadata_client._get_submitter_details("STUDY123")
 
-        # 3. ASSERT: Verify the default values were applied
+        # default value only, the None and empty string should only have empty strings for required fields
         expected = [{
                 'firstName': 'John',
                 'lastName': 'Smith',
+                'telephone': '0123456789',
                 'laboratory': '',
                 'email': 'e1@mail.com',
-                'centre': 'centre1'
+                'centre': 'centre1',
+                'address': '123 Road Name, City, Country'
             },
-            {
-                'firstName': 'Jane',
-                'lastName': '',
-                'laboratory': '',
-                'email': 'e2@mail.com',
-                'centre': 'centre2'
-             },
-            {
-                'firstName': 'Bob',
-                'lastName': '',
-                'laboratory': '',
-                'email': 'e3@mail.com',
-                'centre': 'centre3'
-            },
-            {
-                'firstName': 'Mike',
-                'lastName': 'Jones',
-                'centre': 'centre4',
-                'email': '',
-                'laboratory': ''
-            },
-            {
-                'firstName': 'Dave',
-                'lastName': 'Smith',
-                'email': '',
-                'laboratory': '',
-                'centre': 'centre4'
-            },
-            {
-                'firstName': 'Bobby',
-                'lastName': 'Jones',
-                'email': 'e4@mail.com',
-                'laboratory': '',
-                'centre': ''
-            }]
-
+            {'lastName': '', 'firstName': '', 'email': '', 'laboratory': '', 'centre': ''},
+            {'lastName': '', 'firstName': '', 'email': '', 'laboratory': '', 'centre': ''}
+        ]
         self.assertEqual(expected, result)
-        mock_fetch.assert_called_once_with("STUDY123")
+        mock_fetch_all_last_names.assert_called_once_with("STUDY123")
+        mock_fetch_all_first_names.assert_called_once_with("STUDY123")
+        mock_fetch_all_phone_numbers.assert_called_once_with("STUDY123")
+        mock_fetch_all_email_addresses.assert_called_once_with("STUDY123")
+        mock_fetch_all_centres.assert_called_once_with("STUDY123")
+        mock_fetch_all_addresses.assert_called_once_with("STUDY123")
+
+    def test__get_project_pre_registered(self):
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._get_project_pre_registered("PRJEB123456789")
+        expected = {'projectAccession': 'PRJEB123456789'}
+        self.assertEqual(expected, result)
+
+    # @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.validate_project")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_hold_date")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_project_links")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_project_parent_project")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_project_publications")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_centre")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_tax_id")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_project_description")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_project_title")
+    def test__get_project_new(self, mock_title, mock_description, mock_tax_id, mock_centre, mock_publications, mock_parent, mock_links, mock_date):
+        # all present
+        mock_title.return_value = "title"
+        mock_description.return_value = "description"
+        mock_tax_id.return_value = int("9606")
+        mock_centre.return_value = ["centre"]
+        mock_publications.return_value = ['12345']
+        mock_parent.return_value = "PRJNB5502"
+        mock_links.return_value =  ["www.link.com", "www.another.com"]
+        mock_date.return_value = str("2018-11-13")
+        centre = mock_centre.return_value[0]
+        publications = ['PubMed:12345']
+
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._get_project_new("STUDY123")
+        expected = {"title": mock_title.return_value,
+                    "description": mock_description.return_value,
+                    "taxId": mock_tax_id.return_value,
+                    "centre":centre,
+                    "publications": publications,
+                    "parentProject": mock_parent.return_value,
+                    "links": mock_links.return_value,
+                    "holdDate": mock_date.return_value
+        }
+        self.assertEqual(expected, result)
+        # requried only
+        mock_title.return_value = "title"
+        mock_description.return_value = "description"
+        mock_tax_id.return_value = int("9606")
+        mock_centre.return_value = ["centre"]
+        mock_publications.return_value = None
+        mock_parent.return_value = None
+        mock_links.return_value =  None
+        mock_date.return_value = None
+        centre = mock_centre.return_value[0]
+        # publications = ['PubMed:12345']
+
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._get_project_new("STUDY123")
+        expected = {"title": mock_title.return_value,
+                    "description": mock_description.return_value,
+                    "taxId": mock_tax_id.return_value,
+                    "centre":centre
+        }
+        self.assertEqual(expected, result)
+
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_run_accessions")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_pipeline_descriptions")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_software")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_platform")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._determine_evidence_type")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_reference_genome")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._determine_analysis_experiment_type")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_method_type")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_analysis_type")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_description")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_alias")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_ids")
+    def test__get_analysis(self,
+                           mock_ids,
+                           mock_alias,
+                           mock_desc,
+                           mock_analysis_type,
+                           mock_method_type,
+                           mock_determined_experiment_type,
+                           mock_reference_genome,
+                           mock_determined_evidence_type,
+                           mock_platform,
+                           mock_software,
+                           mock_pipeline_descriptions,
+                           mock_run_accessions):
+        # testing all values
+        mock_ids.return_value = ["1","2", "3"]
+        mock_alias.return_value = "MYanalysisALIAS"
+        mock_desc.return_value = "mock_desc"
+        mock_analysis_type.return_value = "Genotyping"
+        mock_method_type.return_value = "Sequencing"
+        mock_determined_experiment_type.return_value = "genotyping_by_sequencing"
+        mock_reference_genome.return_value = "GCA000000000"
+        mock_determined_evidence_type.return_value = "genotype"
+        mock_reference_fasta = "assembly.fasta"
+        mock_assembly_report = "assembly_report.txt"
+        mock_platform.return_value = "myplatform"
+        mock_software.return_value = ["software1", "software2"]
+        mock_pipeline_descriptions.return_value = "my pipeline description"
+        mock_run_accessions.return_value = ["ERR123456", "SRR123456"]
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._get_analysis("estd123", self.vcf_output, mock_reference_fasta, mock_assembly_report)
+        expected_result = [{'analysisTitle': 'estd123',
+                            'analysisAlias': 'MYanalysisALIAS',
+                            'description': 'mock_desc',
+                            'experimentType': 'genotyping_by_sequencing',
+                            'referenceGenome': 'GCA000000000',
+                            'evidenceType': 'genotype',
+                            'referenceFasta': mock_reference_fasta,
+                            'assemblyReport': mock_assembly_report,
+                            'platform': 'myplatform',
+                            'software': ['software1', 'software2'],
+                            'pipelineDescriptions': 'my pipeline description',
+                            'runAccessions': ['ERR123456', 'SRR123456']}]
+        self.assertEqual(result,expected_result)
+        # testing required only
+        mock_ids.return_value = ["1","2", "3"]
+        mock_alias.return_value = "MYanalysisALIAS"
+        mock_desc.return_value = "mock_desc"
+        mock_analysis_type.return_value = "Genotyping"
+        mock_method_type.return_value = "Sequencing"
+        mock_determined_experiment_type.return_value = "genotyping_by_sequencing"
+        mock_reference_genome.return_value = "GCA000000000"
+        mock_determined_evidence_type.return_value = ""
+        mock_reference_fasta = "assemble.fasta"
+        mock_assembly_report = "assembly_report.txt"
+        mock_platform.return_value = ""
+        mock_software.return_value = []
+        mock_pipeline_descriptions.return_value = ""
+        mock_run_accessions.return_value = []
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._get_analysis("estd123", self.vcf_output, mock_reference_fasta, mock_assembly_report)
+
+        expected_result = [{'analysisTitle': 'estd123',
+                            'analysisAlias': 'MYanalysisALIAS',
+                            'description': 'mock_desc',
+                            'experimentType': 'genotyping_by_sequencing',
+                            'referenceGenome': 'GCA000000000',
+                            'referenceFasta': mock_reference_fasta,
+                            'assemblyReport': mock_assembly_report,
+        }]
+        self.assertEqual(result, expected_result)
+
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_sample_analysis_alias_list")
+    def test__get_sample_pre_registered(self, mock_alias_list):
+        mock_alias_list.return_value = ["alias"]
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._get_sample_pre_registered("STUDY123", "SAMNA123456", "favourite_sample")
+        expected = {'analysisAlias': ['alias'], 'sampleInVCF': 'favourite_sample', 'bioSampleAccession': 'SAMNA123456'}
+        self.assertEqual(result, expected)
+
+
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_scientific_name")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_tax_id")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_sample_analysis_alias_list")
+    def test__get_sample_new(self, mock_alias_list, mock_tax_id, mock_scientific_name):
+        mock_alias_list.return_value = ["alias"]
+        mock_tax_id.return_value = 9606
+        mock_scientific_name.return_value = "homo sapiens"
+
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._get_sample_new("STUDY123", "favourite_sample")
+        expected = {'analysisAlias': ['alias'], 'sampleInVCF': 'favourite_sample', 'bioSampleObject': {'sample_title': 'favourite_sample', 'scientific_name': 'homo sapiens', 'tax_id': 9606, 'collection date': 'not provided', 'geographic location (country and/or sea)': 'not provided'}}
+        self.assertEqual(result, expected)
+
+
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_alias")
+    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_ids")
+    def test__get_files(self, mock_ids, mock_alias):
+        mock_ids.return_value = ["1", "2"]
+        mock_alias.return_value = "alias_1_2"
+
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._get_files("STUDY123", self.vcf_output)
+        expected = [{'analysisAlias': 'alias_1_2', 'fileName': 'a.vcf', 'fileSize': 4177, 'md5': 'a7843773a57dd39a4c85cb7dba59c2c6'}]
+        self.assertEqual(result, expected)
 
     # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db                TARGET
     # PATCH                                                                             THE PATCH
@@ -184,9 +361,7 @@ class TestDGVaMetadataRetriever(TestCase):
     @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db")
     def test__determine_project_pre_registered(self, mock_load):
         # create mock data from load_from_db (PROJECT NOT PRE-REGISTERED)
-        mock_data = {
-            0: (None,) # not pre-registered
-        }
+        mock_data = [(None,) ] # not pre-registered
         mock_load.return_value = mock_data
 
         metadata_client = DGVaMetadataRetriever(self.config)
@@ -194,38 +369,13 @@ class TestDGVaMetadataRetriever(TestCase):
         self.assertFalse(is_preregistered)
         self.assertEqual(accession, None)
         # create mock data from load_from_db (PROJECT PRE-REGISTERED)
-        mock_data = {
-            0: ('PRJNA28889',) # pre-registered
-        }
+        mock_data = [('PRJNA28889',)] # pre-registered
+
         mock_load.return_value = mock_data
         metadata_client = DGVaMetadataRetriever(self.config)
         is_preregistered, accession =  metadata_client._determine_project_pre_registered("STUDY789")
         self.assertTrue(is_preregistered)
         self.assertEqual(accession, "PRJNA28889")
-
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_reference_genome")
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_experiment_type")
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_description")
-    # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_alias                TARGET
-    # PATCH                                                                             THE PATCH
-    # mock_alias                                                                         THE MOCK
-    @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever._fetch_analysis_alias")
-    def test__get_analysis(self, mock_alias, mock_desc, mock_experiment_type, mock_reference_genome):
-        mock_alias.return_value = "MYanalysisALIAS"
-        # mock_title.return_value = "mytitle"
-        mock_desc.return_value = "mock_desc"
-        mock_experiment_type.return_value = "mock_experiment_type"
-        mock_reference_genome.return_value = "GCA000000000"
-        metadata_client = DGVaMetadataRetriever(self.config)
-        result = metadata_client._get_analysis("estd123")
-        expected_result = [{
-            'analysisTitle': '',
-            'analysisAlias': 'MYanalysisALIAS',
-            'description': 'mock_desc',
-            'experimentType': 'mock_experiment_type',
-            'referenceGenome': 'GCA000000000'
-        }]
-        self.assertEqual(result,expected_result)
 
     # convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.load_from_db                TARGET
     # PATCH                                                                             THE PATCH
@@ -234,10 +384,7 @@ class TestDGVaMetadataRetriever(TestCase):
     def test__determine_sample_pre_registered(self, mock_load):
         # (SAMPLE NOT PRE-REGISTERED)
         # create mock data from load_from_db (SAMPLE NOT PRE-REGISTERED)
-        mock_data = {
-            0: (None, "NA20344"),
-            1: (None, "NA20345")  # not pre-registered
-        }
+        mock_data = [ (None, "NA20344"), (None, "NA20345")  ]# not pre-registered
         mock_load.return_value = mock_data
 
         metadata_client = DGVaMetadataRetriever(self.config)
@@ -248,9 +395,7 @@ class TestDGVaMetadataRetriever(TestCase):
         self.assertEqual(result, expected_result)
 
         # create mock data from load_from_db (SAMPLE PRE-REGISTERED)
-        mock_data = {
-            0: ("SAMN12345678","mypreregisteredsample"),
-        }
+        mock_data = [("SAMN12345678","mypreregisteredsample")]
         mock_load.return_value = mock_data
 
         metadata_client = DGVaMetadataRetriever(self.config)
@@ -259,3 +404,57 @@ class TestDGVaMetadataRetriever(TestCase):
         SampleStatus = namedtuple('SampleStatus', ['is_sample_preregistered', 'sample_accession', 'sample_id'])
         expected_result = [SampleStatus(is_sample_preregistered=True, sample_accession="SAMN12345678", sample_id="mypreregisteredsample")]
         self.assertEqual(result, expected_result)
+
+    def test__determine_evidence_type(self):
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._determine_evidence_type(self.vcf_output)
+        expected = "genotype"
+        self.assertEqual(result, expected)
+
+    def test__determine_analysis_experiment_type(self):
+        analysis_types= ["Read depth and paired-end mapping"]
+        method_types = ["Sequencing"]
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._determine_analysis_experiment_type(analysis_types, method_types)
+        expected = "whole_genome_sequencing"
+        self.assertEqual(result, expected)
+
+
+    def test__format_project(self):
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client._format_project(None, ["www.link.com", "www.link2.com"], None, "123456")
+        expected = ('', ['www.link.com| URL', 'www.link2.com| URL'], '', ['PubMed:123456'])
+        self.assertEqual(result, expected)
+
+    def test_validate_fetch_result(self):
+        metadata_client = DGVaMetadataRetriever(self.config)
+        # expect string
+        result = metadata_client.validate_fetch_result("name", [("value",)], True)
+        expected = "value"
+        self.assertEqual(result, expected)
+        # expect list
+        result = metadata_client.validate_fetch_result("name", [("value",)], False)
+        expected = ["value"]
+        self.assertEqual(result, expected)
+
+    def test_validate_date(self):
+        metadata_client = DGVaMetadataRetriever(self.config)
+        result = metadata_client.validate_date("2012-12-12")
+        expected = True
+        self.assertEqual(result,expected)
+        result = metadata_client.validate_date("abcdefg")
+        expected = False
+        self.assertEqual(result, expected)
+
+    def test_validate_project(self):
+        metadata_client = DGVaMetadataRetriever(self.config)
+        description = "a description"
+        hold_date = "2012-12-12"
+        parent = "PRJEA123456"
+        tax_id = 9606
+        title = "title"
+        publication = ["PubMed:123345"]
+        metadata_client.validate_project(description, hold_date, parent, tax_id, title, publication)
+
+    def test_validate_analysis(self):
+        pass
