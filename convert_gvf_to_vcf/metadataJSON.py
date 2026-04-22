@@ -105,7 +105,7 @@ class DGVaMetadataRetriever:
             logger.warning(f"Database error: {e}")
             return []
 
-    def create_json_file(self, json_file_path, study_accession, vcf_output, assembly, assembly_report):
+    def create_json_file(self, json_file_path, study_accession, assembly, assembly_report):
         project_metadata = self._get_project_new(study_accession)  # (all projects are new projects)
 
         # determine if sample new or pre-registered
@@ -126,9 +126,9 @@ class DGVaMetadataRetriever:
         json_in_eva_format = {
             "submitterDetails": self._get_submitter_details(study_accession),
             "project": project_metadata,
-            "analysis": self._get_analysis(study_accession, vcf_output, assembly, assembly_report),
+            "analysis": self._get_analysis(study_accession, assembly, assembly_report),
             "sample": sample_metadata_array,
-            "files": self._get_files(study_accession, vcf_output)
+            "files": self._get_files(study_accession)
         }
         with open(json_file_path, 'w') as f:
             json.dump(json_in_eva_format, f, indent=4)
@@ -244,7 +244,7 @@ class DGVaMetadataRetriever:
         project_object.update(project_object_not_required)
         return project_object
 
-    def _get_analysis(self, study_accession, vcf_output, assembly, assembly_report):
+    def _get_analysis(self, study_accession, assembly, assembly_report):
         # return analysis_array
         # required: analysisTitle, analysisAlias, description, experimentType, reference_genome
         logger.info("Fetching Analysis details.")
@@ -257,7 +257,8 @@ class DGVaMetadataRetriever:
         method_types = self._fetch_analysis_method_type(study_accession)
         analysis_experiment_type = self._determine_analysis_experiment_type(analysis_types, method_types)
         analysis_reference_genome = self._fetch_analysis_reference_genome(study_accession)
-        analysis_evidence_type = self._determine_evidence_type(vcf_output)
+        #TODO: change this by removing evidence type. this will also remove the need for vcf_output
+        analysis_evidence_type = ""
         analysis_reference_fasta = assembly
         analysis_assembly_report = assembly_report
         analysis_platform = self._fetch_analysis_platform(study_accession)
@@ -346,13 +347,18 @@ class DGVaMetadataRetriever:
         }
         return sample_object
 
-    def _get_files(self, study_accession, vcf_output):
+    def _get_files(self, study_accession):
         files_analysis_id_list = self._fetch_analysis_ids(study_accession)
         # analysis alias is a string in files
         files_analysis_alias = self._fetch_analysis_alias(study_accession, files_analysis_id_list)
-        files_file_name = self._get_file_name(vcf_output)
-        files_file_size = self._get_file_size(vcf_output)
-        files_file_md5 = self._get_file_md5(vcf_output)
+        #TODO: add new function to populate after conversion
+
+        files_file_name = ""
+        files_file_size = ""
+        files_file_md5 = ""
+        # files_file_name = self._get_file_name(vcf_output)
+        # files_file_size = self._get_file_size(vcf_output)
+        # files_file_md5 = self._get_file_md5(vcf_output)
         files_array = []
         # required: analysisAlias, filename
         # not required: file size, md5
@@ -404,19 +410,6 @@ class DGVaMetadataRetriever:
                     # return is_sample_preregistered, None, sample_id
                     logger.info(f"Determining if sample is pre-registered - FAILURE - Sample not found: {current_sample_id}.")
         return sample_accession_and_status_list
-
-    def _determine_evidence_type(self, vcf_output):
-        with open(vcf_output, "r") as vcf:
-            for line in vcf:
-                if line.startswith("#CHROM"):
-                    header_tokens = line.split("\t")
-        number_of_header_tokens = len(header_tokens)
-        if number_of_header_tokens == 8:
-            evidence_type = "allele_frequency"
-        else:
-            evidence_type = "genotype"
-        logger.info(f"{number_of_header_tokens} tokens found in the VCF header. Determining evidence type as: {evidence_type}")
-        return evidence_type
 
     def _determine_analysis_experiment_type(self, analysis_types, method_types):
         analysis_and_method_types = list(zip(analysis_types, method_types))
