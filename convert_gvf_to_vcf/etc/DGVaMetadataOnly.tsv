@@ -5,15 +5,11 @@ Study	STUDY_COMMENT	COMMENT_USER_NAME	The user who added the comment	VARCHAR2(40
 Study	STUDY_COMMENT	COMMENT_TIMESTAMP	Timestamp for addition of a study comment	TIMESTAMP	FALSE	CURRENT_TIMESTAMP
 Study	STUDY_UPDATE	SUBMISSION_VERSION	The version of the submission template used for the update	NUMBER(10,0)	FALSE	
 Study	STUDY_UPDATE	UPDATE_COMMENT	A free text description of the update.  Could come from dbVar/DGVA or the submitter	VARCHAR2(4000)	FALSE	
-Study	STUDY_UPDATE	NEW_FEATURE	Boolean indicating if the update is addition of new data		FALSE	
-Study	STUDY_UPDATE	CORRECTION	Indicate if the update represents a correction of loaded data	NUMBER(10,0)	FALSE	
-Study	STUDY_CONTACT	CONTACT_PHONE	An attribute (column name is self-explanatory) describing the contact individuals for a study, e.g. submitter	VARCHAR2(4000)	FALSE	
-Study	STUDY_CONTACT	AFFILIATION_NAME	An attribute (column name is self-explanatory) describing the contact individuals for a study, e.g. submitter	VARCHAR2(4000)	FALSE	
-Study	STUDY_CONTACT	AFFILIATION_ADDRESS	An attribute (column name is self-explanatory) describing the contact individuals for a study, e.g. submitter	VARCHAR2(4000)	FALSE	
+Study	STUDY_UPDATE	NEW_FEATURE	Boolean indicating if the update is addition of new data	NUMBER(10,0)	FALSE
+Study	STUDY_UPDATE	CORRECTION	Indicate if the update represents a correction of loaded data	NUMBER(10,0)	FALSE
 Study	STUDY_CONTACT	AFFILIATION_URL	An attribute (column name is self-explanatory) describing the contact individuals for a study, e.g. submitter	VARCHAR2(4000)	FALSE	
 Study	DGVA_EXPERIMENT	EXPERIMENT_SITE	Used to record site where data was generated for studies such as 1000 Genomes	VARCHAR2(4000)	FALSE	
-Study	DGVA_EXPERIMENT	EXPERIMENT_RESOLUTION	Prior to Exchange V2.9.8 was method_resolution. Now experiment_resolution, indicating the resolution in kilo base pairs of the experiment as a whole.	VARCHAR2(4000)	FALSE	
-Study	DGVA_EXPERIMENT	SRA_ACCESSION		VARCHAR2(4000)	FALSE	
+Study	DGVA_EXPERIMENT	EXPERIMENT_RESOLUTION	Prior to Exchange V2.9.8 was method_resolution. Now experiment_resolution, indicating the resolution in kilo base pairs of the experiment as a whole.	VARCHAR2(4000)	FALSE
 Study	DGVA_DETECTION	DETECTION_METHOD	Free text entry for the type of detection used	VARCHAR2(4000)	FALSE	
 Study	DGVA_DETECTION	DETECTION_DESCRIPTION	Free text description of the type of detection used in an experiment	VARCHAR2(4000)	FALSE	
 Study	EXPERIMENT_CURATION	CURATOR_NAME	The given name of the person/institution responsible for curating the study	VARCHAR2(4000)	TRUE	
