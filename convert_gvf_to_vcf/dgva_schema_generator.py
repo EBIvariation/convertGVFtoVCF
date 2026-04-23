@@ -3,6 +3,10 @@ import argparse
 import pandas as pd
 import json
 
+
+#TODO: ONCE THE JSON SCHEMA HAS BEEN AGREED FINALISED, REMOVE THIS SCRIPT AND THE SPREADSHEET FROM THE REPO.
+# THIS LEAVES THE JSON SCHEMA AS THE ONLY SOURCE OF TRUTH.
+
 class SchemaCreator:
     """The responsibility of this class is to create a JSON schema from a tsv file"""
     def __init__(self, input_file_path):
@@ -13,9 +17,9 @@ class SchemaCreator:
         # JSON SCHEMA VARIABLES
         self.schema_version = "http://json-schema.org/draft-07/schema#"
         self.version = "1.0.0"
-        self.id = "http://yourdomain.com/schemas/myschema.json"
+        self.id = "dgva_additional_metadata"
         self.author = "EVA"
-        self.title = "Metadata for Database of Genomic Variants archive (DGVa)"
+        self.title = "Metadata for Database of Genomic Variants archive (DGVa) that are not already captured in EVA metadata schema."
         self.description = "This contains metadata originally found in DGVa and which could not be imported into the European Variation Archive (EVA)."
 
 
@@ -66,11 +70,49 @@ class SchemaCreator:
         json_string = df.to_json(orient="index", indent=4)
         return json_string
 
+    def to_camel_case(self, string_to_convert):
+        """ Convert string to camel case.
+        :param string_to_convert: string
+        :return camel case string
+        """
+        words = string_to_convert.replace("_", " ").replace("-", " ").split()
+        if not words:
+            return ""
+        first_word = words[0].lower()
+        other_words = [word.capitalize() for word in words[1:]]
+        camel_case = first_word + "".join(other_words)
+        return camel_case
+
+    def nest_json_object(self, data_json_object):
+        """ Turns a flat JSON object into a nested one.
+        :param data_json_object: flat object
+        :return: nested object, list of required fields
+        """
+        nested_object = {}
+        required_fields = []
+        for field_name, field_value in data_json_object.items():
+            if field_value.get("notNull"):
+                required_fields.append(field_name)
+            camel_case_field_name = self.to_camel_case(field_name)
+            nested_object[camel_case_field_name] = {
+                "type": field_value.get("type"),
+                "definition": field_value.get("definition"),
+                "dbMapping": {
+                    "dgvaTable": field_value.get("dgvaTable"),
+                    "notNull": field_value.get("notNull"),
+                    "columnDefault": field_value.get("default"),
+                }
+            }
+        return nested_object, required_fields
+
     def create_json_schema(self):
         """This creates the JSON schema object.
         :return: JSON object for the schema
         """
         data_json_object = json.loads(self.data_string)
+        nested_data_json_object, required_list = self.nest_json_object(data_json_object)
+
+
         schema = {
             "$schema": self.schema_version,
             "$id": self.id,
@@ -80,7 +122,7 @@ class SchemaCreator:
             "description": self.description,
             "type": "object",
             "properties": {
-                "DGVa": {
+                "dgva": {
                     "type": "array",
                     "description": "DGVa metadata that cannot be imported to EVA",
                     "items": {
@@ -91,7 +133,8 @@ class SchemaCreator:
             }
         }
         # adding the JSON object of a nested DGVA item to the schema
-        schema["properties"]["DGVa"]["items"]["properties"] = data_json_object
+        schema["properties"]["dgva"]["items"]["properties"] = nested_data_json_object
+        schema["properties"]["dgva"]["items"]["required"] = required_list
         return schema
 
     def print_json_schema(self, schema, output_path):
