@@ -1,320 +1,381 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "http://yourdomain.com/schemas/myschema.json",
+    "$id": "dgva_additional_metadata",
     "version": "1.0.0",
     "author": "EVA",
-    "title": "Metadata for Database of Genomic Variants archive (DGVa)",
+    "title": "Metadata for Database of Genomic Variants archive (DGVa) that are not already captured in EVA metadata schema.",
     "description": "This contains metadata originally found in DGVa and which could not be imported into the European Variation Archive (EVA).",
     "type": "object",
     "properties": {
-        "DGVa": {
+        "dgva": {
             "type": "array",
             "description": "DGVa metadata that cannot be imported to EVA",
             "items": {
                 "type": "object",
                 "properties": {
-                    "CREATION_DATE": {
-                        "dgvaTable": "DGVA_STUDY",
+                    "creationDate": {
+                        "type": "string",
                         "definition": "Date when study was first entered into the archive",
-                        "type": "string",
-                        "notNull": false,
-                        "default": "SYSDATE"
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_STUDY",
+                            "notNull": false,
+                            "columnDefault": "SYSDATE"
+                        }
                     },
-                    "STUDY_COMMENT": {
-                        "dgvaTable": "STUDY_COMMENT",
+                    "studyComment": {
+                        "type": "string",
                         "definition": "The text of the comment, free text",
-                        "type": "string",
-                        "notNull": true,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "STUDY_COMMENT",
+                            "notNull": true,
+                            "columnDefault": null
+                        }
                     },
-                    "COMMENT_USER_NAME": {
-                        "dgvaTable": "STUDY_COMMENT",
+                    "commentUserName": {
+                        "type": "string",
                         "definition": "The user who added the comment",
-                        "type": "string",
-                        "notNull": false,
-                        "default": "user"
+                        "dbMapping": {
+                            "dgvaTable": "STUDY_COMMENT",
+                            "notNull": false,
+                            "columnDefault": "user"
+                        }
                     },
-                    "COMMENT_TIMESTAMP": {
-                        "dgvaTable": "STUDY_COMMENT",
+                    "commentTimestamp": {
+                        "type": "string",
                         "definition": "Timestamp for addition of a study comment",
-                        "type": "string",
-                        "notNull": false,
-                        "default": "CURRENT_TIMESTAMP"
+                        "dbMapping": {
+                            "dgvaTable": "STUDY_COMMENT",
+                            "notNull": false,
+                            "columnDefault": "CURRENT_TIMESTAMP"
+                        }
                     },
-                    "SUBMISSION_VERSION": {
-                        "dgvaTable": "STUDY_UPDATE",
+                    "submissionVersion": {
+                        "type": "integer",
                         "definition": "The version of the submission template used for the update",
-                        "type": "integer",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "STUDY_UPDATE",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "UPDATE_COMMENT": {
-                        "dgvaTable": "STUDY_UPDATE",
+                    "updateComment": {
+                        "type": "string",
                         "definition": "A free text description of the update.  Could come from dbVar/DGVA or the submitter",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "STUDY_UPDATE",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "NEW_FEATURE": {
-                        "dgvaTable": "STUDY_UPDATE",
+                    "newFeature": {
+                        "type": "integer",
                         "definition": "Boolean indicating if the update is addition of new data",
-                        "type": null,
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "STUDY_UPDATE",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "CORRECTION": {
-                        "dgvaTable": "STUDY_UPDATE",
+                    "correction": {
+                        "type": "integer",
                         "definition": "Indicate if the update represents a correction of loaded data",
-                        "type": "integer",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "STUDY_UPDATE",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "CONTACT_PHONE": {
-                        "dgvaTable": "STUDY_CONTACT",
-                        "definition": "An attribute (column name is self-explanatory) describing the contact individuals for a study, e.g. submitter",
+                    "affiliationUrl": {
                         "type": "string",
-                        "notNull": false,
-                        "default": null
-                    },
-                    "AFFILIATION_NAME": {
-                        "dgvaTable": "STUDY_CONTACT",
                         "definition": "An attribute (column name is self-explanatory) describing the contact individuals for a study, e.g. submitter",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "STUDY_CONTACT",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "AFFILIATION_ADDRESS": {
-                        "dgvaTable": "STUDY_CONTACT",
-                        "definition": "An attribute (column name is self-explanatory) describing the contact individuals for a study, e.g. submitter",
+                    "experimentSite": {
                         "type": "string",
-                        "notNull": false,
-                        "default": null
-                    },
-                    "AFFILIATION_URL": {
-                        "dgvaTable": "STUDY_CONTACT",
-                        "definition": "An attribute (column name is self-explanatory) describing the contact individuals for a study, e.g. submitter",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
-                    },
-                    "EXPERIMENT_SITE": {
-                        "dgvaTable": "DGVA_EXPERIMENT",
                         "definition": "Used to record site where data was generated for studies such as 1000 Genomes",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_EXPERIMENT",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "EXPERIMENT_RESOLUTION": {
-                        "dgvaTable": "DGVA_EXPERIMENT",
+                    "experimentResolution": {
+                        "type": "string",
                         "definition": "Prior to Exchange V2.9.8 was method_resolution. Now experiment_resolution, indicating the resolution in kilo base pairs of the experiment as a whole.",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_EXPERIMENT",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "SRA_ACCESSION": {
-                        "dgvaTable": "DGVA_EXPERIMENT",
-                        "definition": null,
+                    "detectionMethod": {
                         "type": "string",
-                        "notNull": false,
-                        "default": null
-                    },
-                    "DETECTION_METHOD": {
-                        "dgvaTable": "DGVA_DETECTION",
                         "definition": "Free text entry for the type of detection used",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_DETECTION",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "DETECTION_DESCRIPTION": {
-                        "dgvaTable": "DGVA_DETECTION",
+                    "detectionDescription": {
+                        "type": "string",
                         "definition": "Free text description of the type of detection used in an experiment",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_DETECTION",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "CURATOR_NAME": {
-                        "dgvaTable": "EXPERIMENT_CURATION",
+                    "curatorName": {
+                        "type": "string",
                         "definition": "The given name of the person/institution responsible for curating the study",
-                        "type": "string",
-                        "notNull": true,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "EXPERIMENT_CURATION",
+                            "notNull": true,
+                            "columnDefault": null
+                        }
                     },
-                    "CURATOR_EMAIL": {
-                        "dgvaTable": "EXPERIMENT_CURATION",
+                    "curatorEmail": {
+                        "type": "string",
                         "definition": "The given e-mail of the person/institution responsible for curating the study",
-                        "type": "string",
-                        "notNull": true,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "EXPERIMENT_CURATION",
+                            "notNull": true,
+                            "columnDefault": null
+                        }
                     },
-                    "CURATED_SET_NAME": {
-                        "dgvaTable": "EXPERIMENT_CURATION",
+                    "curatedSetName": {
+                        "type": "string",
                         "definition": "The given name for the set of curated variants",
-                        "type": "string",
-                        "notNull": true,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "EXPERIMENT_CURATION",
+                            "notNull": true,
+                            "columnDefault": null
+                        }
                     },
-                    "CURATED_SET_LINK": {
-                        "dgvaTable": "EXPERIMENT_CURATION",
+                    "curatedSetLink": {
+                        "type": "string",
                         "definition": null,
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "EXPERIMENT_CURATION",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "METHOD_TYPE": {
-                        "dgvaTable": "DGVA_METHOD",
+                    "methodType": {
+                        "type": "string",
                         "definition": "Controlled by CV in table \"method_type_cv\"",
-                        "type": "string",
-                        "notNull": true,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_METHOD",
+                            "notNull": true,
+                            "columnDefault": null
+                        }
                     },
-                    "METHOD_RESOLUTION": {
-                        "dgvaTable": "DGVA_METHOD",
+                    "methodResolution": {
+                        "type": "string",
                         "definition": "Text as reported by the submitter, e.g. BP for \"base pair\"",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_METHOD",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "METHOD_DESCRIPTION": {
-                        "dgvaTable": "DGVA_METHOD",
+                    "methodDescription": {
+                        "type": "string",
                         "definition": "Values controlled by entries in table \"method_type_cv\"",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_METHOD",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "PUBMED_ID": {
-                        "dgvaTable": "PUBMED_PUBLICATION",
-                        "definition": "Publication attribute as given by Pubmed",
+                    "pubmedId": {
                         "type": "integer",
-                        "notNull": true,
-                        "default": null
-                    },
-                    "ARTICLE_TITLE": {
-                        "dgvaTable": "PUBMED_PUBLICATION",
                         "definition": "Publication attribute as given by Pubmed",
+                        "dbMapping": {
+                            "dgvaTable": "PUBMED_PUBLICATION",
+                            "notNull": true,
+                            "columnDefault": null
+                        }
+                    },
+                    "articleTitle": {
                         "type": "string",
-                        "notNull": false,
-                        "default": null
-                    },
-                    "FIRST_AUTHOR": {
-                        "dgvaTable": "PUBMED_PUBLICATION",
                         "definition": "Publication attribute as given by Pubmed",
+                        "dbMapping": {
+                            "dgvaTable": "PUBMED_PUBLICATION",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
+                    },
+                    "firstAuthor": {
                         "type": "string",
-                        "notNull": false,
-                        "default": null
-                    },
-                    "JOURNAL_TITLE": {
-                        "dgvaTable": "PUBMED_PUBLICATION",
                         "definition": "Publication attribute as given by Pubmed",
+                        "dbMapping": {
+                            "dgvaTable": "PUBMED_PUBLICATION",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
+                    },
+                    "journalTitle": {
                         "type": "string",
-                        "notNull": false,
-                        "default": null
-                    },
-                    "PUBLICATION_YEAR": {
-                        "dgvaTable": "PUBMED_PUBLICATION",
                         "definition": "Publication attribute as given by Pubmed",
+                        "dbMapping": {
+                            "dgvaTable": "PUBMED_PUBLICATION",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
+                    },
+                    "publicationYear": {
                         "type": "integer",
-                        "notNull": false,
-                        "default": null
-                    },
-                    "ARTICLE_ABSTRACT": {
-                        "dgvaTable": "PUBMED_PUBLICATION",
                         "definition": "Publication attribute as given by Pubmed",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "PUBMED_PUBLICATION",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "SUBJECT_SEX": {
-                        "dgvaTable": "DGVA_SUBJECT",
+                    "articleAbstract": {
+                        "type": "string",
+                        "definition": "Publication attribute as given by Pubmed",
+                        "dbMapping": {
+                            "dgvaTable": "PUBMED_PUBLICATION",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
+                    },
+                    "subjectSex": {
+                        "type": "string",
                         "definition": "Controlled by table \"sex_cv\"",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_SUBJECT",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "SUBJECT_AGE": {
-                        "dgvaTable": "DGVA_SUBJECT",
+                    "subjectAge": {
+                        "type": "string",
                         "definition": null,
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_SUBJECT",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "FAMILY_RELATIONSHIP": {
-                        "dgvaTable": "SUBJECT_FAMILY_RELATIONSHIP",
+                    "familyRelationship": {
+                        "type": "string",
                         "definition": "An FK from table \"family_relationship_cv\"",
-                        "type": "string",
-                        "notNull": true,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "SUBJECT_FAMILY_RELATIONSHIP",
+                            "notNull": true,
+                            "columnDefault": null
+                        }
                     },
-                    "PHENOTYPE_DATABASE_NAME": {
-                        "dgvaTable": "PHENOTYPE_CV",
+                    "phenotypeDatabaseName": {
+                        "type": "string",
                         "definition": "An FK from table \"phenotype_database_name_cv\"",
-                        "type": "string",
-                        "notNull": true,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "PHENOTYPE_CV",
+                            "notNull": true,
+                            "columnDefault": null
+                        }
                     },
-                    "REFERENCE_TYPE": {
-                        "dgvaTable": "ANALYSIS_REFERENCE_TYPE_CV",
+                    "referenceType": {
+                        "type": "string",
                         "definition": "Populated from XSD \"ReferenceTypeCV\"",
-                        "type": "string",
-                        "notNull": true,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "ANALYSIS_REFERENCE_TYPE_CV",
+                            "notNull": true,
+                            "columnDefault": null
+                        }
                     },
-                    "SAMPLE_CELL_TYPE": {
-                        "dgvaTable": "DGVA_SAMPLE",
+                    "sampleCellType": {
+                        "type": "string",
                         "definition": "Provided by submitter, usually null and sometimes \"Cell-culture\"",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_SAMPLE",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "SAMPLE_CANCER": {
-                        "dgvaTable": "DGVA_SAMPLE",
+                    "sampleCancer": {
+                        "type": "string",
                         "definition": "Indicate if the sample is tumour-derived",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_SAMPLE",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "SAMPLE_KARYOTYPE": {
-                        "dgvaTable": "DGVA_SAMPLE",
+                    "sampleKaryotype": {
+                        "type": "string",
                         "definition": "Can be recored by submitter if relevant, almost always null",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_SAMPLE",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "SAMPLESET_NAME": {
-                        "dgvaTable": "DGVA_SAMPLESET",
+                    "samplesetName": {
+                        "type": "string",
                         "definition": "Recorded by the submitter, corresponds to the attribute \"sampleset_name=\"  of the <SAMPLESET> element in the Exchange XML",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_SAMPLESET",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "SAMPLESET_TYPE": {
-                        "dgvaTable": "DGVA_SAMPLESET",
+                    "samplesetType": {
+                        "type": "string",
                         "definition": "Submitter-provided.  Optional and rarely used, example is \"Control\"",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_SAMPLESET",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "SAMPLESET_SEX": {
-                        "dgvaTable": "DGVA_SAMPLESET",
+                    "samplesetSex": {
+                        "type": "string",
                         "definition": "Optional value provided by submitter",
-                        "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "dbMapping": {
+                            "dgvaTable": "DGVA_SAMPLESET",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     },
-                    "FILE_DESCRIPTION": {
-                        "dgvaTable": "STUDY_FILE",
+                    "fileDescription": {
+                        "type": "string",
                         "definition": "Records any information specific to a given file",
-                        "type": "string",
-                        "notNull": false,
-                        "default": "No description given'"
+                        "dbMapping": {
+                            "dgvaTable": "STUDY_FILE",
+                            "notNull": false,
+                            "columnDefault": "No description given'"
+                        }
                     },
-                    "FILE_CONTENT": {
-                        "dgvaTable": "STUDY_FILE",
-                        "definition": "Entire file contents, gzipped if possible. Can contain text, XML, or proprietary binary files such as Excel spreadsheets",
+                    "fileContent": {
                         "type": "string",
-                        "notNull": false,
-                        "default": null
+                        "definition": "Entire file contents, gzipped if possible. Can contain text, XML, or proprietary binary files such as Excel spreadsheets",
+                        "dbMapping": {
+                            "dgvaTable": "STUDY_FILE",
+                            "notNull": false,
+                            "columnDefault": null
+                        }
                     }
-                }
+                },
+                "required": [
+                    "STUDY_COMMENT",
+                    "CURATOR_NAME",
+                    "CURATOR_EMAIL",
+                    "CURATED_SET_NAME",
+                    "METHOD_TYPE",
+                    "PUBMED_ID",
+                    "FAMILY_RELATIONSHIP",
+                    "PHENOTYPE_DATABASE_NAME",
+                    "REFERENCE_TYPE"
+                ]
             }
         }
     }
