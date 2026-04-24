@@ -1,3 +1,5 @@
+# paths relative to package directory
 paths:
   etc_folder: "etc"
   schema_file: "etc/eva_schema.json"
+  test_folder: "../tests"

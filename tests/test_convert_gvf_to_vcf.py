@@ -16,8 +16,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         # Prepare Directories
         self.paths = ProjectPaths()
         self.etc_folder = self.paths.etc_dir
-        self.input_folder = self.paths.base_dir
-        self.tests_folder = os.path.normpath(os.path.join(self.paths.base_dir,"..", "tests"))
+        self.input_folder = self.paths.package_dir
+        self.tests_folder = self.paths.test_dir
         # Prepare Inputs
         self.input_file = os.path.join(self.tests_folder, "input", "zebrafish.gvf")
         # Prepare Outputs

@@ -9,7 +9,7 @@ from convert_gvf_to_vcf.projectpaths import ProjectPaths
 class TestGatherMetadata(TestCase):
     def setUp(self):
         self.paths = ProjectPaths()
-        self.tests_folder = os.path.abspath(os.path.join(self.paths.base_dir,"..", "tests"))
+        self.tests_folder = self.paths.test_dir
         self.config = os.path.join(self.tests_folder, "input", "test.config")
         self.study_accession = "estd22"
         self.assembly = os.path.join(self.tests_folder, "input", "zebrafish.fa")
