@@ -7,7 +7,10 @@ from collections import namedtuple
 
 import oracledb
 from pypika import Query, Table, Schema
+from jsonschema import validate, ValidationError
 
+from convert_gvf_to_vcf.projectpaths import ProjectPaths
+from convert_gvf_to_vcf.utils import read_in_json_schema
 from ebi_eva_common_pyutils.config import cfg
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
@@ -22,9 +25,9 @@ class DGVaMetadataRetriever:
     by querying the DGVa database.
     It will generate the metadata submission JSON file.
     """
-    def __init__(self, path_to_config_yaml):
+    def __init__(self, path_to_config_yaml, path_to_path_config_yaml):
         # coming from the config file
-        cfg.load_config_file(path_to_config_yaml)  # cfg is a dictionary
+        cfg.load_config_file(path_to_config_yaml)  # cfg is a dictionary - this is for db connection
         # db connection setup
         self._connection = None
         self._host = self._get_validated_value(cfg, ("DGVA","host"), str, default_value=None) # get information from the config dictionary
@@ -34,6 +37,11 @@ class DGVaMetadataRetriever:
         self._service_name = self._get_validated_value(cfg, ("DGVA", "service_name"), str, default_value=None)
         # db parameters
         self._max_retries = 3
+        # path setup
+        self.paths = ProjectPaths(path_to_path_config_yaml)
+        self.etc_folder = self.paths.etc_dir
+        self.json_schema = self.paths.schema_path
+
     def __enter__(self):
         # enables the "with" context manager
         _ = self.connection
@@ -217,11 +225,8 @@ class DGVaMetadataRetriever:
         project_hold_date = self._fetch_hold_date(study_accession)
 
         # formatting
-        project_hold_date, project_links, project_parent_project, pubmed_publications = self._format_project(
+        project_hold_date, project_links, project_parent_project, pubmed_publications = self._format_project_fields(
             project_hold_date, project_links, project_parent_project, project_publications)
-        # ensure compliance with EVA JSON schema https://github.com/EBIvariation/eva-sub-cli/blob/main/eva_sub_cli/etc/eva_schema.json
-        self.validate_project(project_description, project_hold_date, project_parent_project,
-                              project_tax_id, project_title, pubmed_publications)
 
         logger.info(f"Project accession has not been found. Creating a new project. ")
         # required: title, description, taxID, centre
@@ -242,6 +247,10 @@ class DGVaMetadataRetriever:
         }
         project_object_not_required = {k:v for k,v in project_object_not_required_all.items() if v}
         project_object.update(project_object_not_required)
+
+        # ensure compliance with EVA JSON schema https://github.com/EBIvariation/eva-sub-cli/blob/main/eva_sub_cli/etc/eva_schema.json
+        if not self.is_project_valid(project_object):
+            raise ValueError("Project does not match the JSON schema")
         return project_object
 
     def _get_analysis(self, study_accession, assembly, assembly_report):
@@ -257,7 +266,6 @@ class DGVaMetadataRetriever:
         method_types = self._fetch_analysis_method_type(study_accession)
         analysis_experiment_type = self._determine_analysis_experiment_type(analysis_types, method_types)
         analysis_reference_genome = self._fetch_analysis_reference_genome(study_accession)
-        #TODO: change this by removing evidence type. this will also remove the need for vcf_output
         analysis_evidence_type = ""
         analysis_reference_fasta = assembly
         analysis_assembly_report = assembly_report
@@ -351,7 +359,6 @@ class DGVaMetadataRetriever:
         files_analysis_id_list = self._fetch_analysis_ids(study_accession)
         # analysis alias is a string in files
         files_analysis_alias = self._fetch_analysis_alias(study_accession, files_analysis_id_list)
-        #TODO: add new function to populate after conversion
 
         files_file_name = ""
         files_file_size = ""
@@ -468,7 +475,7 @@ class DGVaMetadataRetriever:
         string_to_generate = string_to_generate.lstrip(" & ")
         return string_to_generate
 
-    def _format_project(self, project_hold_date, project_links, project_parent_project, project_publications):
+    def _format_project_fields(self, project_hold_date, project_links, project_parent_project, project_publications):
         if project_hold_date is None:
             project_hold_date = ""
         label = "| URL"
@@ -514,9 +521,8 @@ class DGVaMetadataRetriever:
         except ValueError:
             return False
 
-    def validate_project(self, project_description, project_hold_date, project_parent_project,
-                         project_tax_id, project_title, pubmed_publications):
-        """ Asserts whether the input parameters meet the EVA JSON schema https://github.com/EBIvariation/eva-sub-cli/blob/main/eva_sub_cli/etc/eva_schema.json
+    def is_project_valid(self, project_object_to_validate):
+        """ Validates project with the EVA JSON schema https://github.com/EBIvariation/eva-sub-cli/blob/main/eva_sub_cli/etc/eva_schema.json
         :params: project_description: string of max 5000 chars
         :params: project_hold_date: YYYY-MM-DD or ""
         :params: project_parent_project: project accession matching regex "^PRJ(E|D|N)[A-Z][0-9]+$"
@@ -524,27 +530,15 @@ class DGVaMetadataRetriever:
         :params: project_title: string of max 500 chars
         :params: pubmed_publications: list of pubmed ids ['Pubmed:1239234'] (can be more than one, in some studies)
         """
-        # constants
-        MAX_PROJECT_DESCRIPTION_LENGTH = 5000
-        MAX_PROJECT_TITLE_LENGTH = 500
-        project_accession_pattern = r"^PRJ(E|D|N)[A-Z][0-9]+$"  # applies to parent/child/peer
-        publications_pattern = "^[^:,]+?:[^:,]+?$"  # e.g. PubMed:23128226
-        # performing checks
-        assert len(
-            project_description) <= MAX_PROJECT_DESCRIPTION_LENGTH, f"Project description exceeded length: {MAX_PROJECT_DESCRIPTION_LENGTH}"
-        assert len(
-            project_title) <= MAX_PROJECT_TITLE_LENGTH, f"Project title exceeded length: {MAX_PROJECT_TITLE_LENGTH}"
-        assert isinstance(project_tax_id,
-                          int), f"Project Tax ID must be an int: {project_tax_id} is {type(project_tax_id)}"
-        if project_hold_date != "":
-            assert self.validate_date(
-                project_hold_date) == True, f"Project Hold Date must be YYYY-MM-DD: {project_hold_date}"
-        if project_parent_project is not None and project_parent_project != "":
-            assert re.fullmatch(project_accession_pattern, project_parent_project), f"String {project_parent_project} does not match pattern: {project_accession_pattern}"
-        for pub in pubmed_publications:
-            if pub:
-                assert re.fullmatch(publications_pattern,
-                                    pub), f"String {pub} does not match pattern: {publications_pattern}"
+        schema = read_in_json_schema(self.json_schema)
+        project_schema = schema["properties"]["project"]
+        project_schema["definitions"] = schema["definitions"]
+        try:
+            validate(instance=project_object_to_validate, schema=project_schema)
+            return True
+        except (FileNotFoundError, json.JSONDecodeError, ValidationError) as e:
+            print(f"Validating Project Error: {e}")
+            return False
 
     def validate_analysis(self, analysis_pipeline_descriptions, analysis_run_accessions):
         if analysis_run_accessions is not None:
