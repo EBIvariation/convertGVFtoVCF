@@ -2,20 +2,15 @@ import argparse
 import json
 import os.path
 import shutil
-from convert_gvf_to_vcf.metadataJSON import DGVaMetadataRetriever
 
+def gather_metadata(retriever, json_output, study_accession, assembly, assembly_report):
+    with retriever:
+        retriever.create_json_file(json_file_path=json_output, study_accession=study_accession, assembly=assembly, assembly_report=assembly_report)
 
-def gather_metadata(config_input, json_output, study_accession, assembly, assembly_report):
-
-    retrieved_dgva_metadata = DGVaMetadataRetriever(config_input)
-    with retrieved_dgva_metadata:
-        retrieved_dgva_metadata.create_json_file(json_file_path=json_output, study_accession=study_accession, assembly=assembly, assembly_report=assembly_report)
-
-def add_file_metadata(config_input, json_output, vcf_output):
-    retrieved_dgva_metadata = DGVaMetadataRetriever(config_input)
-    files_file_name = retrieved_dgva_metadata._get_file_name(vcf_output)
-    files_file_size = retrieved_dgva_metadata._get_file_size(vcf_output)
-    files_file_md5 = retrieved_dgva_metadata._get_file_md5(vcf_output)
+def add_file_metadata(retriever, json_output,vcf_output):
+    files_file_name = retriever._get_file_name(vcf_output)
+    files_file_size = retriever._get_file_size(vcf_output)
+    files_file_md5 = retriever._get_file_md5(vcf_output)
 
     with open(json_output, 'r') as f_in:
         metadata = json.load(f_in)

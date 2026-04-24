@@ -1,20 +1,15 @@
 import argparse
 import os
-from collections import Counter
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 from convert_gvf_to_vcf.conversionstatistics import FileStatistics
 from convert_gvf_to_vcf.gather_metadata import gather_metadata, add_file_metadata
 from convert_gvf_to_vcf.lookup import Lookup
+from convert_gvf_to_vcf.projectpaths import ProjectPaths
 from convert_gvf_to_vcf.utils import read_in_gvf_header, read_in_gvf_data
 from convert_gvf_to_vcf.vcfline import VcfLineBuilder
-from convert_gvf_to_vcf.metadataJSON import DGVaMetadataRetriever
 
 logger = log_cfg.get_logger(__name__)
-
-# setting up paths to useful directories
-convert_gvf_to_vcf_folder = os.path.dirname(__file__)
-etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
 # the functions below relate to the VCF header (Part 1)
 def generate_vcf_header_structured_lines(header_type, mapping_attribute_dict):
@@ -258,7 +253,7 @@ def write_header(vcf_output, pragmas_for_vcf, header_lines_per_type, header_fiel
         vcf_header_output.write(f"{header_fields}\n")
     return vcf_header_file
 
-def convert(gvf_input, vcf_output, assembly):
+def convert(gvf_input, vcf_output, assembly, paths):
     # Log the inputs and outputs.
     logger.info("Running the GVF to VCF converter")
     logger.info(f"The provided input file is: {gvf_input}")
@@ -270,84 +265,87 @@ def convert(gvf_input, vcf_output, assembly):
     assert os.path.isfile(assembly_file), "Assembly file does not exist"
     assert os.path.isfile(gvf_input), "GVF file does not exist"
 
+
     # Creating lookup object to store important dictionaries and log what has been stored.
-    reference_lookup = Lookup(assembly_file)
-    logger.info("Creating the reference lookup object.")
-    logger.info("Storing the attributes file: attribute_mapper.yaml")
-    logger.info("Storing the symbolic allele dictionary.")
-    logger.info(f"Storing the assembly file: {assembly_file}")
-    logger.info("Storing the IUPAC ambiguity dictionary.")
+    reference_lookup = Lookup(assembly_file, paths)
+    try:
+        logger.info("Creating the reference lookup object.")
+        logger.info("Storing the attributes file: attribute_mapper.yaml")
+        logger.info("Storing the symbolic allele dictionary.")
+        logger.info(f"Storing the assembly file: {assembly_file}")
+        logger.info("Storing the IUPAC ambiguity dictionary.")
 
-    # Read input file and separate out its components
-    logger.info(f"Reading in the following GVF header from {gvf_input}")
-    gvf_pragmas, gvf_pragma_comments = read_in_gvf_header(gvf_input)
+        # Read input file and separate out its components
+        logger.info(f"Reading in the following GVF header from {gvf_input}")
+        gvf_pragmas, gvf_pragma_comments = read_in_gvf_header(gvf_input)
 
-    # Preparation work:
-    # Store the VCF metainformation and ensure preservation of important GVF data.
-    # This information will be useful when creating the VCF header.
-    (
-        pragmas_for_vcf,
-        samples
-    ) = convert_gvf_pragmas_for_vcf_header(gvf_pragmas, gvf_pragma_comments, reference_lookup)
-    report = FileStatistics(gvf_file_path=gvf_input, gvf_pragmas=gvf_pragmas, samples=samples)
+        # Preparation work:
+        # Store the VCF metainformation and ensure preservation of important GVF data.
+        # This information will be useful when creating the VCF header.
+        (
+            pragmas_for_vcf,
+            samples
+        ) = convert_gvf_pragmas_for_vcf_header(gvf_pragmas, gvf_pragma_comments, reference_lookup)
+        report = FileStatistics(gvf_file_path=gvf_input, gvf_pragmas=gvf_pragmas, samples=samples)
 
-    # Create data structure to store all possible outcomes for header lines (for fields ALT, INFO, FILTER, FORMAT)
-    all_header_lines_per_type_dict = {
-        htype: generate_vcf_header_structured_lines(htype, reference_lookup.mapping_attribute_dict) for htype in
-        ["ALT", "INFO", "FILTER", "FORMAT"]
-    }
+        # Create data structure to store all possible outcomes for header lines (for fields ALT, INFO, FILTER, FORMAT)
+        all_header_lines_per_type_dict = {
+            htype: generate_vcf_header_structured_lines(htype, reference_lookup.mapping_attribute_dict) for htype in
+            ["ALT", "INFO", "FILTER", "FORMAT"]
+        }
 
-    vcf_builder = VcfLineBuilder(all_header_lines_per_type_dict, reference_lookup, samples)
-    is_missing_format_value = True
-    # VCF dataline generation
-    # Convert each feature line in the GVF file to a VCF object (stores all the data for a line in the VCF file).
-    # NOTE: Main Logic lives here.
-    vcf_data_file = vcf_output + '_data_lines'
-    with open(vcf_data_file, "w") as open_data_lines:
-        logger.info("Generating the VCF datalines")
-        chrom_vcf_lines = []
-        current_chrom = None
-        has_any_features = False
-        for gvf_entry in read_in_gvf_data(gvf_input):
-            # record GVF counts
-            report.gvf_feature_line_count += 1
-            report.gvf_chromosome_count[gvf_entry.seqid] += 1
-            report.gvf_sv_count.update([gvf_entry.feature_type])
-            has_any_features = True
-            # create the VCF line object
-            current_vcf_line = vcf_builder.build_vcf_line(gvf_entry)
-            # is_missing_format_value will only be true if all the format field are missing.
-            is_missing_format_value = is_missing_format_value and current_vcf_line.format_keys == ['.']
-            # On chromosome change, flush the vcf_lines for the previous chromosome
-            if current_chrom is not None and current_vcf_line.chrom != current_chrom:
+        vcf_builder = VcfLineBuilder(all_header_lines_per_type_dict, reference_lookup, samples)
+        is_missing_format_value = True
+        # VCF dataline generation
+        # Convert each feature line in the GVF file to a VCF object (stores all the data for a line in the VCF file).
+        # NOTE: Main Logic lives here.
+        vcf_data_file = vcf_output + '_data_lines'
+        with open(vcf_data_file, "w") as open_data_lines:
+            logger.info("Generating the VCF datalines")
+            chrom_vcf_lines = []
+            current_chrom = None
+            has_any_features = False
+            for gvf_entry in read_in_gvf_data(gvf_input):
+                # record GVF counts
+                report.gvf_feature_line_count += 1
+                report.gvf_chromosome_count[gvf_entry.seqid] += 1
+                report.gvf_sv_count.update([gvf_entry.feature_type])
+                has_any_features = True
+                # create the VCF line object
+                current_vcf_line = vcf_builder.build_vcf_line(gvf_entry)
+                # is_missing_format_value will only be true if all the format field are missing.
+                is_missing_format_value = is_missing_format_value and current_vcf_line.format_keys == ['.']
+                # On chromosome change, flush the vcf_lines for the previous chromosome
+                if current_chrom is not None and current_vcf_line.chrom != current_chrom:
+                    flush_chrom_vcf_lines(chrom_vcf_lines, open_data_lines, samples, report)
+                    chrom_vcf_lines = []
+                current_chrom = current_vcf_line.chrom
+                chrom_vcf_lines.append(current_vcf_line)
+            # Flush the final chromosome vcf_lines
+            if chrom_vcf_lines:
                 flush_chrom_vcf_lines(chrom_vcf_lines, open_data_lines, samples, report)
-                chrom_vcf_lines = []
-            current_chrom = current_vcf_line.chrom
-            chrom_vcf_lines.append(current_vcf_line)
-        # Flush the final chromosome vcf_lines
-        if chrom_vcf_lines:
-            flush_chrom_vcf_lines(chrom_vcf_lines, open_data_lines, samples, report)
-        if not has_any_features:
-            logger.warning("No feature lines were found for this GVF file.")
+            if not has_any_features:
+                logger.warning("No feature lines were found for this GVF file.")
 
-    # VCF header generation
-    header_lines_per_type = vcf_builder.build_vcf_header()
-    header_fields = generate_vcf_header_line(is_missing_format=is_missing_format_value, samples=samples)
-    vcf_header_file = write_header(vcf_output, pragmas_for_vcf, header_lines_per_type, header_fields, samples)
+        # VCF header generation
+        header_lines_per_type = vcf_builder.build_vcf_header()
+        header_fields = generate_vcf_header_line(is_missing_format=is_missing_format_value, samples=samples)
+        vcf_header_file = write_header(vcf_output, pragmas_for_vcf, header_lines_per_type, header_fields, samples)
 
-    logger.info(f"Combining the header and data lines to the following VCF output: {vcf_output}")
-    construct_vcf_output(vcf_header_file, vcf_data_file, vcf_output)
+        logger.info(f"Combining the header and data lines to the following VCF output: {vcf_output}")
+        construct_vcf_output(vcf_header_file, vcf_data_file, vcf_output)
 
-    logger.info("Remove the temporary files")
-    cleanup_temp_files([vcf_header_file, vcf_data_file])
+        logger.info("Remove the temporary files")
+        cleanup_temp_files([vcf_header_file, vcf_data_file])
 
-    logger.info("Printing the summary of conversion report.")
-    vcf_output_directory = os.path.dirname(vcf_output)
-    stats_summary_file = os.path.join(vcf_output_directory, "summary_stats.txt")
-    report.print_report(stats_summary_file)
+        logger.info("Printing the summary of conversion report.")
+        vcf_output_directory = os.path.dirname(vcf_output)
+        stats_summary_file = os.path.join(vcf_output_directory, "summary_stats.txt")
+        report.print_report(stats_summary_file)
 
-    logger.info("GVF to VCF conversion complete")
-
+        logger.info("GVF to VCF conversion complete")
+    finally:
+        reference_lookup.close()
 
 #helper functions for convert
 def construct_vcf_output(vcf_header_file, vcf_data_file, vcf_output):
@@ -421,8 +419,9 @@ def main():
         gather_metadata(args.config, args.json_output, args.study_accession, args.assembly, args.assembly_report)
     else:
         logger.info(f"No config file provided. Unable to gather metadata.")
+    paths = ProjectPaths()
     # Conversion: GVF to VCF
-    convert(args.gvf_input, args.vcf_output, args.assembly)
+    convert(args.gvf_input, args.vcf_output, args.assembly, paths)
     # Post-conversion: adding VCF details to the JSON file
     add_file_metadata(args.config, args.json_output, args.vcf_output)
 if __name__ == "__main__":

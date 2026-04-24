@@ -4,18 +4,20 @@ import unittest
 from convert_gvf_to_vcf.assistingconverter import get_gvf_attributes, generate_custom_structured_meta_line, \
     convert_gvf_attributes_to_vcf_values
 from convert_gvf_to_vcf.lookup import Lookup
+from convert_gvf_to_vcf.projectpaths import ProjectPaths
+
 
 class TestAssistingConverter(unittest.TestCase):
     def setUp(self):
-        input_folder = os.path.dirname(__file__)
-        self.input_file = os.path.join(input_folder, "input", "zebrafish.gvf")
-        self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'convert_gvf_to_vcf'))
+        self.paths = ProjectPaths()
+        self.tests_folder = os.path.abspath(os.path.join(self.paths.base_dir,"..", "tests"))
+        self.input_file = os.path.join(self.tests_folder, "input", "zebrafish.gvf")
+        self.input_folder_parent = os.path.abspath(os.path.join(self.tests_folder, '..', 'convert_gvf_to_vcf'))
         # the inputs below are INFO attribute files
         self.etc_folder =  os.path.join(self.input_folder_parent, "etc")
-        self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
-        self.etc_folder =  os.path.join(self.input_folder_parent, "etc")
-        self.output_file = os.path.join(input_folder, "input", "a.vcf")
-        self.reference_lookup = Lookup(self.assembly)
+        self.assembly = os.path.join(self.tests_folder, "input", "zebrafish.fa")
+        self.output_file = os.path.join(self.tests_folder, "input", "a.vcf")
+        self.reference_lookup = Lookup(self.assembly, self.paths)
 
     def test_generate_custom_structured_meta_line(self):
         field = "INFO"

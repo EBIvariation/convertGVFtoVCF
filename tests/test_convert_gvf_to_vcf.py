@@ -7,24 +7,24 @@ from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_unstructured_
     convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line, parse_pragma, get_pragma_name_and_value, \
     get_pragma_tokens, \
     get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
-    convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert, flush_chrom_vcf_lines
-from convert_gvf_to_vcf.vcfline import VcfLine
+    convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert
+from convert_gvf_to_vcf.projectpaths import ProjectPaths
 
 
 class TestConvertGVFtoVCF(unittest.TestCase):
     def setUp(self):
         # Prepare Directories
-        self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'convert_gvf_to_vcf'))
-        self.etc_folder =  os.path.join(self.input_folder_parent, "etc")
-        input_folder = os.path.dirname(__file__)
+        self.paths = ProjectPaths()
+        self.etc_folder = self.paths.etc_dir
+        self.input_folder = self.paths.base_dir
+        self.tests_folder = os.path.normpath(os.path.join(self.paths.base_dir,"..", "tests"))
         # Prepare Inputs
-        self.input_file = os.path.join(input_folder, "input", "zebrafish.gvf")
-        self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'convert_gvf_to_vcf'))
+        self.input_file = os.path.join(self.tests_folder, "input", "zebrafish.gvf")
         # Prepare Outputs
-        self.output_file = os.path.join(input_folder, "input", "a.vcf")
+        self.output_file = os.path.join(self.tests_folder, "input", "a.vcf")
         # Prepare References
-        self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
-        self.reference_lookup = Lookup(self.assembly)
+        self.assembly = os.path.join(self.tests_folder, "input", "zebrafish.fa")
+        self.reference_lookup = Lookup(self.assembly, self.paths)
         self.ordered_list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
 
     # the tests below relate to the VCF header (Part 1)
@@ -109,7 +109,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         header_fields = generate_vcf_header_line(True, self.ordered_list_of_samples)
         assert header_fields == '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO'
 
-
     # the tests below relate to the GVF header
     def test_parse_pragma(self):
         # testing: pragma has a name and value
@@ -153,7 +152,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
             self.assertEqual(unexpected_pragma_tokens, pragma_tokens)
 
     def test_convert(self):
-        convert(self.input_file , self.output_file, self.assembly)
+        convert(self.input_file , self.output_file, self.assembly, self.paths)
         #####VCF#####
         header_lines = []
         data_lines = []
@@ -178,8 +177,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert gvf_header[1] == "##gvf-version 1.06"
         assert gvf_features[0] == "chromosome1	DGVa	copy_number_loss	1	2	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         # check statistics file exists and what is inside it
-        test_dir = os.path.dirname(__file__)
-        vcf_output_directory = os.path.join(test_dir, "input")
+        vcf_output_directory = os.path.join(self.tests_folder, "input")
         stats_file = os.path.join(vcf_output_directory, "summary_stats.txt")
         assert os.path.exists(stats_file) == True
         stats_lines = []
@@ -195,8 +193,8 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
 
     def test_convert_500(self):
-        input_folder = os.path.join(os.path.dirname(__file__), "input")
-        output_folder = os.path.join(os.path.dirname(__file__), "output")
+        input_folder = os.path.join(self.tests_folder, "input")
+        output_folder = os.path.join(self.tests_folder, "output")
         # Prepare Inputs
         input_file = os.path.join(input_folder, "drosophila_estd205_lines_500_sorted.gvf")
         output_file = os.path.join(output_folder, "drosophila_estd205_lines_500.vcf")
@@ -205,7 +203,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assembly = os.path.join(input_folder, "drosophila_GCA_000001215.2_chr4.fa")
         assert os.path.exists(input_file) == True
         assert os.path.exists(assembly) == True
-        convert(input_file, output_file, assembly)
+        convert(input_file, output_file, assembly, self.paths)
 
     def test_convert_position_shift(self):
         """
@@ -213,13 +211,13 @@ class TestConvertGVFtoVCF(unittest.TestCase):
           - Record 1 (first in GVF): SNP, Variant_seq=G → VCF pos=5 (no padding)
           - Record 2 (second in GVF): Del, Variant_seq=. → VCF pos=4 (padded before)
         """
-        input_folder = os.path.join(os.path.dirname(__file__), "input")
-        output_folder = os.path.join(os.path.dirname(__file__), "output")
+        input_folder = os.path.join(self.tests_folder, "input")
+        output_folder = os.path.join(self.tests_folder, "output")
         os.makedirs(output_folder, exist_ok=True)
         input_file = os.path.join(input_folder, "zebrafish_position_shift.gvf")
         output_file = os.path.join(output_folder, "zebrafish_position_shift.vcf")
 
-        convert(input_file, output_file, self.assembly)
+        convert(input_file, output_file, self.assembly, self.paths)
 
         data_lines = []
         with open(output_file) as f:

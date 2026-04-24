@@ -1,7 +1,7 @@
 import os
 import unittest
 
-
+from convert_gvf_to_vcf.projectpaths import ProjectPaths
 from convert_gvf_to_vcf.utils import read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, \
     build_iupac_ambiguity_code, read_in_gvf_header, read_in_gvf_data
 from convert_gvf_to_vcf.lookup import Lookup
@@ -9,17 +9,20 @@ from convert_gvf_to_vcf.lookup import Lookup
 class TestUtils(unittest.TestCase):
     def setUp(self):
         # Prepare Directories
-        self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'convert_gvf_to_vcf'))
+        self.paths = ProjectPaths()
+        self.tests_folder = os.path.abspath(os.path.join(self.paths.base_dir,"..", "tests"))
+        self.input_folder_parent = os.path.abspath(os.path.join(self.paths.base_dir, '..', 'convert_gvf_to_vcf'))
         self.etc_folder =  os.path.join(self.input_folder_parent, "etc")
         input_folder = os.path.dirname(__file__)
+
         # Prepare Inputs
         self.input_file = os.path.join(input_folder, "input", "zebrafish.gvf")
-        self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'convert_gvf_to_vcf'))
+        self.input_folder_parent = os.path.abspath(os.path.join(self.paths.base_dir, '..', 'convert_gvf_to_vcf'))
         # Prepare Outputs
         self.output_file = os.path.join(input_folder, "input", "a.vcf")
         # Prepare References
         self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
-        self.reference_lookup = Lookup(self.assembly)
+        self.reference_lookup = Lookup(self.assembly, self.paths)
 
 
     def test_read_yaml(self):
