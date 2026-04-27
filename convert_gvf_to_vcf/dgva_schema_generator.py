@@ -59,9 +59,17 @@ class SchemaCreator:
         clean_df = df.drop(columns=["Section"])
         clean_df_index = clean_df.set_index("metadataField")
         clean_df_index['type'] = clean_df_index['type'].map(self.map_type_oracle_to_json)
+        # converting values to boolean
         fields_to_change = ["STUDY_UPDATE", "NEW_FEATURE"] # should be in upper case as not converted to camelCase
         matched_fields = clean_df_index.index.intersection(fields_to_change)
         clean_df_index.loc[matched_fields, "type"] = "boolean"
+        # add enum
+        if "enum" not in clean_df_index.columns:
+            clean_df_index["enum"] = None
+            clean_df_index["enum"] = clean_df_index["enum"].astype(object)
+
+        if "SUBJECT_SEX" in clean_df_index.index:
+            clean_df_index.at["SUBJECT_SEX", "enum"] = ["Female", "Male", "Unknown"]
         return clean_df_index
 
     def generate_json_string(self, df):
@@ -70,7 +78,9 @@ class SchemaCreator:
         :param df: data frame
         :return: string of json object
         """
-        json_string = df.to_json(orient="index", indent=4)
+        df_none = df.where(pd.notnull(df), None)
+        json_dict = df_none.to_dict(orient="index")
+        json_string = json.dumps(json_dict, indent=4)
         return json_string
 
     def to_camel_case(self, string_to_convert):
@@ -106,6 +116,8 @@ class SchemaCreator:
                     "columnDefault": field_value.get("default"),
                 }
             }
+            if "enum" in field_value and field_value["enum"] is not None:
+                nested_object[camel_case_field_name]["enum"] = field_value["enum"]
         return nested_object, required_fields
 
     def create_json_schema(self):
