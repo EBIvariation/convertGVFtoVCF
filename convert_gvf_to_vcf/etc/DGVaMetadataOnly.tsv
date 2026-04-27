@@ -19,12 +19,12 @@ Study	EXPERIMENT_CURATION	CURATED_SET_LINK		VARCHAR2(4000)	FALSE
 Study	DGVA_METHOD	METHOD_TYPE	Controlled by CV in table "method_type_cv"	VARCHAR2(4000)	TRUE	
 Study	DGVA_METHOD	METHOD_RESOLUTION	Text as reported by the submitter, e.g. BP for "base pair"	VARCHAR2(4000)	FALSE	
 Study	DGVA_METHOD	METHOD_DESCRIPTION	Values controlled by entries in table "method_type_cv"	VARCHAR2(4000)	FALSE	
-Study	PUBMED_PUBLICATION	PUBMED_ID	Publication attribute as given by Pubmed	NUMBER(10,0)	TRUE	
-Study	PUBMED_PUBLICATION	ARTICLE_TITLE	Publication attribute as given by Pubmed	VARCHAR2(4000)	FALSE	
-Study	PUBMED_PUBLICATION	FIRST_AUTHOR	Publication attribute as given by Pubmed	VARCHAR2(4000)	FALSE	
-Study	PUBMED_PUBLICATION	JOURNAL_TITLE	Publication attribute as given by Pubmed	VARCHAR2(4000)	FALSE	
-Study	PUBMED_PUBLICATION	PUBLICATION_YEAR	Publication attribute as given by Pubmed	NUMBER(10,0)	FALSE	
-Study	PUBMED_PUBLICATION	ARTICLE_ABSTRACT	Publication attribute as given by Pubmed	VARCHAR2(4000)	FALSE	
+Study	PUBMED_PUBLICATION	PUBMED_ID	Publication ID from Pubmed	NUMBER(10,0)	TRUE
+Study	PUBMED_PUBLICATION	ARTICLE_TITLE	Publication title from Pubmed	VARCHAR2(4000)	FALSE
+Study	PUBMED_PUBLICATION	FIRST_AUTHOR	Publication first author from Pubmed	VARCHAR2(4000)	FALSE
+Study	PUBMED_PUBLICATION	JOURNAL_TITLE	Publication journal title from Pubmed	VARCHAR2(4000)	FALSE
+Study	PUBMED_PUBLICATION	PUBLICATION_YEAR	Publication year from Pubmed	NUMBER(10,0)	FALSE
+Study	PUBMED_PUBLICATION	ARTICLE_ABSTRACT	Publication abstract from Pubmed	VARCHAR2(4000)	FALSE
 Study	DGVA_SUBJECT	SUBJECT_SEX	Controlled by table "sex_cv"	VARCHAR2(4000)	FALSE	
 Study	DGVA_SUBJECT	SUBJECT_AGE		VARCHAR2(4000)	FALSE	
 Study	SUBJECT_FAMILY_RELATIONSHIP	FAMILY_RELATIONSHIP	An FK from table "family_relationship_cv"	VARCHAR2(4000)	TRUE

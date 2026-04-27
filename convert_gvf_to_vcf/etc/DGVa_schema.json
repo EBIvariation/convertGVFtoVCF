@@ -195,7 +195,7 @@
                     },
                     "pubmedId": {
                         "type": "integer",
-                        "definition": "Publication attribute as given by Pubmed",
+                        "definition": "Publication ID from Pubmed",
                         "dbMapping": {
                             "dgvaTable": "PUBMED_PUBLICATION",
                             "notNull": true,
@@ -204,7 +204,7 @@
                     },
                     "articleTitle": {
                         "type": "string",
-                        "definition": "Publication attribute as given by Pubmed",
+                        "definition": "Publication title from Pubmed",
                         "dbMapping": {
                             "dgvaTable": "PUBMED_PUBLICATION",
                             "notNull": false,
@@ -213,7 +213,7 @@
                     },
                     "firstAuthor": {
                         "type": "string",
-                        "definition": "Publication attribute as given by Pubmed",
+                        "definition": "Publication first author from Pubmed",
                         "dbMapping": {
                             "dgvaTable": "PUBMED_PUBLICATION",
                             "notNull": false,
@@ -222,7 +222,7 @@
                     },
                     "journalTitle": {
                         "type": "string",
-                        "definition": "Publication attribute as given by Pubmed",
+                        "definition": "Publication journal title from Pubmed",
                         "dbMapping": {
                             "dgvaTable": "PUBMED_PUBLICATION",
                             "notNull": false,
@@ -231,7 +231,7 @@
                     },
                     "publicationYear": {
                         "type": "integer",
-                        "definition": "Publication attribute as given by Pubmed",
+                        "definition": "Publication year from Pubmed",
                         "dbMapping": {
                             "dgvaTable": "PUBMED_PUBLICATION",
                             "notNull": false,
@@ -240,7 +240,7 @@
                     },
                     "articleAbstract": {
                         "type": "string",
-                        "definition": "Publication attribute as given by Pubmed",
+                        "definition": "Publication abstract from Pubmed",
                         "dbMapping": {
                             "dgvaTable": "PUBMED_PUBLICATION",
                             "notNull": false,
