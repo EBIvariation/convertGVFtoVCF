@@ -67,9 +67,18 @@ class SchemaCreator:
         if "enum" not in clean_df_index.columns:
             clean_df_index["enum"] = None
             clean_df_index["enum"] = clean_df_index["enum"].astype(object)
-
-        if "SUBJECT_SEX" in clean_df_index.index:
-            clean_df_index.at["SUBJECT_SEX", "enum"] = ["Female", "Male", "Unknown"]
+        enum_lists = {
+            "SUBJECT_SEX": ["Female", "Male", "Unknown"],
+            "METHOD_TYPE": ["Microsatellite genotyping", "Multiple", "Merging", "MCD analysis", "Not provided",
+                            "BAC aCGH", "Curated", "Digital array", "FISH", "Gene expression array", "Karyotyping",
+                            "MAPH", "Multiple complete digestion", "MLPA", "MassSpec", "Oligo aCGH", "Optical Mapping",
+                            "PCR", "ROMA", "RT-PCR", "SNP array", "Sequencing", "qPCR", "Southern", "Western"],
+            "PHENOTYPE_DATABASE_NAME": ["DO", "MONDO", "Orphanet", "MedGen", "HP", "MeSH", "OMIM", "SNOMED", "UMLS"],
+            "REFERENCE_TYPE": ["Assembly", "Control tissue", "Other", "Sample", "Sampleset"]
+        }
+        for field, values in enum_lists.items():
+            if field in clean_df_index.index:
+                clean_df_index.at[field, "enum"] = values
         return clean_df_index
 
     def generate_json_string(self, df):
