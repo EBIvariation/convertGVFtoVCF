@@ -416,15 +416,15 @@
                     }
                 },
                 "required": [
-                    "STUDY_COMMENT",
-                    "CURATOR_NAME",
-                    "CURATOR_EMAIL",
-                    "CURATED_SET_NAME",
-                    "METHOD_TYPE",
-                    "PUBMED_ID",
-                    "FAMILY_RELATIONSHIP",
-                    "PHENOTYPE_DATABASE_NAME",
-                    "REFERENCE_TYPE"
+                    "studyComment",
+                    "curatorName",
+                    "curatorEmail",
+                    "curatedSetName",
+                    "methodType",
+                    "pubmedId",
+                    "familyRelationship",
+                    "phenotypeDatabaseName",
+                    "referenceType"
                 ]
             }
         }
