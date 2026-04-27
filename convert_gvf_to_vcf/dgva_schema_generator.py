@@ -52,13 +52,16 @@ class SchemaCreator:
         return json_type
 
     def clean_data(self, df):
-        """ Restricts data to the required values only.
+        """ Restricts data to the required values only. Changes type where needed.
         :param df: dataframe of metadata from DGVa
         :return: cleaned dataframe
         """
         clean_df = df.drop(columns=["Section"])
         clean_df_index = clean_df.set_index("metadataField")
         clean_df_index['type'] = clean_df_index['type'].map(self.map_type_oracle_to_json)
+        fields_to_change = ["STUDY_UPDATE", "NEW_FEATURE"] # should be in upper case as not converted to camelCase
+        matched_fields = clean_df_index.index.intersection(fields_to_change)
+        clean_df_index.loc[matched_fields, "type"] = "boolean"
         return clean_df_index
 
     def generate_json_string(self, df):

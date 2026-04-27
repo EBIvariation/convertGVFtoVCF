@@ -68,7 +68,7 @@
                         }
                     },
                     "newFeature": {
-                        "type": "integer",
+                        "type": "boolean",
                         "definition": "Boolean indicating if the update is addition of new data",
                         "dbMapping": {
                             "dgvaTable": "STUDY_UPDATE",
