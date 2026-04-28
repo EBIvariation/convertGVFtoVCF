@@ -411,12 +411,12 @@ class TestDGVaMetadataRetriever(TestCase):
 
     def test_validate_fetch_result(self):
         metadata_client = DGVaMetadataRetriever(self.config, self.full_config_path)
-        # expect string
-        result = metadata_client.validate_fetch_result("name", [("value",)], True)
+        # expect one value in list
+        [result, *_] = metadata_client.validate_fetch_result("name", [("value",)]) or [""]
         expected = "value"
         self.assertEqual(result, expected)
-        # expect list
-        result = metadata_client.validate_fetch_result("name", [("value",)], False)
+        # expect multiple values in list
+        result = metadata_client.validate_fetch_result("name", [("value",)])
         expected = ["value"]
         self.assertEqual(result, expected)
 
