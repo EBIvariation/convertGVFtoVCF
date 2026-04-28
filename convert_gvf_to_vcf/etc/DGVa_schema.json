@@ -290,7 +290,7 @@
                     },
                     "subjectAge": {
                         "type": "string",
-                        "definition": null,
+                        "definition": "Age of the subject",
                         "dbMapping": {
                             "dgvaTable": "DGVA_SUBJECT",
                             "notNull": false,
