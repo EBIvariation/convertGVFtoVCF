@@ -15,31 +15,34 @@ class TestGatherMetadata(TestCase):
         self.assembly = os.path.join(self.tests_folder, "input", "zebrafish.fa")
         self.assembly_report = os.path.join(self.tests_folder, "input", "assembly_report.txt")
 
-        self.json_file = os.path.join(self.tests_folder, "output", "a_preconverted.json")
-        self.json_file_preconverted = os.path.join(self.tests_folder, "output", "a_preconverted_preconverted.json")
+        self.json_file = os.path.join(self.tests_folder, "output", "a.json")
+        self.json_file_preconverted = os.path.join(self.tests_folder, "output", "a_preconverted.json")
         self.vcf_output = os.path.join(self.tests_folder, "output", "a.vcf")
         self.expected_json_output = os.path.join(self.tests_folder, "output", "a.json")
 
     @patch('convert_gvf_to_vcf.gather_metadata.DGVaMetadataRetriever')
     def test_gather_metadata(self, MockRetriever):
         mock_instance = MockRetriever.return_value
-        mock_instance.__enter__.return_value = mock_instance
         gather_metadata(
-            self.config,
+            mock_instance,
             self.json_file,
             self.study_accession,
             self.assembly,
             self.assembly_report
         )
-
+        mock_instance.create_json_file.assert_called_once()
         with open(self.json_file_preconverted, 'r') as f_out:
             metadata = json.load(f_out)
+        self.assertEqual(metadata["files"][0].get("fileSize"), 12345)
+        self.assertEqual(metadata["files"][0].get("md5"), "abcde12345")
 
-        self.assertIn(metadata["files"][0].get("fileSize"), [None,""])
-        self.assertIn(metadata["files"][0].get("md5"), [None, ""])
-
-    def test_add_file_metadata(self):
-        add_file_metadata(self.config, self.json_file, self.vcf_output)
+    @patch('convert_gvf_to_vcf.gather_metadata.DGVaMetadataRetriever')
+    def test_add_file_metadata(self, MockRetriever):
+        mock_retriever = MockRetriever.return_value
+        mock_retriever._get_file_name.return_value = "a.vcf"
+        mock_retriever._get_file_size.return_value = 12345
+        mock_retriever._get_file_md5.return_value = "abcde12345"
+        add_file_metadata(mock_retriever, self.json_file, self.vcf_output)
 
         with open(self.json_file, 'r') as f:
             metadata = json.load(f)
