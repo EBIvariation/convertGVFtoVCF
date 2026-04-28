@@ -87,7 +87,7 @@
                     },
                     "affiliationUrl": {
                         "type": "string",
-                        "definition": "An attribute (column name is self-explanatory) describing the contact individuals for a study, e.g. submitter",
+                        "definition": "Link to the submitter institution",
                         "dbMapping": {
                             "dgvaTable": "STUDY_CONTACT",
                             "notNull": false,
@@ -159,7 +159,7 @@
                     },
                     "curatedSetLink": {
                         "type": "string",
-                        "definition": null,
+                        "definition": "Link to the curated set of variants",
                         "dbMapping": {
                             "dgvaTable": "EXPERIMENT_CURATION",
                             "notNull": false,
