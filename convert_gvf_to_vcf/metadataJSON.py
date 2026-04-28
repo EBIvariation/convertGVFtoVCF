@@ -646,7 +646,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_centres_list = self.load_from_db(all_centres_query.get_sql(quote_char=None))
-        all_centres = self.validate_fetch_result("firstName", all_centres_list)
+        all_centres = self.validate_fetch_result("centre", all_centres_list)
         return all_centres
 
     def _fetch_submitter_details_all_addresses(self, study_accession):
