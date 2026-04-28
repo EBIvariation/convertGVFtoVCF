@@ -3,9 +3,11 @@ import json
 import os.path
 import shutil
 
+from convert_gvf_to_vcf.metadataJSON import DGVaMetadataRetriever
+
+
 def gather_metadata(retriever, json_output, study_accession, assembly, assembly_report):
-    with retriever:
-        retriever.create_json_file(json_file_path=json_output, study_accession=study_accession, assembly=assembly, assembly_report=assembly_report)
+    retriever.create_json_file(json_file_path=json_output, study_accession=study_accession, assembly=assembly, assembly_report=assembly_report)
 
 def add_file_metadata(retriever, json_output,vcf_output):
     files_file_name = retriever._get_file_name(vcf_output)
@@ -33,6 +35,7 @@ def add_file_metadata(retriever, json_output,vcf_output):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config")
+    parser.add_argument("--path_config")
     parser.add_argument("--json_output")
     parser.add_argument("--study_accession")
     parser.add_argument("--vcf_output")
@@ -40,7 +43,11 @@ def main():
     parser.add_argument("--assembly_report")
     args = parser.parse_args()
 
-    gather_metadata(args.config, args.json_output, args.study_accession, args.assembly, args.assembly_report)
-    add_file_metadata(args.config, args.json_output, args.vcf_output)
+    retriever = DGVaMetadataRetriever(
+        path_to_config_yaml=args.config,
+        path_to_path_config_yaml=args.path_config
+    )
+    gather_metadata(retriever, args.json_output, args.study_accession, args.assembly, args.assembly_report)
+    add_file_metadata(retriever, args.json_output, args.vcf_output)
 if __name__ == "__main__":
     main()

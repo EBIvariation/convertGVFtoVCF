@@ -774,14 +774,14 @@ class DGVaMetadataRetriever:
         # create the table objects
         ds = Table("DGVA_STUDY", schema=db).as_("ds")
         # create the query
-        project_accession_query = (Query
+        peer_project_accession_query = (Query
                                    .from_(ds)
                                    .select(ds.BIOPROJECT_ACCESSION)
                                    .where(ds.STUDY_ACCESSION == study_accession)
                                    )
-        project_accession_list = self.load_from_db(project_accession_query.get_sql(quote_char=None))
-        project_accession = self.validate_fetch_result("peerProject", project_accession_list, True)
-        return project_accession
+        peer_project_accession_list = self.load_from_db(peer_project_accession_query.get_sql(quote_char=None))
+        [peer_project_accession, *_] = self.validate_fetch_result("peerProject", peer_project_accession_list) or [""]
+        return peer_project_accession
 
     def _fetch_project_links(self, study_accession):
         # create the schema objects
