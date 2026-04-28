@@ -495,8 +495,7 @@ class DGVaMetadataRetriever:
                 pubmed_string = "PubMed:" + str(pub)
                 pubmed_publications.append(pubmed_string)
         return project_hold_date, project_links, project_parent_project, pubmed_publications
-    # VALIDATING
-    def validate_fetch_result(self, eva_field_name, fetch_result_list):
+    def fetch_results_from_rows(self, eva_field_name, fetch_result_list):
         try:
             if fetch_result_list:
                 fetch_result = [row[0] for row in fetch_result_list if row]
@@ -570,7 +569,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_last_names_list = self.load_from_db(all_last_names_query.get_sql(quote_char=None))
-        all_last_names = self.validate_fetch_result("lastName", all_last_names_list)
+        all_last_names = self.fetch_results_from_rows("lastName", all_last_names_list)
         return all_last_names
 
     def _fetch_submitter_details_all_first_names(self, study_accession):
@@ -589,7 +588,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_first_names_list = self.load_from_db(all_first_names_query.get_sql(quote_char=None))
-        all_first_names = self.validate_fetch_result("firstName", all_first_names_list)
+        all_first_names = self.fetch_results_from_rows("firstName", all_first_names_list)
         return all_first_names
 
     def _fetch_submitter_details_all_phone_numbers(self, study_accession):
@@ -608,7 +607,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_phone_numbers_list = self.load_from_db(all_phone_numbers_query.get_sql(quote_char=None))
-        all_phone_numbers = self.validate_fetch_result("telephone", all_phone_numbers_list)
+        all_phone_numbers = self.fetch_results_from_rows("telephone", all_phone_numbers_list)
         return all_phone_numbers
 
     def _fetch_submitter_details_all_email_addresses(self, study_accession):
@@ -627,7 +626,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_email_addresses_list = self.load_from_db(all_email_addresses_query.get_sql(quote_char=None))
-        all_email_addresses = self.validate_fetch_result("email", all_email_addresses_list)
+        all_email_addresses = self.fetch_results_from_rows("email", all_email_addresses_list)
         return all_email_addresses
 
     def _fetch_submitter_details_all_centres(self, study_accession):
@@ -646,7 +645,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_centres_list = self.load_from_db(all_centres_query.get_sql(quote_char=None))
-        all_centres = self.validate_fetch_result("centre", all_centres_list)
+        all_centres = self.fetch_results_from_rows("centre", all_centres_list)
         return all_centres
 
     def _fetch_submitter_details_all_addresses(self, study_accession):
@@ -665,7 +664,7 @@ class DGVaMetadataRetriever:
             ).where(ds.STUDY_ACCESSION == study_accession)
         )
         all_addresses_list = self.load_from_db(all_addresses_query.get_sql(quote_char=None))
-        all_addresses = self.validate_fetch_result("address", all_addresses_list)
+        all_addresses = self.fetch_results_from_rows("address", all_addresses_list)
         return all_addresses
     # PROJECT SECTION
     def _fetch_project_title(self, study_accession):
@@ -680,7 +679,7 @@ class DGVaMetadataRetriever:
 
         )
         project_title_list = self.load_from_db(project_title_query.get_sql(quote_char=None))
-        [project_title, *_] = self.validate_fetch_result("title", project_title_list) or [""]
+        [project_title, *_] = self.fetch_results_from_rows("title", project_title_list) or [""]
         return project_title
 
     def _fetch_project_description(self, study_accession):
@@ -697,7 +696,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         project_description_list = self.load_from_db(project_description_query.get_sql(quote_char=None))
-        [project_description, *_] = self.validate_fetch_result("description", project_description_list) or [""]
+        [project_description, *_] = self.fetch_results_from_rows("description", project_description_list) or [""]
         return project_description
 
     def _fetch_tax_id(self, study_accession):
@@ -714,7 +713,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         tax_id_list = self.load_from_db(tax_id_query.get_sql(quote_char=None))
-        [tax_id, *_] = self.validate_fetch_result("taxId", tax_id_list) or [""]
+        [tax_id, *_] = self.fetch_results_from_rows("taxId", tax_id_list) or [""]
         return tax_id
 
     def _fetch_centre(self, study_accession):
@@ -731,7 +730,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         project_centre_list = self.load_from_db(project_centre_query.get_sql(quote_char=None))
-        [project_centre, *_] = self.validate_fetch_result("centre", project_centre_list) or [""]
+        [project_centre, *_] = self.fetch_results_from_rows("centre", project_centre_list) or [""]
         return project_centre
 
     def _fetch_project_publications(self, study_accession):
@@ -746,7 +745,7 @@ class DGVaMetadataRetriever:
             .where(spp.STUDY_ACCESSION == study_accession)
         )
         project_publications_list = self.load_from_db(project_publications_query.get_sql(quote_char=None))
-        [project_publications, *_] = self.validate_fetch_result("publications", project_publications_list) or [""]
+        [project_publications, *_] = self.fetch_results_from_rows("publications", project_publications_list) or [""]
         return project_publications
 
     def _fetch_project_parent_project(self, study_accession):
@@ -761,7 +760,7 @@ class DGVaMetadataRetriever:
                                    .where(ds.STUDY_ACCESSION == study_accession)
                                    )
         parent_project_list = self.load_from_db(parent_project_query.get_sql(quote_char=None))
-        [parent_project, *_] = self.validate_fetch_result("projectAccession", parent_project_list) or [""]
+        [parent_project, *_] = self.fetch_results_from_rows("projectAccession", parent_project_list) or [""]
         return parent_project
 
     def _fetch_project_peer_project(self, study_accession):
@@ -780,7 +779,7 @@ class DGVaMetadataRetriever:
                                    .where(ds.STUDY_ACCESSION == study_accession)
                                    )
         peer_project_accession_list = self.load_from_db(peer_project_accession_query.get_sql(quote_char=None))
-        [peer_project_accession, *_] = self.validate_fetch_result("peerProject", peer_project_accession_list) or [""]
+        [peer_project_accession, *_] = self.fetch_results_from_rows("peerProject", peer_project_accession_list) or [""]
         return peer_project_accession
 
     def _fetch_project_links(self, study_accession):
@@ -797,7 +796,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         project_links_list = self.load_from_db(project_links_query.get_sql(quote_char=None))
-        project_links = self.validate_fetch_result("links", project_links_list)
+        project_links = self.fetch_results_from_rows("links", project_links_list)
         # adding analysis links here because of project_links flexibility
         analysis_links = self._fetch_analysis_links(study_accession)
         if project_links is None:
@@ -822,7 +821,7 @@ class DGVaMetadataRetriever:
             .where(de.STUDY_ACCESSION == study_accession)
         )
         analysis_id_list = self.load_from_db(analysis_id_query.get_sql(quote_char=None))
-        all_analysis_ids = self.validate_fetch_result("analysisID", analysis_id_list)
+        all_analysis_ids = self.fetch_results_from_rows("analysisID", analysis_id_list)
         all_analysis_ids.sort()
         return all_analysis_ids
 
@@ -855,7 +854,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         analysis_description_list = self.load_from_db(analysis_description_query.get_sql(quote_char=None))
-        analysis_descriptions = self.validate_fetch_result("description", analysis_description_list)
+        analysis_descriptions = self.fetch_results_from_rows("description", analysis_description_list)
         analysis_description = self.concatenate_elements_to_string(analysis_descriptions)
         return analysis_description
 
@@ -870,7 +869,7 @@ class DGVaMetadataRetriever:
             .where(vse.STUDY_ACCESSION == study_accession)
         )
         analysis_type_list = self.load_from_db(analysis_type_query.get_sql(quote_char=None))
-        analysis_types = self.validate_fetch_result("analysis_type", analysis_type_list)
+        analysis_types = self.fetch_results_from_rows("analysis_type", analysis_type_list)
         return analysis_types
 
     def _fetch_analysis_method_type(self, study_accession):
@@ -884,7 +883,7 @@ class DGVaMetadataRetriever:
             .where(vse.STUDY_ACCESSION == study_accession)
         )
         method_type_list = self.load_from_db(analysis_type_query.get_sql(quote_char=None))
-        method_types = self.validate_fetch_result("method_types", method_type_list)
+        method_types = self.fetch_results_from_rows("method_types", method_type_list)
         return method_types
 
     def _fetch_analysis_experiment_type(self, study_accession):
@@ -900,7 +899,7 @@ class DGVaMetadataRetriever:
             .where(de.STUDY_ACCESSION == study_accession)
         )
         experiment_type_list = self.load_from_db(experiment_type_query.get_sql(quote_char=None))
-        experiment_types = self.validate_fetch_result("experimentType", experiment_type_list)
+        experiment_types = self.fetch_results_from_rows("experimentType", experiment_type_list)
         if experiment_types and all(experiment_type == experiment_types[0] for experiment_type in experiment_types):
             experiment_type = experiment_types[0]
             return experiment_type
@@ -935,7 +934,7 @@ class DGVaMetadataRetriever:
                 reference_genome_list = self.load_from_db(reference_genome_query.get_sql(quote_char=None))
             if reference_genome_list:
                 break
-        [reference_genome, *_] = self.validate_fetch_result("referenceGenome", reference_genome_list) or [""]
+        [reference_genome, *_] = self.fetch_results_from_rows("referenceGenome", reference_genome_list) or [""]
         return reference_genome
 
     def _fetch_analysis_platform(self, study_accession):
@@ -953,7 +952,7 @@ class DGVaMetadataRetriever:
             .where(de.STUDY_ACCESSION == study_accession)
         )
         analysis_platform_list = self.load_from_db(analysis_platform_query.get_sql(quote_char=None))
-        analysis_platforms = self.validate_fetch_result("platform", analysis_platform_list)
+        analysis_platforms = self.fetch_results_from_rows("platform", analysis_platform_list)
         analysis_platform_set = self.create_set(analysis_platforms)
         analysis_platform = self.concatenate_elements_to_string(analysis_platform_set)
         return analysis_platform
@@ -973,7 +972,7 @@ class DGVaMetadataRetriever:
             .where(de.STUDY_ACCESSION == study_accession)
         )
         analysis_software_list = self.load_from_db(analysis_software_query.get_sql(quote_char=None))
-        analysis_software = self.validate_fetch_result("software", analysis_software_list)
+        analysis_software = self.fetch_results_from_rows("software", analysis_software_list)
         return analysis_software
 
     def _fetch_analysis_pipeline_descriptions(self, study_accession):
@@ -991,8 +990,8 @@ class DGVaMetadataRetriever:
             .where(de.STUDY_ACCESSION == study_accession)
         )
         analysis_pipeline_descriptions_list = self.load_from_db(analysis_pipeline_descriptions_query.get_sql(quote_char=None))
-        [analysis_pipeline_descriptions, *_] = self.validate_fetch_result("pipelineDescriptions",
-                                                                    analysis_pipeline_descriptions_list) or [""]
+        [analysis_pipeline_descriptions, *_] = self.fetch_results_from_rows("pipelineDescriptions",
+                                                                            analysis_pipeline_descriptions_list) or [""]
         analysis_pipeline_description_set = self.create_set(analysis_pipeline_descriptions)
         analysis_pipeline_description = self.concatenate_elements_to_string(analysis_pipeline_description_set)
         return analysis_pipeline_description
@@ -1011,7 +1010,7 @@ class DGVaMetadataRetriever:
         )
         analysis_links_list = self.load_from_db(analysis_links_query.get_sql(quote_char=None))
         # NOTE: ANALYSIS_LINKS SHOULD  match regex (DB:ID:LABEL) but we are placing in project links for flexibility.
-        analysis_links = self.validate_fetch_result("links", analysis_links_list)
+        analysis_links = self.fetch_results_from_rows("links", analysis_links_list)
         return analysis_links
 
     def _fetch_analysis_run_accessions(self, study_accession):
@@ -1027,7 +1026,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         analysis_run_accessions_list = self.load_from_db(analysis_run_accessions_query.get_sql(quote_char=None))
-        [analysis_run_accessions, *_] = self.validate_fetch_result("runAccessions", analysis_run_accessions_list) or [""]
+        [analysis_run_accessions, *_] = self.fetch_results_from_rows("runAccessions", analysis_run_accessions_list) or [""]
         return analysis_run_accessions
     # SAMPLE SECTION
     def _fetch_analysis_ids_for_sample(self, study_accession, sample_id):
@@ -1047,7 +1046,7 @@ class DGVaMetadataRetriever:
             .where((de.STUDY_ACCESSION == study_accession) & (ds.SUBMITTER_SAMPLE_ID == sample_id))
         )
         analysis_id_list = self.load_from_db(analysis_id_for_sample_query.get_sql(quote_char=None))
-        all_analysis_ids_for_sample = self.validate_fetch_result("analysisID", analysis_id_list)
+        all_analysis_ids_for_sample = self.fetch_results_from_rows("analysisID", analysis_id_list)
         all_analysis_ids_for_sample.sort()
         return all_analysis_ids_for_sample
 
@@ -1084,7 +1083,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         hold_date_list = self.load_from_db(hold_date_query.get_sql(quote_char=None))
-        [hold_date, *_] = self.validate_fetch_result("holdDate", hold_date_list) or [""]
+        [hold_date, *_] = self.fetch_results_from_rows("holdDate", hold_date_list) or [""]
         return hold_date
 
     def _fetch_scientific_name(self, study_accession):
@@ -1102,7 +1101,7 @@ class DGVaMetadataRetriever:
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         scientific_name_list = self.load_from_db(scientific_name_query.get_sql(quote_char=None))
-        [scientific_name, *_] = self.validate_fetch_result("scientific_name", scientific_name_list) or [""]
+        [scientific_name, *_] = self.fetch_results_from_rows("scientific_name", scientific_name_list) or [""]
         return scientific_name
 
     # FILES SECTION
