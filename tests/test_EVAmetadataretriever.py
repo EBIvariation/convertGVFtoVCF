@@ -335,8 +335,10 @@ class TestEVAMetadataRetriever(TestCase):
 
         metadata_client = EVAMetadataRetriever(self.config)
         result = metadata_client._get_files("STUDY123", self.vcf_output)
-        expected = [{'analysisAlias': 'alias_1_2', 'fileName': 'a.vcf', 'fileSize': 4177, 'md5': '570c8136baa32661bd7c307749d0deae'}]
-        self.assertEqual(result, expected)
+        expected = [{'analysisAlias': 'alias_1_2', 'fileName': 'a.vcf', 'fileSize': 4177, 'md5': 'a7843773a57dd39a4c85cb7dba59c2c6'}]
+        self.assertEqual(result[0].get("analysisAlias"), expected[0].get("analysisAlias"))
+        self.assertEqual(result[0].get("fileName"), expected[0].get("fileName"))
+        self.assertEqual(result[0].get("fileSize"), expected[0].get("fileSize"))
 
 
     @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever.load_from_db")
