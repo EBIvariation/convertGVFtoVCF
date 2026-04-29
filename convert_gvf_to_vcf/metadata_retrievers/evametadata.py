@@ -23,13 +23,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
     def retrieve(self):
         pass
 
-    def create_json_file(self, json_file_path, study_accession, vcf_output, assembly, assembly_report):
+    def create_json_eva(self, json_file_path, study_accession, vcf_output, assembly, assembly_report):
         project_metadata = self._get_project_new(study_accession)  # (all projects are new projects)
-
-        # determine if sample new or pre-registered
-        # list of tuples [(is_sample_preregistered, biosample_accession)]
-
-        # sample_ids = self._fetch_sample_id_list(study_accession)
         sample_registration_statuses = self._determine_sample_pre_registered(study_accession)
         sample_metadata_array = []
 

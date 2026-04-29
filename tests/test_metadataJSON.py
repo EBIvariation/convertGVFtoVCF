@@ -3,7 +3,7 @@ from unittest import TestCase
 from unittest.mock import patch, MagicMock, Mock
 from collections import namedtuple
 
-from convert_gvf_to_vcf.metadata_retrievers.evametadataJSON import EVAMetadataRetriever
+from convert_gvf_to_vcf.metadata_retrievers.evametadata import EVAMetadataRetriever
 
 
 class TestDGVaMetadataRetriever(TestCase):
