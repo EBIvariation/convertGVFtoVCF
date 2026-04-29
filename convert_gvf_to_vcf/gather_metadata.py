@@ -1,11 +1,11 @@
 import argparse
 
-from convert_gvf_to_vcf.metadataJSON import DGVaMetadataRetriever
+from convert_gvf_to_vcf.metadata_retrievers.evametadataJSON import EVAMetadataRetriever
 
 
 def gather_metadata(config_input, json_output, study_accession, vcf_output, assembly, assembly_report):
 
-    retrieved_dgva_metadata = DGVaMetadataRetriever(config_input)
+    retrieved_dgva_metadata = EVAMetadataRetriever(config_input)
     with retrieved_dgva_metadata:
         retrieved_dgva_metadata.create_json_file(json_file_path=json_output, study_accession=study_accession, vcf_output=vcf_output, assembly=assembly, assembly_report=assembly_report)
 

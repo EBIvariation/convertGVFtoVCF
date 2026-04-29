@@ -1,6 +1,5 @@
 import argparse
 import os
-from collections import Counter
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 from convert_gvf_to_vcf.conversionstatistics import FileStatistics
@@ -8,7 +7,6 @@ from convert_gvf_to_vcf.gather_metadata import gather_metadata
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.utils import read_in_gvf_header, read_in_gvf_data
 from convert_gvf_to_vcf.vcfline import VcfLineBuilder
-from convert_gvf_to_vcf.metadataJSON import DGVaMetadataRetriever
 
 logger = log_cfg.get_logger(__name__)
 
