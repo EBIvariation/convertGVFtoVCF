@@ -4,7 +4,8 @@ import os.path
 import shutil
 
 from convert_gvf_to_vcf.metadataJSON import DGVaMetadataRetriever
-
+from ebi_eva_common_pyutils.logger import logging_config as log_cfg
+logger = log_cfg.get_logger(__name__)
 
 def gather_metadata(retriever, json_output, study_accession, assembly, assembly_report):
     retriever.create_json_file(json_file_path=json_output, study_accession=study_accession, assembly=assembly, assembly_report=assembly_report)
@@ -14,9 +15,11 @@ def add_file_metadata(retriever, json_output,vcf_output):
     files_file_size = retriever._get_file_size(vcf_output)
     files_file_md5 = retriever._get_file_md5(vcf_output)
 
-    with open(json_output, 'r') as f_in:
-        metadata = json.load(f_in)
-
+    try:
+        with open(json_output, 'r') as f_in:
+            metadata = json.load(f_in)
+    except FileNotFoundError:
+        logger.error(f"Cannot find json output: {json_output}")
     # moving the file to a preconversion file to prevent confusion
     base_path, ext = os.path.splitext(json_output)
     preconversion_json_path = base_path + "_preconverted.json" # this will be missing part of the files section
