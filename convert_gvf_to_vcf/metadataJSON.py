@@ -531,7 +531,7 @@ class DGVaMetadataRetriever:
             validate(instance=project_object_to_validate, schema=project_schema)
             return True
         except (FileNotFoundError, json.JSONDecodeError, ValidationError) as e:
-            print(f"Validating Project Error: {e}")
+            logger.error(f"Validating Project Error: {e}")
             return False
 
     def validate_analysis(self, analysis_pipeline_descriptions, analysis_run_accessions):
