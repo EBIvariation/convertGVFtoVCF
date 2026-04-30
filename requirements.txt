@@ -3,3 +3,4 @@ biopython
 pyyaml
 oracledb
 pypika
+jsonschema
