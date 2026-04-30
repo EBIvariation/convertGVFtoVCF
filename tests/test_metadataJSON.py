@@ -440,7 +440,7 @@ class TestDGVaMetadataRetriever(TestCase):
         centre = "A new centre."
         child = "PRJEA223456"
         peer = "PRJEA323456"
-        links = ""
+        links = [""]
         project_object = {
             "title": title,
             "description": description,
@@ -455,7 +455,11 @@ class TestDGVaMetadataRetriever(TestCase):
             "links": links,
             "holdDate": hold_date
         }
-        metadata_client.is_project_valid(project_object)
+        required_result = metadata_client.is_project_valid(project_object)
+        self.assertEqual(required_result, True)
+        project_object.update(project_object_not_required_all)
+        with_not_required_result = metadata_client.is_project_valid(project_object)
+        self.assertEqual(with_not_required_result, True)
 
     def test_validate_analysis(self):
         pass
