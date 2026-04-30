@@ -1,11 +1,8 @@
 """
 This is contains functions to assist the conversion of gvf attributes
 """
-import os
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
-# setting up paths to useful directories
-convert_gvf_to_vcf_folder = os.path.dirname(__file__)
-etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
+
 
 logger = log_cfg.get_logger(__name__)
 
