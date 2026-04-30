@@ -363,9 +363,7 @@ class DGVaMetadataRetriever:
         files_file_name = ""
         files_file_size = ""
         files_file_md5 = ""
-        # files_file_name = self._get_file_name(vcf_output)
-        # files_file_size = self._get_file_size(vcf_output)
-        # files_file_md5 = self._get_file_md5(vcf_output)
+
         files_array = []
         # required: analysisAlias, filename
         # not required: file size, md5

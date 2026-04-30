@@ -22,5 +22,3 @@ class ProjectPaths:
         self.etc_dir = os.path.join(self.package_dir, paths.get("etc_folder", ""))
         self.schema_path = os.path.join(self.package_dir, paths.get("schema_file", ""))
         self.test_dir = os.path.normpath(os.path.join(self.package_dir, paths.get("test_folder", "")))
-
-ProjectPaths()
