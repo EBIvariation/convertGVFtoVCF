@@ -3,9 +3,9 @@ import os
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 from convert_gvf_to_vcf.conversionstatistics import FileStatistics
-from convert_gvf_to_vcf.gather_metadata import gather_metadata, add_file_metadata
+from convert_gvf_to_vcf.gather_metadata import eva_gather_metadata, eva_add_file_metadata
 from convert_gvf_to_vcf.lookup import Lookup
-from convert_gvf_to_vcf.metadataJSON import DGVaMetadataRetriever
+from convert_gvf_to_vcf.metadata_retrievers.dgvametadata import DGVAMetadataRetriever
 from convert_gvf_to_vcf.projectpaths import ProjectPaths
 from convert_gvf_to_vcf.utils import read_in_gvf_header, read_in_gvf_data
 from convert_gvf_to_vcf.vcfline import VcfLineBuilder
@@ -416,12 +416,12 @@ def main():
         log_cfg.add_stdout_handler()
     # Gathering of metadata
     logger.info(f"The config file is {args.config}. Gathering metadata")
-    gather_metadata(args.config, args.json_output, args.study_accession, args.assembly, args.assembly_report)
+    eva_gather_metadata(args.config, args.json_output, args.study_accession, args.assembly, args.assembly_report)
     paths = ProjectPaths()
-    retriever = DGVaMetadataRetriever(args.config, paths.full_config_path)
+    retriever = DGVAMetadataRetriever(args.config)
     # Conversion: GVF to VCF
     convert(args.gvf_input, args.vcf_output, args.assembly, paths)
     # Post-conversion: adding VCF details to the JSON file
-    add_file_metadata(retriever, args.json_output, args.vcf_output)
+    eva_add_file_metadata(retriever, args.json_output, args.vcf_output)
 if __name__ == "__main__":
     main()

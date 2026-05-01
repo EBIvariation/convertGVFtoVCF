@@ -16,8 +16,8 @@ from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 logger = log_cfg.get_logger(__name__)
 
-
-class DGVaMetadataRetriever:
+from convert_gvf_to_vcf.metadata_retrievers.basemetadataretriever import BaseMetadataRetriever
+class EVAMetadataRetriever(BaseMetadataRetriever):
     """
     The responsibility of this class is to retrieve the metadata for submission to EVA.
     It will extract the required properties to fill in the EVA JSON submission schema
@@ -25,101 +25,11 @@ class DGVaMetadataRetriever:
     by querying the DGVa database.
     It will generate the metadata submission JSON file.
     """
-    def __init__(self, path_to_config_yaml, path_to_path_config_yaml):
-        # coming from the config file
-        cfg.load_config_file(path_to_config_yaml)  # cfg is a dictionary - this is for db connection
-        # db connection setup
-        self._connection = None
-        self._host = self._get_validated_value(cfg, ("DGVA","host"), str, default_value=None) # get information from the config dictionary
-        self._port = self._get_validated_value(cfg, ("DGVA", "port"), str, default_value=None)
-        self._username = self._get_validated_value(cfg, ("DGVA", "user"), str, default_value=None)
-        self._password = self._get_validated_value(cfg, ("DGVA", "password"), str, default_value=None)
-        self._service_name = self._get_validated_value(cfg, ("DGVA", "service_name"), str, default_value=None)
-        # db parameters
-        self._max_retries = 3
-        # path setup
-        self.paths = ProjectPaths(path_to_path_config_yaml)
-        self.etc_folder = self.paths.etc_dir
-        self.json_schema = self.paths.schema_path
+    def retrieve(self):
+        pass
 
-    def __enter__(self):
-        # enables the "with" context manager
-        _ = self.connection
-        logger.info("Opening connection using a context manager - SUCCESS")
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        # closes the connection and resets the state of connection
-        if self._connection:
-            self._connection.close()
-            self._connection = None
-            logger.info("Closing connection safely using a context manager - SUCCESS")
-
-    @property
-    def connection(self):
-        attempts = 0
-        while attempts < self._max_retries:
-            # if there is a healthy connection established, return it
-            if self._connection is not None and self._connection.is_healthy():
-                logger.info("A healthy connection has already been established.")
-                return self._connection
-            # if there is an unhealthy connection, close it and reset the state
-            if self._connection:
-                logger.warning("Unhealthy connection. Attempting to reconnect.")
-                try:
-                    # close the unhealthy connection
-                    self._connection.close()
-                    logger.info("Connection closed safely.")
-                except:
-                    pass
-                self._connection = None
-            # first connection or reconnection
-            attempts += 1
-            try:
-                logger.info("Connecting to the database.")
-                self._connection = oracledb.connect(host=self._host, port=self._port,
-                                                    user=self._username, password=self._password, service_name=self._service_name)
-                return self._connection
-            except Exception as e:
-                logger.error(f"Failed to connect. {e}")
-                if attempts >= self._max_retries:
-                    logger.error(f"Max connection retries reached: {self._max_retries}.")
-                    raise
-
-    def load_from_db(self, query_to_load):
-        """ Searches the DGVa database using the query provided.
-        :param query_to_load : SQL query
-        :return: a list of rows (or if query returns nothing an empty list)
-        """
-        try:
-            # create the iterator to process queries
-            with self.connection.cursor() as cur:
-                # prepare to fetch data
-                ###############################################################################
-                # WARNING: do not use f-strings or % formatting here, use placeholders instead
-                query = query_to_load
-                # query_placeholders = query_place_holder_to_load
-                # cur.execute(query, query_placeholders)
-                ###############################################################################
-                # run the sql query
-                logger.info(f"Executing the following query: {query}")
-                cur.execute(query)
-                # fetch the data from the cursor
-                rows = cur.fetchall() # returns list of tuples
-                logger.info(f"Fetching the data: {rows}")
-                logger.info(f"Fetching metadata query - SUCCESS - {len(rows)} records found")
-                return rows
-        except Exception as e:
-            logger.warning(f"Database error: {e}")
-            return []
-
-    def create_json_file(self, json_file_path, study_accession, assembly, assembly_report):
+    def create_json_eva(self, json_file_path, study_accession, assembly, assembly_report):
         project_metadata = self._get_project_new(study_accession)  # (all projects are new projects)
-
-        # determine if sample new or pre-registered
-        # list of tuples [(is_sample_preregistered, biosample_accession)]
-
-        # sample_ids = self._fetch_sample_id_list(study_accession)
         sample_registration_statuses = self._determine_sample_pre_registered(study_accession)
         sample_metadata_array = []
 
@@ -141,20 +51,6 @@ class DGVaMetadataRetriever:
         with open(json_file_path, 'w') as f:
             json.dump(json_in_eva_format, f, indent=4)
         logger.info(f"Write JSON file for {study_accession}- SUCCESS: {json_file_path}")
-
-    @staticmethod
-    def _get_validated_value(config, key_parts_to_get, expected_type, default_value=None):
-        # key_parts_to_get is a tuple of multiple values so unpacking
-        value_in_config = config.query(*key_parts_to_get, ret_default=default_value)
-        if value_in_config is None:
-            raise ValueError(f"Missing key required: {key_parts_to_get}")
-        if not isinstance(value_in_config, expected_type):
-            try:
-                # cast the value to its expected type
-                value_in_config = expected_type(value_in_config)
-            except (ValueError, TypeError):
-                raise TypeError(f"Key '{key_parts_to_get}' must be {expected_type.__name__}")
-        return value_in_config
 
     # THESE GETTERS GET THE RELEVANT JSON OBJECT FOR THE SECTION
     def _get_submitter_details(self, study_accession):
@@ -266,6 +162,9 @@ class DGVaMetadataRetriever:
         method_types = self._fetch_analysis_method_type(study_accession)
         analysis_experiment_type = self._determine_analysis_experiment_type(analysis_types, method_types)
         analysis_reference_genome = self._fetch_analysis_reference_genome(study_accession)
+        print("NON-VERSION")
+        print(f"_get_analysis analysis_experiment_type {analysis_experiment_type}")
+        print(f" _get_analysis analysis_reference_genome {analysis_reference_genome}")
         analysis_evidence_type = ""
         analysis_reference_fasta = assembly
         analysis_assembly_report = assembly_report
@@ -311,6 +210,9 @@ class DGVaMetadataRetriever:
         analysis_object_not_required = {k: v for k, v in analysis_object_not_required_all.items() if v}
         analysis_object.update(analysis_object_not_required)
         analysis_array.append(analysis_object)
+        print("in _get_analysis analysis_experiment_type", analysis_experiment_type)
+        print("in _get_analysis analysis_reference_genome", analysis_reference_genome)
+        print("in _get_analysis", analysis_object)
         return analysis_array
 
     def _get_sample_pre_registered(self, study_accession, biosample_accession, sample_id):
@@ -455,6 +357,7 @@ class DGVaMetadataRetriever:
                 experiment_type_set.add(exp_type)
         if len(experiment_type_set) == 1:
             experiment_type = list(experiment_type_set)[0]
+            print("in deteremine analysis exp type", experiment_type)
             return experiment_type
         return None
 
@@ -493,20 +396,21 @@ class DGVaMetadataRetriever:
                 pubmed_string = "PubMed:" + str(pub)
                 pubmed_publications.append(pubmed_string)
         return project_hold_date, project_links, project_parent_project, pubmed_publications
-    def fetch_results_from_rows(self, eva_field_name, fetch_result_list):
-        try:
-            if fetch_result_list:
-                fetch_result = [row[0] for row in fetch_result_list if row]
-                if fetch_result:
-                    # SUCCESS if value is present or None
-                    logger.info(f"Fetching {eva_field_name} - SUCCESS - Value(s) for {eva_field_name} found: {fetch_result}.")
-
-            else:
-                raise ValueError(f"Missing data: {eva_field_name}.")
-        except ValueError as e:
-            logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty list.")
-            fetch_result = []
-        return fetch_result
+    # def fetch_results_from_rows(self, eva_field_name, fetch_result_list):
+    #     try:
+    #         if fetch_result_list:
+    #             fetch_result = [row[0] for row in fetch_result_list if row]
+    #             if fetch_result:
+    #                 # SUCCESS if value is present or None
+    #                 logger.info(f"Fetching {eva_field_name} - SUCCESS - Value(s) for {eva_field_name} found: {fetch_result}.")
+    #
+    #         else:
+    #             raise ValueError(f"Missing data: {eva_field_name}.")
+    #     except ValueError as e:
+    #         logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty list.")
+    #         fetch_result = []
+    #     return fetch_result
+    # VALIDATING
 
     def validate_date(self, date):
         try:
@@ -524,7 +428,7 @@ class DGVaMetadataRetriever:
         :params: project_title: string of max 500 chars
         :params: pubmed_publications: list of pubmed ids ['Pubmed:1239234'] (can be more than one, in some studies)
         """
-        schema = read_in_json_schema(self.json_schema)
+        schema = read_in_json_schema(ProjectPaths().eva_schema_path)
         project_schema = schema["properties"]["project"]
         project_schema["definitions"] = schema["definitions"]
         try:
