@@ -18,7 +18,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         json_in_dgva_format = {
             "dgva": [
                 {
-                    "creationDate": self._fetch_creation_date(),
+                    "creationDate": self._fetch_creation_date(study_accession=study_accession),
                     "studyComment": self._get_study_comment(),
                     "commentUserName": self._get_comment_user_name(),
                     "commentTimestamp": self._get_comment_timestamp(),
@@ -54,7 +54,9 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
             .where(ds.STUDY_ACCESSION == study_accession)
         )
         creation_date_list = self.load_from_db(project_title_query.get_sql(quote_char=None))
-        [creation_date, *_] = self.validate_fetch_result("creationDate", creation_date_list) or [""]
+        [creation_date, *_] = self.fetch_results_from_rows("creationDate", creation_date_list) or [""]
+        #TODO: return datetime object in a way json can print
+        creation_date = "TESTING"
         return creation_date
 
     def _get_study_comment(self):

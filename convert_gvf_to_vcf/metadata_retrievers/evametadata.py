@@ -28,7 +28,7 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
     def retrieve(self):
         pass
 
-    def create_json_eva(self, json_file_path, study_accession, vcf_output, assembly, assembly_report):
+    def create_json_eva(self, json_file_path, study_accession, assembly, assembly_report):
         project_metadata = self._get_project_new(study_accession)  # (all projects are new projects)
         sample_registration_statuses = self._determine_sample_pre_registered(study_accession)
         sample_metadata_array = []
@@ -162,6 +162,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         method_types = self._fetch_analysis_method_type(study_accession)
         analysis_experiment_type = self._determine_analysis_experiment_type(analysis_types, method_types)
         analysis_reference_genome = self._fetch_analysis_reference_genome(study_accession)
+        print("NON-VERSION")
+        print(f"_get_analysis analysis_experiment_type {analysis_experiment_type}")
+        print(f" _get_analysis analysis_reference_genome {analysis_reference_genome}")
         analysis_evidence_type = ""
         analysis_reference_fasta = assembly
         analysis_assembly_report = assembly_report
@@ -207,6 +210,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         analysis_object_not_required = {k: v for k, v in analysis_object_not_required_all.items() if v}
         analysis_object.update(analysis_object_not_required)
         analysis_array.append(analysis_object)
+        print("in _get_analysis analysis_experiment_type", analysis_experiment_type)
+        print("in _get_analysis analysis_reference_genome", analysis_reference_genome)
+        print("in _get_analysis", analysis_object)
         return analysis_array
 
     def _get_sample_pre_registered(self, study_accession, biosample_accession, sample_id):
@@ -351,6 +357,7 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
                 experiment_type_set.add(exp_type)
         if len(experiment_type_set) == 1:
             experiment_type = list(experiment_type_set)[0]
+            print("in deteremine analysis exp type", experiment_type)
             return experiment_type
         return None
 
@@ -389,20 +396,20 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
                 pubmed_string = "PubMed:" + str(pub)
                 pubmed_publications.append(pubmed_string)
         return project_hold_date, project_links, project_parent_project, pubmed_publications
-    def fetch_results_from_rows(self, eva_field_name, fetch_result_list):
-        try:
-            if fetch_result_list:
-                fetch_result = [row[0] for row in fetch_result_list if row]
-                if fetch_result:
-                    # SUCCESS if value is present or None
-                    logger.info(f"Fetching {eva_field_name} - SUCCESS - Value(s) for {eva_field_name} found: {fetch_result}.")
-
-            else:
-                raise ValueError(f"Missing data: {eva_field_name}.")
-        except ValueError as e:
-            logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty list.")
-            fetch_result = []
-        return fetch_result
+    # def fetch_results_from_rows(self, eva_field_name, fetch_result_list):
+    #     try:
+    #         if fetch_result_list:
+    #             fetch_result = [row[0] for row in fetch_result_list if row]
+    #             if fetch_result:
+    #                 # SUCCESS if value is present or None
+    #                 logger.info(f"Fetching {eva_field_name} - SUCCESS - Value(s) for {eva_field_name} found: {fetch_result}.")
+    #
+    #         else:
+    #             raise ValueError(f"Missing data: {eva_field_name}.")
+    #     except ValueError as e:
+    #         logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty list.")
+    #         fetch_result = []
+    #     return fetch_result
     # VALIDATING
 
     def validate_date(self, date):
@@ -421,7 +428,7 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         :params: project_title: string of max 500 chars
         :params: pubmed_publications: list of pubmed ids ['Pubmed:1239234'] (can be more than one, in some studies)
         """
-        schema = read_in_json_schema(self.json_schema)
+        schema = read_in_json_schema(ProjectPaths().eva_schema_path)
         project_schema = schema["properties"]["project"]
         project_schema["definitions"] = schema["definitions"]
         try:

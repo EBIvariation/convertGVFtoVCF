@@ -4,6 +4,8 @@ import oracledb
 from ebi_eva_common_pyutils.config import cfg
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
+from convert_gvf_to_vcf.projectpaths import ProjectPaths
+
 logger = log_cfg.get_logger(__name__)
 class BaseMetadataRetriever(ABC):
     """ The responsibility of this base class is to ensure a consistent method for metadata retrieval.
@@ -12,6 +14,7 @@ class BaseMetadataRetriever(ABC):
     def __init__(self, path_to_config_yaml):
         # coming from the config file
         cfg.load_config_file(path_to_config_yaml)  # cfg is a dictionary
+        ProjectPaths()
         # db connection setup
         self._connection = None
         self._host = self._get_validated_value(cfg, ("DGVA","host"), str, default_value=None) # get information from the config dictionary
@@ -107,22 +110,19 @@ class BaseMetadataRetriever(ABC):
             logger.warning(f"Database error: {e}")
             return []
 
-    def validate_fetch_result(self, eva_field_name, fetch_result_list, single_value_as_str):
+    def fetch_results_from_rows(self, eva_field_name, fetch_result_list):
         try:
             if fetch_result_list:
-                results = [row[0] for row in fetch_result_list if row]
-                if single_value_as_str:
-                    fetch_result = results[0] if len(results) == 1 else results
-                else:
-                    fetch_result = results
+                fetch_result = [row[0] for row in fetch_result_list if row]
                 if fetch_result:
                     # SUCCESS if value is present or None
                     logger.info(f"Fetching {eva_field_name} - SUCCESS - Value(s) for {eva_field_name} found: {fetch_result}.")
+
             else:
                 raise ValueError(f"Missing data: {eva_field_name}.")
         except ValueError as e:
-            logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty string.")
-            fetch_result = ""
+            logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty list.")
+            fetch_result = []
         return fetch_result
 
     @abstractmethod

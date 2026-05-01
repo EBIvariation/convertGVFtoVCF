@@ -16,9 +16,9 @@ class ProjectPaths:
             with open(self.full_config_path, 'r') as f:
                 data = yaml.safe_load(f) or {}
         except FileNotFoundError:
-            print(f"Can't find file: {self.full_config_path}")
-            data = {}
+            raise FileNotFoundError(f"Required config missing at: {self.full_config_path}")
         paths = data.get('paths', {})
         self.etc_dir = os.path.join(self.package_dir, paths.get("etc_folder", ""))
-        self.schema_path = os.path.join(self.package_dir, paths.get("schema_file", ""))
+        self.eva_schema_path = os.path.join(self.package_dir, paths.get("eva_schema_file", ""))
+        self.dgva_schema_path = os.path.join(self.package_dir, paths.get("dgva_schema_file", ""))
         self.test_dir = os.path.normpath(os.path.join(self.package_dir, paths.get("test_folder", "")))

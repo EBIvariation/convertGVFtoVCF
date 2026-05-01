@@ -226,7 +226,6 @@ class TestEVAMetadataRetriever(TestCase):
     @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_pipeline_descriptions")
     @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_software")
     @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_platform")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._determine_evidence_type")
     @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_reference_genome")
     @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._determine_analysis_experiment_type")
     @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_method_type")
@@ -240,8 +239,8 @@ class TestEVAMetadataRetriever(TestCase):
                            mock_desc,
                            mock_analysis_type,
                            mock_method_type,
-                           mock_reference_genome,
                            mock_determined_experiment_type,
+                           mock_reference_genome,
                            mock_platform,
                            mock_software,
                            mock_pipeline_descriptions,
@@ -261,7 +260,8 @@ class TestEVAMetadataRetriever(TestCase):
         mock_pipeline_descriptions.return_value = "my pipeline description"
         mock_run_accessions.return_value = ["ERR123456", "SRR123456"]
         metadata_client = EVAMetadataRetriever(self.config)
-        result = metadata_client._get_analysis("estd123", self.vcf_output, mock_reference_fasta, mock_assembly_report)
+        result = metadata_client._get_analysis("estd123", mock_reference_fasta, mock_assembly_report)
+        print(result)
         expected_result = [{'analysisTitle': 'estd123',
                             'analysisAlias': 'MYanalysisALIAS_ALL',
                             'description': 'mock_desc',
@@ -291,7 +291,7 @@ class TestEVAMetadataRetriever(TestCase):
         metadata_client = EVAMetadataRetriever(self.config)
         result = metadata_client._get_analysis("estd123", mock_reference_fasta, mock_assembly_report)
         metadata_client = EVAMetadataRetriever(self.config)
-        result = metadata_client._get_analysis("estd123", self.vcf_output, mock_reference_fasta, mock_assembly_report)
+        result = metadata_client._get_analysis("estd123", mock_reference_fasta, mock_assembly_report)
 
         expected_result = [{'analysisTitle': 'estd123',
                             'analysisAlias': 'MYanalysisALIAS_REQUIRED',
@@ -333,11 +333,10 @@ class TestEVAMetadataRetriever(TestCase):
         mock_alias.return_value = "alias_1_2"
 
         metadata_client = EVAMetadataRetriever(self.config)
-        result = metadata_client._get_files("STUDY123", self.vcf_output)
-        expected = [{'analysisAlias': 'alias_1_2', 'fileName': 'a.vcf', 'fileSize': 4177, 'md5': 'a7843773a57dd39a4c85cb7dba59c2c6'}]
+        result = metadata_client._get_files("STUDY123")
+        expected = [{'analysisAlias': 'alias_1_2', 'fileName': ''}] # only required fields
         self.assertEqual(result[0].get("analysisAlias"), expected[0].get("analysisAlias"))
         self.assertEqual(result[0].get("fileName"), expected[0].get("fileName"))
-        self.assertEqual(result[0].get("fileSize"), expected[0].get("fileSize"))
 
 
     @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever.load_from_db")
@@ -382,12 +381,6 @@ class TestEVAMetadataRetriever(TestCase):
         expected_result = [SampleStatus(is_sample_preregistered=True, sample_accession="SAMN12345678", sample_id="mypreregisteredsample")]
         self.assertEqual(result, expected_result)
 
-    def test__determine_evidence_type(self):
-        metadata_client = EVAMetadataRetriever(self.config)
-        result = metadata_client._determine_evidence_type(self.vcf_output)
-        expected = "genotype"
-        self.assertEqual(result, expected)
-
     def test__determine_analysis_experiment_type(self):
         analysis_types= ["Read depth and paired-end mapping"]
         method_types = ["Sequencing"]
@@ -399,15 +392,15 @@ class TestEVAMetadataRetriever(TestCase):
 
     def test__format_project(self):
         metadata_client = EVAMetadataRetriever(self.config)
-        result = metadata_client._format_project(None, ["www.link.com", "www.link2.com"], None, "123456")
+        result = metadata_client._format_project_fields(None, ["www.link.com", "www.link2.com"], None, "123456")
         expected = ('', ['www.link.com| URL', 'www.link2.com| URL'], '', ['PubMed:123456'])
         self.assertEqual(result, expected)
 
     def test_validate_fetch_result(self):
         metadata_client = EVAMetadataRetriever(self.config)
         # expect string
-        result = metadata_client.validate_fetch_result("name", [("value",)], True)
-        expected = "value"
+        result = metadata_client.fetch_results_from_rows("name", [("value",)])
+        expected = ["value"]
         self.assertEqual(result, expected)
         # expect multiple values in list
         result = metadata_client.fetch_results_from_rows("name", [("value",)])
