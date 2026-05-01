@@ -4,13 +4,15 @@ from unittest.mock import patch, MagicMock, Mock
 from collections import namedtuple
 
 from convert_gvf_to_vcf.metadata_retrievers.evametadata import EVAMetadataRetriever
-
+from convert_gvf_to_vcf.projectpaths import ProjectPaths
 
 class TestEVAMetadataRetriever(TestCase):
     def setUp(self):
         input_folder = os.path.dirname(__file__)
         self.config = os.path.join(input_folder, "input", "test.config")
         self.vcf_output = os.path.join(input_folder, "output", "a.vcf")
+        self.paths = ProjectPaths()
+        self.full_config_path = self.paths.full_config_path
 
     def test_init(self):
         # testing the __init__ function has loaded the config correctly
@@ -210,7 +212,6 @@ class TestEVAMetadataRetriever(TestCase):
         mock_links.return_value =  None
         mock_date.return_value = None
         centre = mock_centre.return_value[0]
-        # publications = ['PubMed:12345']
 
         metadata_client = EVAMetadataRetriever(self.config)
         result = metadata_client._get_project_new("STUDY123")
@@ -239,22 +240,20 @@ class TestEVAMetadataRetriever(TestCase):
                            mock_desc,
                            mock_analysis_type,
                            mock_method_type,
-                           mock_determined_experiment_type,
                            mock_reference_genome,
-                           mock_determined_evidence_type,
+                           mock_determined_experiment_type,
                            mock_platform,
                            mock_software,
                            mock_pipeline_descriptions,
                            mock_run_accessions):
         # testing all values
         mock_ids.return_value = ["1","2", "3"]
-        mock_alias.return_value = "MYanalysisALIAS"
+        mock_alias.return_value = "MYanalysisALIAS_ALL"
         mock_desc.return_value = "mock_desc"
         mock_analysis_type.return_value = "Genotyping"
         mock_method_type.return_value = "Sequencing"
         mock_determined_experiment_type.return_value = "genotyping_by_sequencing"
         mock_reference_genome.return_value = "GCA000000000"
-        mock_determined_evidence_type.return_value = "genotype"
         mock_reference_fasta = "assembly.fasta"
         mock_assembly_report = "assembly_report.txt"
         mock_platform.return_value = "myplatform"
@@ -264,11 +263,10 @@ class TestEVAMetadataRetriever(TestCase):
         metadata_client = EVAMetadataRetriever(self.config)
         result = metadata_client._get_analysis("estd123", self.vcf_output, mock_reference_fasta, mock_assembly_report)
         expected_result = [{'analysisTitle': 'estd123',
-                            'analysisAlias': 'MYanalysisALIAS',
+                            'analysisAlias': 'MYanalysisALIAS_ALL',
                             'description': 'mock_desc',
                             'experimentType': 'genotyping_by_sequencing',
                             'referenceGenome': 'GCA000000000',
-                            'evidenceType': 'genotype',
                             'referenceFasta': mock_reference_fasta,
                             'assemblyReport': mock_assembly_report,
                             'platform': 'myplatform',
@@ -278,13 +276,12 @@ class TestEVAMetadataRetriever(TestCase):
         self.assertEqual(result,expected_result)
         # testing required only
         mock_ids.return_value = ["1","2", "3"]
-        mock_alias.return_value = "MYanalysisALIAS"
+        mock_alias.return_value = "MYanalysisALIAS_REQUIRED"
         mock_desc.return_value = "mock_desc"
         mock_analysis_type.return_value = "Genotyping"
         mock_method_type.return_value = "Sequencing"
         mock_determined_experiment_type.return_value = "genotyping_by_sequencing"
         mock_reference_genome.return_value = "GCA000000000"
-        mock_determined_evidence_type.return_value = ""
         mock_reference_fasta = "assemble.fasta"
         mock_assembly_report = "assembly_report.txt"
         mock_platform.return_value = ""
@@ -292,10 +289,12 @@ class TestEVAMetadataRetriever(TestCase):
         mock_pipeline_descriptions.return_value = ""
         mock_run_accessions.return_value = []
         metadata_client = EVAMetadataRetriever(self.config)
+        result = metadata_client._get_analysis("estd123", mock_reference_fasta, mock_assembly_report)
+        metadata_client = EVAMetadataRetriever(self.config)
         result = metadata_client._get_analysis("estd123", self.vcf_output, mock_reference_fasta, mock_assembly_report)
 
         expected_result = [{'analysisTitle': 'estd123',
-                            'analysisAlias': 'MYanalysisALIAS',
+                            'analysisAlias': 'MYanalysisALIAS_REQUIRED',
                             'description': 'mock_desc',
                             'experimentType': 'genotyping_by_sequencing',
                             'referenceGenome': 'GCA000000000',
@@ -410,8 +409,8 @@ class TestEVAMetadataRetriever(TestCase):
         result = metadata_client.validate_fetch_result("name", [("value",)], True)
         expected = "value"
         self.assertEqual(result, expected)
-        # expect list
-        result = metadata_client.validate_fetch_result("name", [("value",)], False)
+        # expect multiple values in list
+        result = metadata_client.fetch_results_from_rows("name", [("value",)])
         expected = ["value"]
         self.assertEqual(result, expected)
 
@@ -432,7 +431,29 @@ class TestEVAMetadataRetriever(TestCase):
         tax_id = 9606
         title = "title"
         publication = ["PubMed:123345"]
-        metadata_client.validate_project(description, hold_date, parent, tax_id, title, publication)
+        centre = "A new centre."
+        child = "PRJEA223456"
+        peer = "PRJEA323456"
+        links = [""]
+        project_object = {
+            "title": title,
+            "description": description,
+            "taxId": tax_id,
+            "centre": centre
+        }
+        project_object_not_required_all = {
+            "publications": publication,
+            "parentProject": parent,
+            "childProject": child,
+            "peerProject": peer,
+            "links": links,
+            "holdDate": hold_date
+        }
+        required_result = metadata_client.is_project_valid(project_object)
+        self.assertEqual(required_result, True)
+        project_object.update(project_object_not_required_all)
+        with_not_required_result = metadata_client.is_project_valid(project_object)
+        self.assertEqual(with_not_required_result, True)
 
     def test_validate_analysis(self):
         pass

@@ -1,0 +1,97 @@
+{
+    "submitterDetails": [
+        {
+            "lastName": "",
+            "firstName": "Database of Genomic Variants",
+            "email": "dgv-contact@sickkids.ca",
+            "laboratory": "",
+            "centre": "The Hospital for Sick Children",
+            "telephone": "1-416-813-7032",
+            "address": "101 College Street, MaRS Centre - East Tower, Toronto Ontario, Canada, M5G 1L7"
+        },
+        {
+            "lastName": "Levy",
+            "firstName": "Samuel",
+            "email": "slevy@jcvi.org",
+            "laboratory": "",
+            "centre": "J. Craig Venter Institute",
+            "address": "Rockville, Maryland, USA"
+        },
+        {
+            "lastName": "Venter",
+            "firstName": "J. Craig",
+            "email": "jcventer@jcvi.org",
+            "laboratory": "",
+            "centre": ""
+        }
+    ],
+    "project": {
+        "title": "Levy_et_al_2007",
+        "description": "Presented here is a genome sequence of an individual human. It was produced from 32 million random DNA fragments, sequenced by Sanger dideoxy technology and assembled into 4,528 scaffolds, comprising 2,810 million bases (Mb) of contiguous sequence with approximately 7.5-fold coverage for any given region. We developed a modified version of the Celera assembler to facilitate the identification and comparison of alternate alleles within this individual diploid genome. Comparison of this genome and the National Center for Biotechnology Information human reference assembly revealed more than 4.1 million DNA variants, encompassing 12.3 Mb. These variants (of which 1,288,319 were novel) included 3,213,401 single nucleotide polymorphisms (SNPs), 53,823 block substitutions (2-206 bp), 292,102 heterozygous insertion/deletion events (indels)(1-571 bp), 559,473 homozygous indels (1-82,711 bp), 90 inversions, as well as numerous segmental duplications and copy number variation regions. Non-SNP DNA variation accounts for 22% of all events identified in the donor, however they involve 74% of all variant bases. This suggests an important role for non-SNP genetic alterations in defining the diploid genome structure. Moreover, 44% of genes were heterozygous for one or more variants. Using a novel haplotype assembly strategy, we were able to span 1.5 Gb of genome sequence in segments .200 kb, providing further precision to the diploid nature of the genome. These data depict a definitive molecular portrait of a diploid human genome that provides a starting point for future genome comparisons and enables an era of individualized genomic information.",
+        "taxId": 9606,
+        "centre": "The Hospital for Sick Children",
+        "publications": [
+            "PubMed:17803354"
+        ],
+        "links": [
+            "http://huref.jcvi.org/| URL"
+        ]
+    },
+    "analysis": [
+        {
+            "analysisTitle": "estd22",
+            "analysisAlias": "estd22_analysis_ids_1_4_5_6_13_15_16_17",
+            "description": "Results were analyzed using the CNVfinder algorithm [PMID: 17122085]. One of the dye-swap experiments did not meet the quality control cut-offs, and because of this, the Nimblegen CNV calls were only employed for confirmation of CNV identified by the other platforms, and not used for identification of additional CNVs & No Reference, merging experiment & None & Detection of regions of copy number variation from BeadArray SNP genotyping data using an Objective Bayes Hidden-Markov Model (PMID: 17341461). & The slides were scanned at 5-lm resolution using the Agilent G2565 Microarray Scanner System (Agilent Technologies; http://www.agilent. com). Feature extraction was performed using Feature Extraction v9.1 and results were analyzed using CGH Analytics v3.4.27. & Analysis with dChip was performed using a Hidden Markov Model. A set of 50 samples run in the same facility were used as reference. & GEMCA analysis was performed essentially as described (PMID: 17122084), except that we used one designated DNA samples (NA10851) as reference for pair-wise comparison. This sample has been screened for CNVs described previously (PMID: 17122850) and the CNVs known to be present in the reference genome were excluded & The copy number changes were inferred using a Hidden Markov Model built into CNAG.",
+            "experimentType": "genotyping_by_array",
+            "referenceGenome": "GCF_000001405.12",
+            "evidenceType": "genotype",
+            "referenceFasta": "./tests/input/zebrafish.fa",
+            "assemblyReport": "./tests/input/assembly_report.txt",
+            "platform": "Not Reported & Sanger Sequencing & [Mapping250K_Nsp] Affymetrix Mapping 250K Nsp SNP Array & Illumina HumanHap650Y Genotyping BeadChip & [Mapping250K_Sty] Affymetrix Mapping 250K Sty2 SNP Array",
+            "software": [
+                "CNVFinder",
+                "QuantiSNP",
+                "CNVFinder",
+                "dCHIP",
+                "CGH_Analytics_Software",
+                "CNAG"
+            ]
+        }
+    ],
+    "sample": [
+        {
+            "analysisAlias": [
+                "estd22_analysis_ids_1_4_5_6_13_15_16_17"
+            ],
+            "sampleInVCF": "HuRef",
+            "bioSampleObject": {
+                "sample_title": "HuRef",
+                "scientific_name": "Homo sapiens",
+                "tax_id": 9606,
+                "collection date": "not provided",
+                "geographic location (country and/or sea)": "not provided"
+            }
+        },
+        {
+            "analysisAlias": [
+                "estd22_analysis_ids_1_4_5_6_13_15_16_17"
+            ],
+            "sampleInVCF": "NA10851",
+            "bioSampleObject": {
+                "sample_title": "NA10851",
+                "scientific_name": "Homo sapiens",
+                "tax_id": 9606,
+                "collection date": "not provided",
+                "geographic location (country and/or sea)": "not provided"
+            }
+        }
+    ],
+    "files": [
+        {
+            "analysisAlias": "estd22_analysis_ids_1_4_5_6_13_15_16_17",
+            "fileName": "a.vcf",
+            "fileSize": 12345,
+            "md5": "abcde12345"
+        }
+    ]
+}

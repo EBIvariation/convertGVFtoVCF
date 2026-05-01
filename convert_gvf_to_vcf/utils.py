@@ -1,4 +1,5 @@
 """This contains readers and utilities"""
+import json
 import os
 import yaml
 import logging
@@ -7,11 +8,15 @@ from convert_gvf_to_vcf.gvffeature import GvfFeatureline
 
 logger = logging.getLogger(__name__)
 
-# setting up paths to useful directories
-convert_gvf_to_vcf_folder = os.path.dirname(__file__)
-etc_folder = os.path.join(convert_gvf_to_vcf_folder, 'etc')
 
-
+def read_in_json_schema(json_schema_file):
+    """Reads in JSON file and returns JSON schema as a dictionary
+    :param json_schema_file: path to schema
+    :return: schema: dictionary of JSON schema
+    """
+    with open(json_schema_file) as json_file:
+        schema = json.load(json_file)
+    return schema
 
 def read_yaml(yaml_file):
     """Reads a yaml file (of attributes) and returns dictionary

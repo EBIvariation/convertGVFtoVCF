@@ -3,22 +3,22 @@ import unittest
 
 from convert_gvf_to_vcf.convertGVFtoVCF import generate_vcf_header_structured_lines
 from convert_gvf_to_vcf.gvffeature import GvfFeatureline
+from convert_gvf_to_vcf.projectpaths import ProjectPaths
 from convert_gvf_to_vcf.vcfline import VcfLine, VcfLineBuilder, VariantRange, extract_reference_allele
 from convert_gvf_to_vcf.lookup import Lookup
 
 class TestVcfLineBuilder(unittest.TestCase):
     def setUp(self):
-        self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'convert_gvf_to_vcf'))
-        self.etc_folder = os.path.join(self.input_folder_parent, "etc")
-        input_folder = os.path.dirname(__file__)
+        self.paths = ProjectPaths()
+        self.input_folder_parent = self.paths.package_dir
+        self.etc_folder = self.paths.etc_dir
         # Prepare Inputs
-        self.input_file = os.path.join(input_folder, "input", "zebrafish.gvf")
-        self.input_folder_parent = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'convert_gvf_to_vcf'))
+        self.input_file = os.path.join(self.paths.test_dir, "input", "zebrafish.gvf")
         # Prepare Outputs
-        self.output_file = os.path.join(input_folder, "input", "a.vcf")
+        self.output_file = os.path.join(self.paths.test_dir, "input", "a.vcf")
         # Prepare References
-        self.assembly = os.path.join(input_folder, "input", "zebrafish.fa")
-        self.reference_lookup = Lookup(self.assembly)
+        self.assembly = os.path.join(self.paths.test_dir, "input", "zebrafish.fa")
+        self.reference_lookup = Lookup(self.assembly, self.paths)
         # Set up GVF line object
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         f_list = gvf_feature_line.split("\t")
