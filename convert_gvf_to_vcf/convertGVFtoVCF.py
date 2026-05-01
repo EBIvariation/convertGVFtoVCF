@@ -416,7 +416,7 @@ def main():
         log_cfg.add_stdout_handler()
     # Gathering of metadata
     logger.info(f"The config file is {args.config}. Gathering metadata")
-    gather_metadata(args.config, args.json_output, args.study_accession, args.assembly, args.assembly_report)
+    eva_gather_metadata(args.config, args.json_output, args.study_accession, args.assembly, args.assembly_report)
     paths = ProjectPaths()
     retriever = DGVAMetadataRetriever(args.config)
     # Conversion: GVF to VCF
