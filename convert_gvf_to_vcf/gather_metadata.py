@@ -35,6 +35,8 @@ def eva_add_file_metadata(retriever, json_output, vcf_output):
     with open(json_output, 'w') as f_out:
         json.dump(metadata, f_out, indent=4)
 
+def dgva_gather_metadata(retriever, json_output, study_accession):
+    retriever.create_json_dgva(json_file_path=json_output, study_accession=study_accession)
 
 
 def main():
@@ -58,8 +60,7 @@ def main():
     dgva_retriever = DGVAMetadataRetriever(
         path_to_config_yaml=args.config
     )
-    dgva_retriever.create_json_dgva(json_file_path=args.json_output_dgva, study_accession=args.study_accession)
-
+    dgva_gather_metadata(dgva_retriever, args.json_output_dgva, args.study_accession)
 
 
 if __name__ == "__main__":
