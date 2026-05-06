@@ -72,7 +72,7 @@ class TestDGVAMetadataRetriever(TestCase):
                               mock_comment_timestamp: "mock_comment_timestamp",
                               mock_submission_version: 1,
                               mock_update_comment: "mock_update_comment",
-                              mock_new_feature: "mock_new_feature",
+                              mock_new_feature: False,
                               mock_correction: 0,
                               mock_affiliation_url: "mock_affiliation_url",
                               mock_experiment_site: "mock_experiment_site",
@@ -83,12 +83,17 @@ class TestDGVAMetadataRetriever(TestCase):
                               mock_curation_email: "mock_curation_email",
                               mock_curated_set_name: "mock_curated_set_name",
                               mock_curated_set_link: "mock_curated_set_link",
-                              mock_method_type: "mock_method_type"
+                              mock_method_type: "Not provided"
         }
 
         # set up mock result
+
+        specific_return_values = [mock_submission_version, mock_correction, mock_new_feature, mock_method_type]
         for mock, label in mock_map.items():
-            mock.return_value = f"testing_{label}"
+            if mock in specific_return_values:
+                mock.return_value = label
+            else:
+                mock.return_value = f"testing_{label}"
 
         metadata_client = DGVAMetadataRetriever(self.config)
         metadata_client.create_json_dgva(self.json_output, study_accession='estd22')
@@ -99,6 +104,6 @@ class TestDGVAMetadataRetriever(TestCase):
         with open(self.json_output, 'r') as f:
             results = json.load(f)
 
-        expected = {'dgva': [{'creationDate': 'testing_mock_creation_date', 'studyComment': 'testing_mock_study_comment', 'commentUserName': 'testing_mock_comment_user_name', 'commentTimestamp': 'testing_mock_comment_timestamp', 'submissionVersion': 'testing_mock_submission_version', 'updateComment': 'testing_mock_update_comment', 'newFeature': 'testing_mock_new_feature', 'correction': 'testing_mock_correction', 'affiliationUrl': 'testing_mock_affiliation_url', 'experimentSite': 'testing_mock_experiment_site', 'experimentResolution': 'testing_mock_experiment_resolution', 'detectionMethod': 'testing_mock_detection_method', 'detectionDescription': 'testing_mock_detection_description', 'curatorName': 'testing_mock_curator_name', 'curatorEmail': 'testing_mock_curation_email', 'curatedSetName': 'testing_mock_curated_set_name', 'curatedSetLink': 'testing_mock_curated_set_link', 'methodType': 'testing_mock_method_type'}]}
+        expected = {'dgva': [{'creationDate': 'testing_mock_creation_date', 'studyComment': 'testing_mock_study_comment', 'commentUserName': 'testing_mock_comment_user_name', 'commentTimestamp': 'testing_mock_comment_timestamp', 'submissionVersion': 1, 'updateComment': 'testing_mock_update_comment', 'newFeature': False, 'correction': 0, 'affiliationUrl': 'testing_mock_affiliation_url', 'experimentSite': 'testing_mock_experiment_site', 'experimentResolution': 'testing_mock_experiment_resolution', 'detectionMethod': 'testing_mock_detection_method', 'detectionDescription': 'testing_mock_detection_description', 'curatorName': 'testing_mock_curator_name', 'curatorEmail': 'testing_mock_curation_email', 'curatedSetName': 'testing_mock_curated_set_name', 'curatedSetLink': 'testing_mock_curated_set_link', 'methodType': 'Not provided'}]}
         self.assertEqual(results, expected)
 
