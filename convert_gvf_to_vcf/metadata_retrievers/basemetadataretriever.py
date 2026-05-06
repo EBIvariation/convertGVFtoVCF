@@ -14,7 +14,7 @@ class BaseMetadataRetriever(ABC):
     def __init__(self, path_to_config_yaml):
         # coming from the config file
         cfg.load_config_file(path_to_config_yaml)  # cfg is a dictionary
-        ProjectPaths()
+        self.paths =ProjectPaths()
         # db connection setup
         self._connection = None
         self._host = self._get_validated_value(cfg, ("DGVA","host"), str, default_value=None) # get information from the config dictionary
