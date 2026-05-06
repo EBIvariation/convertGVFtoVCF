@@ -1,7 +1,4 @@
 import json
-import os
-import re
-from datetime import datetime
 
 from pypika import Query, Table, Schema
 
@@ -18,24 +15,24 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         json_in_dgva_format = {
             "dgva": [
                 {
-                    "creationDate": self._fetch_creation_date(study_accession=study_accession),
-                    "studyComment": self._get_study_comment(),
-                    "commentUserName": self._get_comment_user_name(),
-                    "commentTimestamp": self._get_comment_timestamp(),
-                    "submissionVersion": self._get_submission_version(),
-                    "updateComment": self._get_update_comment(),
-                    "newFeature": self._get_new_feature(),
-                    "correction": self._get_correction(),
-                    "affiliationUrl": self._get_affiliation_url(),
-                    "experimentSite": self._get_experiment_site(),
-                    "experimentResolution": self._get_experiment_resolution(),
-                    "detectionMethod": self._get_detection_method(),
-                    "detectionDescription": self._get_detection_description(),
-                    "curatorName": self._get_curator_name(),
-                    "curatorEmail": self._get_curator_email(),
-                    "curatedSetName": self._get_curated_set_name(),
-                    "curatedSetLink": self._get_curated_set_link(),
-                    "methodType": self._get_method_type()
+                    "creationDate": self._get_creation_date(study_accession),
+                    "studyComment": self._get_study_comment(study_accession),
+                    "commentUserName": self._get_comment_user_name(study_accession),
+                    "commentTimestamp": self._get_comment_timestamp(study_accession),
+                    "submissionVersion": self._get_submission_version(study_accession),
+                    "updateComment": self._get_update_comment(study_accession),
+                    "newFeature": self._get_new_feature(study_accession),
+                    "correction": self._get_correction(study_accession),
+                    "affiliationUrl": self._get_affiliation_url(study_accession),
+                    "experimentSite": self._get_experiment_site(study_accession),
+                    "experimentResolution": self._get_experiment_resolution(study_accession),
+                    "detectionMethod": self._get_detection_method(study_accession),
+                    "detectionDescription": self._get_detection_description(study_accession),
+                    "curatorName": self._get_curator_name(study_accession),
+                    "curatorEmail": self._get_curator_email(study_accession),
+                    "curatedSetName": self._get_curated_set_name(study_accession),
+                    "curatedSetLink": self._get_curated_set_link(study_accession),
+                    "methodType": self._get_method_type(study_accession)
                 }
             ]
         }
@@ -43,7 +40,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
             json.dump(json_in_dgva_format, f, indent=4)
         logger.info(f"Write DGVA JSON file for {study_accession}- SUCCESS: {json_file_path}")
 
-    def _fetch_creation_date(self, study_accession):
+    def _get_creation_date(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -55,57 +52,304 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         )
         creation_date_list = self.load_from_db(project_title_query.get_sql(quote_char=None))
         [creation_date, *_] = self.fetch_results_from_rows("creationDate", creation_date_list) or [""]
-        #TODO: return datetime object in a way json can print
-        creation_date = "TESTING"
-        return creation_date
+        creation_date_json_string = json.dumps(creation_date, default=str)
+        return creation_date_json_string
 
-    def _get_study_comment(self):
+    def _get_study_comment(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sc = Table("STUDY_COMMENT", schema=db).as_("sc")
+        study_comment_query=(
+            Query.from_(sc)
+            .join(ds)
+            .on(sc.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(sc.STUDY_COMMENT)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        study_comment_list = self.load_from_db(study_comment_query.get_sql(quote_char=None))
+        [study_comment, *_] = self.fetch_results_from_rows("studyComment", study_comment_list) or [""]
+        return study_comment
+
+    def _get_comment_user_name(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sc = Table("STUDY_COMMENT", schema=db).as_("sc")
+        study_comment_query=(
+            Query.from_(sc)
+            .join(ds)
+            .on(sc.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(sc.COMMENT_USER_NAME)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        comment_user_name_list = self.load_from_db(study_comment_query.get_sql(quote_char=None))
+        [comment_user_name, *_] = self.fetch_results_from_rows("commentUserName", comment_user_name_list) or [""]
+        return comment_user_name
+
+    def _get_comment_timestamp(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sc = Table("STUDY_COMMENT", schema=db).as_("sc")
+        study_comment_query=(
+            Query.from_(sc)
+            .join(ds)
+            .on(sc.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(sc.COMMENT_TIMESTAMP)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        comment_timestamp_list = self.load_from_db(study_comment_query.get_sql(quote_char=None))
+        [comment_timestamp, *_] = self.fetch_results_from_rows("commentTimestamp", comment_timestamp_list) or [""]
+        return comment_timestamp
+
+    def _get_submission_version(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        su = Table("STUDY_UPDATE", schema=db).as_("su")
+        study_comment_query=(
+            Query.from_(su)
+            .join(ds)
+            .on(su.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(su.SUBMISSION_VERSION)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        submission_version_list = self.load_from_db(study_comment_query.get_sql(quote_char=None))
+        [submission_version, *_] = self.fetch_results_from_rows("submissionVersion", submission_version_list) or [""]
+        return submission_version
+
+    def _get_update_comment(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        su = Table("STUDY_UPDATE", schema=db).as_("su")
+        study_comment_query=(
+            Query.from_(su)
+            .join(ds)
+            .on(su.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(su.UPDATE_COMMENT)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        update_comment_list = self.load_from_db(study_comment_query.get_sql(quote_char=None))
+        [update_comment, *_] = self.fetch_results_from_rows("updateComment", update_comment_list) or [""]
+        return update_comment
+
+    def _get_new_feature(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        su = Table("STUDY_UPDATE", schema=db).as_("su")
+        study_comment_query=(
+            Query.from_(su)
+            .join(ds)
+            .on(su.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(su.NEW_FEATURE)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        new_feature_list = self.load_from_db(study_comment_query.get_sql(quote_char=None))
+        [new_feature, *_] = self.fetch_results_from_rows("newFeature", new_feature_list) or [""]
+        return new_feature
+
+    def _get_method_type(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        dm = Table("DGVA_METHOD", schema=db).as_("dm")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        em = Table("EXPERIMENT_METHOD", schema=db).as_("em")
+        method_type_query=(
+            Query.from_(dm)
+            .join(em)
+            .on(dm.METHOD_ID == em.METHOD_ID)
+            .join(de)
+            .on(de.EXPERIMENT_ID == em.EXPERIMENT_ID)
+            .join(ds)
+            .on(dm.METHOD_ID == em.METHOD_ID)
+            .select(dm.METHOD_TYPE)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        method_type_list = self.load_from_db(method_type_query.get_sql(quote_char=None))
+        [method_type, *_] = self.fetch_results_from_rows("methodType", method_type_list) or [""]
+        return method_type
+
+    def _get_curated_set_link(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        ec = Table("EXPERIMENT_CURATION", schema=db).as_("ec")
+        curated_set_link_query=(
+            Query.from_(ec)
+            .join(de)
+            .on(de.EXPERIMENT_ID == ec.EXPERIMENT_ID)
+            .join(ds)
+            .on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
+            .select(ec.CURATED_SET_LINK)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        curated_set_link_list = self.load_from_db(curated_set_link_query.get_sql(quote_char=None))
+        [curated_set_link, *_] = self.fetch_results_from_rows("curatedSetLink", curated_set_link_list) or [""]
+        return curated_set_link
+
+    def _get_curated_set_name(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        ec = Table("EXPERIMENT_CURATION", schema=db).as_("ec")
+        curated_set_name_query=(
+            Query.from_(ec)
+            .join(de)
+            .on(de.EXPERIMENT_ID == ec.EXPERIMENT_ID)
+            .join(ds)
+            .on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
+            .select(ec.CURATED_SET_NAME)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        curated_set_name_list = self.load_from_db(curated_set_name_query.get_sql(quote_char=None))
+        [curated_set_name, *_] = self.fetch_results_from_rows("curatedSetName", curated_set_name_list) or [""]
+        return curated_set_name
+
+    def _get_curator_email(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        ec = Table("EXPERIMENT_CURATION", schema=db).as_("ec")
+        curator_email_query = (
+            Query.from_(ec)
+            .join(de)
+            .on(de.EXPERIMENT_ID == ec.EXPERIMENT_ID)
+            .join(ds)
+            .on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
+            .select(ec.CURATOR_EMAIL)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        curator_email_list = self.load_from_db(curator_email_query.get_sql(quote_char=None))
+        [curator_email, *_] = self.fetch_results_from_rows("curatorEmailList", curator_email_list) or [""]
+        return curator_email
+
+    def _get_curator_name(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        ec = Table("EXPERIMENT_CURATION", schema=db).as_("ec")
+        curator_name_query = (
+            Query.from_(ec)
+            .join(de)
+            .on(de.EXPERIMENT_ID == ec.EXPERIMENT_ID)
+            .join(ds)
+            .on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
+            .select(ec.CURATOR_NAME)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        curator_name_list = self.load_from_db(curator_name_query.get_sql(quote_char=None))
+        [curator_name, *_] = self.fetch_results_from_rows("curatorNameList", curator_name_list) or [""]
+        return curator_name
+
+    def _get_detection_description(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        dd = Table("DGVA_DETECTION", schema=db).as_("dd")
+        ed = Table("EXPERIMENT_DETECTION", schema=db).as_("ed")
+        detection_description_query = (
+            Query.from_(dd)
+            .join(ed)
+            .on(dd.DETECTION_ID == ed.DETECTION_ID)
+            .join(de)
+            .on(de.EXPERIMENT_ID == ed.EXPERIMENT_ID)
+            .join(ds)
+            .on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
+            .select(de.EXPERIMENT_RESOLUTION)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        detection_description_list = self.load_from_db(detection_description_query.get_sql(quote_char=None))
+        [detection_description, *_] = self.fetch_results_from_rows("detectionDescription", detection_description_list) or [""]
+        return detection_description
+
+    def _get_detection_method(self, study_accession):
         pass
 
-    def _get_comment_user_name(self):
-        pass
+    def _get_experiment_resolution(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        experiment_resolution_query = (
+            Query.from_(de)
+            .join(ds)
+            .on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
+            .select(de.EXPERIMENT_RESOLUTION)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        experiment_resolution_list = self.load_from_db(experiment_resolution_query.get_sql(quote_char=None))
+        [experiment_resolution, *_] = self.fetch_results_from_rows("experimentResolution", experiment_resolution_list) or [""]
+        return experiment_resolution
 
-    def _get_comment_timestamp(self):
-        pass
+    def _get_experiment_site(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        experiment_site_query = (
+            Query.from_(de)
+            .join(ds)
+            .on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
+            .select(de.EXPERIMENT_SITE)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        experiment_site_list = self.load_from_db(experiment_site_query.get_sql(quote_char=None))
+        [experiment_site, *_] = self.fetch_results_from_rows("experimentSite", experiment_site_list) or [""]
+        return experiment_site
 
-    def _get_submission_version(self):
-        pass
+    def _get_affiliation_url(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
+        study_comment_query=(
+            Query.from_(sc)
+            .join(ds)
+            .on(sc.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(sc.AFFILIATION_URL)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        affiliation_url_list = self.load_from_db(study_comment_query.get_sql(quote_char=None))
+        [affiliation_url, *_] = self.fetch_results_from_rows("affiliation_url", affiliation_url_list) or [""]
+        return affiliation_url
 
-    def _get_update_comment(self):
-        pass
-
-    def _get_new_feature(self):
-        pass
-
-    def _get_method_type(self):
-        pass
-
-    def _get_curated_set_link(self):
-        pass
-
-    def _get_curated_set_name(self):
-        pass
-
-    def _get_curator_email(self):
-        pass
-
-    def _get_curator_name(self):
-        pass
-
-    def _get_detection_description(self):
-        pass
-
-    def _get_detection_method(self):
-        pass
-
-    def _get_experiment_resolution(self):
-        pass
-
-    def _get_experiment_site(self):
-        pass
-
-    def _get_affiliation_url(self):
-        pass
-
-    def _get_correction(self):
-        pass
+    def _get_correction(self, study_accession):
+        # create the schema objects
+        db = Schema("DGVA")
+        # create the table objects
+        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        su = Table("STUDY_UPDATE", schema=db).as_("su")
+        study_comment_query=(
+            Query.from_(su)
+            .join(ds)
+            .on(su.STUDY_ACCESSION == ds.STUDY_ACCESSION)
+            .select(su.CORRECTION)
+            .where(ds.STUDY_ACCESSION == study_accession)
+        )
+        correction_list = self.load_from_db(study_comment_query.get_sql(quote_char=None))
+        [correction, *_] = self.fetch_results_from_rows("correction", correction_list) or [""]
+        return correction
