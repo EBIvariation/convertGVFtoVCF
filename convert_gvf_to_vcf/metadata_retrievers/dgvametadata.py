@@ -15,24 +15,24 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         json_in_dgva_format = {
             "dgva": [
                 {
-                    "creationDate": self._get_creation_date(study_accession),
-                    "studyComment": self._get_study_comment(study_accession),
-                    "commentUserName": self._get_comment_user_name(study_accession),
-                    "commentTimestamp": self._get_comment_timestamp(study_accession),
-                    "submissionVersion": self._get_submission_version(study_accession),
-                    "updateComment": self._get_update_comment(study_accession),
-                    "newFeature": self._get_new_feature(study_accession),
-                    "correction": self._get_correction(study_accession),
-                    "affiliationUrl": self._get_affiliation_url(study_accession),
-                    "experimentSite": self._get_experiment_site(study_accession),
-                    "experimentResolution": self._get_experiment_resolution(study_accession),
-                    "detectionMethod": self._get_detection_method(study_accession),
-                    "detectionDescription": self._get_detection_description(study_accession),
-                    "curatorName": self._get_curator_name(study_accession),
-                    "curatorEmail": self._get_curator_email(study_accession),
-                    "curatedSetName": self._get_curated_set_name(study_accession),
-                    "curatedSetLink": self._get_curated_set_link(study_accession),
-                    "methodType": self._get_method_type(study_accession)
+                    "creationDate": self._fetch_creation_date(study_accession),
+                    "studyComment": self._fetch_study_comment(study_accession),
+                    "commentUserName": self._fetch_comment_user_name(study_accession),
+                    "commentTimestamp": self._fetch_comment_timestamp(study_accession),
+                    "submissionVersion": self._fetch_submission_version(study_accession),
+                    "updateComment": self._fetch_update_comment(study_accession),
+                    "newFeature": self._fetch_new_feature(study_accession),
+                    "correction": self._fetch_correction(study_accession),
+                    "affiliationUrl": self._fetch_affiliation_url(study_accession),
+                    "experimentSite": self._fetch_experiment_site(study_accession),
+                    "experimentResolution": self._fetch_experiment_resolution(study_accession),
+                    "detectionMethod": self._fetch_detection_method(study_accession),
+                    "detectionDescription": self._fetch_detection_description(study_accession),
+                    "curatorName": self._fetch_curator_name(study_accession),
+                    "curatorEmail": self._fetch_curator_email(study_accession),
+                    "curatedSetName": self._fetch_curated_set_name(study_accession),
+                    "curatedSetLink": self._fetch_curated_set_link(study_accession),
+                    "methodType": self._fetch_method_type(study_accession)
                 }
             ]
         }
@@ -40,7 +40,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
             json.dump(json_in_dgva_format, f, indent=4)
         logger.info(f"Write DGVA JSON file for {study_accession}- SUCCESS: {json_file_path}")
 
-    def _get_creation_date(self, study_accession):
+    def _fetch_creation_date(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -55,7 +55,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         creation_date_json_string = json.dumps(creation_date, default=str)
         return creation_date_json_string
 
-    def _get_study_comment(self, study_accession):
+    def _fetch_study_comment(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -72,7 +72,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [study_comment, *_] = self.fetch_results_from_rows("studyComment", study_comment_list) or [""]
         return study_comment
 
-    def _get_comment_user_name(self, study_accession):
+    def _fetch_comment_user_name(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -89,7 +89,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [comment_user_name, *_] = self.fetch_results_from_rows("commentUserName", comment_user_name_list) or [""]
         return comment_user_name
 
-    def _get_comment_timestamp(self, study_accession):
+    def _fetch_comment_timestamp(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -106,7 +106,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [comment_timestamp, *_] = self.fetch_results_from_rows("commentTimestamp", comment_timestamp_list) or [""]
         return comment_timestamp
 
-    def _get_submission_version(self, study_accession):
+    def _fetch_submission_version(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -123,7 +123,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [submission_version, *_] = self.fetch_results_from_rows("submissionVersion", submission_version_list) or [""]
         return submission_version
 
-    def _get_update_comment(self, study_accession):
+    def _fetch_update_comment(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -140,7 +140,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [update_comment, *_] = self.fetch_results_from_rows("updateComment", update_comment_list) or [""]
         return update_comment
 
-    def _get_new_feature(self, study_accession):
+    def _fetch_new_feature(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -157,7 +157,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [new_feature, *_] = self.fetch_results_from_rows("newFeature", new_feature_list) or [""]
         return new_feature
 
-    def _get_method_type(self, study_accession):
+    def _fetch_method_type(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -180,7 +180,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [method_type, *_] = self.fetch_results_from_rows("methodType", method_type_list) or [""]
         return method_type
 
-    def _get_curated_set_link(self, study_accession):
+    def _fetch_curated_set_link(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -200,7 +200,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [curated_set_link, *_] = self.fetch_results_from_rows("curatedSetLink", curated_set_link_list) or [""]
         return curated_set_link
 
-    def _get_curated_set_name(self, study_accession):
+    def _fetch_curated_set_name(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -220,7 +220,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [curated_set_name, *_] = self.fetch_results_from_rows("curatedSetName", curated_set_name_list) or [""]
         return curated_set_name
 
-    def _get_curator_email(self, study_accession):
+    def _fetch_curator_email(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -240,7 +240,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [curator_email, *_] = self.fetch_results_from_rows("curatorEmailList", curator_email_list) or [""]
         return curator_email
 
-    def _get_curator_name(self, study_accession):
+    def _fetch_curator_name(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -260,7 +260,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [curator_name, *_] = self.fetch_results_from_rows("curatorNameList", curator_name_list) or [""]
         return curator_name
 
-    def _get_detection_description(self, study_accession):
+    def _fetch_detection_description(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -283,10 +283,10 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [detection_description, *_] = self.fetch_results_from_rows("detectionDescription", detection_description_list) or [""]
         return detection_description
 
-    def _get_detection_method(self, study_accession):
+    def _fetch_detection_method(self, study_accession):
         pass
 
-    def _get_experiment_resolution(self, study_accession):
+    def _fetch_experiment_resolution(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -303,7 +303,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [experiment_resolution, *_] = self.fetch_results_from_rows("experimentResolution", experiment_resolution_list) or [""]
         return experiment_resolution
 
-    def _get_experiment_site(self, study_accession):
+    def _fetch_experiment_site(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -320,7 +320,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [experiment_site, *_] = self.fetch_results_from_rows("experimentSite", experiment_site_list) or [""]
         return experiment_site
 
-    def _get_affiliation_url(self, study_accession):
+    def _fetch_affiliation_url(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
@@ -337,7 +337,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         [affiliation_url, *_] = self.fetch_results_from_rows("affiliation_url", affiliation_url_list) or [""]
         return affiliation_url
 
-    def _get_correction(self, study_accession):
+    def _fetch_correction(self, study_accession):
         # create the schema objects
         db = Schema("DGVA")
         # create the table objects
