@@ -261,7 +261,6 @@ class TestEVAMetadataRetriever(TestCase):
         mock_run_accessions.return_value = ["ERR123456", "SRR123456"]
         metadata_client = EVAMetadataRetriever(self.config)
         result = metadata_client._get_analysis("estd123", mock_reference_fasta, mock_assembly_report)
-        print(result)
         expected_result = [{'analysisTitle': 'estd123',
                             'analysisAlias': 'MYanalysisALIAS_ALL',
                             'description': 'mock_desc',
