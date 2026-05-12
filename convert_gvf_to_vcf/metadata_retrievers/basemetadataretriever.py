@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import oracledb
+from pypika import Schema
 from ebi_eva_common_pyutils.config import cfg
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
@@ -24,7 +25,8 @@ class BaseMetadataRetriever(ABC):
         self._service_name = self._get_validated_value(cfg, ("DGVA", "service_name"), str, default_value=None)
         # db parameters
         self._max_retries = 3
-
+        # create the db schema objects
+        self.db = Schema("DGVA")
     def __enter__(self):
         # enables the "with" context manager
         _ = self.connection

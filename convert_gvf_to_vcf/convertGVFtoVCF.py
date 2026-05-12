@@ -421,6 +421,7 @@ def main():
     # Gathering of metadata
     logger.info(f"The config file is {args.config}. Gathering metadata")
     paths = ProjectPaths()
+
     eva_retriever, dga_retriever = gather_metadata_workflow(
         config=args.config,
         json_eva=args.json_output_eva,
