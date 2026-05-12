@@ -54,8 +54,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         )
         creation_date_list = self.load_from_db(project_title_query.get_sql(quote_char=None))
         [creation_date, *_] = self.fetch_results_from_rows("creationDate", creation_date_list) or [""]
-        creation_date_json_string = json.dumps(creation_date, default=str)
-        return creation_date_json_string or ""
+        return str(creation_date) if creation_date else ""
 
     def _fetch_study_comment(self, study_accession):
         # create the table objects
@@ -100,7 +99,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         )
         comment_timestamp_list = self.load_from_db(study_comment_query.get_sql(quote_char=None))
         [comment_timestamp, *_] = self.fetch_results_from_rows("commentTimestamp", comment_timestamp_list) or [""]
-        return comment_timestamp or ""
+        return str(comment_timestamp) if comment_timestamp else ""
 
     def _fetch_submission_version(self, study_accession):
         # create the table objects
