@@ -280,10 +280,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
 
 
     def _determine_sample_pre_registered(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        dsamp = Table("DGVA_SAMPLE", schema=db).as_("dsamp")
+        dsamp = Table("DGVA_SAMPLE", schema=self.db).as_("dsamp")
         # create the query
         sample_accession_query = (Query
                                    .from_(dsamp)
@@ -449,11 +447,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
     #_fetch_<section>_field_name = return a single value
     # SUBMITTER DETAILS SECTION
     def _fetch_submitter_details_all_last_names(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sc = Table("STUDY_CONTACT", schema=self.db).as_("sc")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         # programmatically create the queries
         all_last_names_query = (
             Query.from_(sc)
@@ -468,11 +464,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return all_last_names
 
     def _fetch_submitter_details_all_first_names(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sc = Table("STUDY_CONTACT", schema=self.db).as_("sc")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         # programmatically create the queries
         all_first_names_query = (
             Query.from_(sc)
@@ -487,11 +481,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return all_first_names
 
     def _fetch_submitter_details_all_phone_numbers(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sc = Table("STUDY_CONTACT", schema=self.db).as_("sc")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         # programmatically create the queries
         all_phone_numbers_query = (
             Query.from_(sc)
@@ -506,11 +498,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return all_phone_numbers
 
     def _fetch_submitter_details_all_email_addresses(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sc = Table("STUDY_CONTACT", schema=self.db).as_("sc")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         # programmatically create the queries
         all_email_addresses_query = (
             Query.from_(sc)
@@ -525,11 +515,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return all_email_addresses
 
     def _fetch_submitter_details_all_centres(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sc = Table("STUDY_CONTACT", schema=self.db).as_("sc")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         # programmatically create the queries
         all_centres_query = (
             Query.from_(sc)
@@ -544,11 +532,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return all_centres
 
     def _fetch_submitter_details_all_addresses(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        sc = Table("STUDY_CONTACT", schema=self.db).as_("sc")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         # programmatically create the queries
         all_addresses_query = (
             Query.from_(sc)
@@ -563,10 +549,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return all_addresses
     # PROJECT SECTION
     def _fetch_project_title(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         project_title_query = (
             Query.from_(ds)
             .select(ds.DISPLAY_NAME)
@@ -578,11 +562,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return project_title
 
     def _fetch_project_description(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        stc = Table("STUDY_TYPE_CV", schema=db).as_("stc")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        stc = Table("STUDY_TYPE_CV", schema=self.db).as_("stc")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         project_description_query = (
             Query.from_(ds)
             .join(stc)
@@ -595,11 +577,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return project_description
 
     def _fetch_tax_id(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        so = Table("STUDY_ORGANISM", schema=db).as_("so")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
+        so = Table("STUDY_ORGANISM", schema=self.db).as_("so")
         tax_id_query = (
             Query.from_(ds)
             .join(so)
@@ -612,11 +592,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return tax_id
 
     def _fetch_centre(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        sc = Table("STUDY_CONTACT", schema=db).as_("sc")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
+        sc = Table("STUDY_CONTACT", schema=self.db).as_("sc")
         project_centre_query = (
             Query.from_(sc)
             .join(ds)
@@ -630,10 +608,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
 
     def _fetch_project_publications(self, study_accession):
         # some study accessions do have multiple publications e.g. estd192
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        spp = Table("STUDY_PUBMED_PUBLICATION", schema=db).as_("spp")
+        spp = Table("STUDY_PUBMED_PUBLICATION", schema=self.db).as_("spp")
         project_publications_query = (
             Query.from_(spp)
             .select(spp.PUBMED_ID)
@@ -644,10 +620,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return project_publications
 
     def _fetch_project_parent_project(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         # create the query
         parent_project_query = (Query
                                    .from_(ds)
@@ -663,10 +637,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         :param: study_accession - expected format ^(estd|nstd)\d+$
         :return project_accession : string format ^(PRJ)[A-Z]{2}\d+$
         """
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         # create the query
         peer_project_accession_query = (Query
                                    .from_(ds)
@@ -678,11 +650,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return peer_project_accession
 
     def _fetch_project_links(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        sub = Table("DGVA_SUBMISSION", schema=db).as_("sub")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
+        sub = Table("DGVA_SUBMISSION", schema=self.db).as_("sub")
         project_links_query = (
             Query.from_(ds)
             .join(sub)
@@ -702,12 +672,10 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
 
     # ANALYSIS SECTION
     def _fetch_analysis_ids(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        da = Table("DGVA_ANALYSIS", schema=db).as_("da")
-        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
-        ea = Table("EXPERIMENT_ANALYSIS", schema=db).as_("ea")
+        da = Table("DGVA_ANALYSIS", schema=self.db).as_("da")
+        de = Table("DGVA_EXPERIMENT", schema=self.db).as_("de")
+        ea = Table("EXPERIMENT_ANALYSIS", schema=self.db).as_("ea")
         analysis_id_query = (
             Query.from_(de)
             .select(da.ANALYSIS_ID)
@@ -732,13 +700,11 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return analysis_alias
 
     def _fetch_analysis_description(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        da = Table("DGVA_ANALYSIS", schema=db).as_("da")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
-        ea = Table("EXPERIMENT_ANALYSIS", schema=db).as_("ea")
+        da = Table("DGVA_ANALYSIS", schema=self.db).as_("da")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
+        de = Table("DGVA_EXPERIMENT", schema=self.db).as_("de")
+        ea = Table("EXPERIMENT_ANALYSIS", schema=self.db).as_("ea")
 
         analysis_description_query = (
             Query.from_(ds)
@@ -754,10 +720,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return analysis_description
 
     def _fetch_analysis_analysis_type(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        vse = Table("VW_SUMM_EXPERIMENT", schema=db).as_("vse")
+        vse = Table("VW_SUMM_EXPERIMENT", schema=self.db).as_("vse")
         analysis_type_query = (
             Query.from_(vse)
             .select(vse.ANALYSIS_TYPE)
@@ -768,10 +732,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return analysis_types
 
     def _fetch_analysis_method_type(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        vse = Table("VW_SUMM_EXPERIMENT", schema=db).as_("vse")
+        vse = Table("VW_SUMM_EXPERIMENT", schema=self.db).as_("vse")
         analysis_type_query = (
             Query.from_(vse)
             .select(vse.METHOD_TYPE)
@@ -782,11 +744,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return method_types
 
     def _fetch_analysis_experiment_type(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        de = Table("DGVA_EXPERIMENT", schema=self.db).as_("de")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         experiment_type_query = (
             Query.from_(de)
             .join(ds).on(de.STUDY_ACCESSION == ds.STUDY_ACCESSION)
@@ -801,10 +761,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return None
 
     def _fetch_analysis_reference_genome(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        sap = Table("STUDY_ASSEMBLY_PLACEMENT", schema=db).as_("sap")
+        sap = Table("STUDY_ASSEMBLY_PLACEMENT", schema=self.db).as_("sap")
         reference_genome_query = (
             Query.from_(sap)
             .select(sap.ASSEMBLY_ACCESSION)
@@ -833,12 +791,10 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return reference_genome
 
     def _fetch_analysis_platform(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
-        ep = Table("EXPERIMENT_PLATFORM", schema=db).as_("ep")
-        dp = Table("DGVA_PLATFORM", schema=db).as_("dp")
+        de = Table("DGVA_EXPERIMENT", schema=self.db).as_("de")
+        ep = Table("EXPERIMENT_PLATFORM", schema=self.db).as_("ep")
+        dp = Table("DGVA_PLATFORM", schema=self.db).as_("dp")
         analysis_platform_query = (
             Query.from_(de)
             .join(ep).on(de.EXPERIMENT_ID == ep.EXPERIMENT_ID)
@@ -853,12 +809,10 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return analysis_platform
 
     def _fetch_analysis_software(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        dd = Table("DGVA_DETECTION", schema=db).as_("dd")
-        ed = Table("EXPERIMENT_DETECTION", schema=db).as_("ed")
-        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        dd = Table("DGVA_DETECTION", schema=self.db).as_("dd")
+        ed = Table("EXPERIMENT_DETECTION", schema=self.db).as_("ed")
+        de = Table("DGVA_EXPERIMENT", schema=self.db).as_("de")
         analysis_software_query = (
             Query.from_(dd)
             .join(ed).on(dd.DETECTION_ID == ed.DETECTION_ID)
@@ -871,12 +825,10 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return analysis_software
 
     def _fetch_analysis_pipeline_descriptions(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        dd = Table("DGVA_DETECTION", schema=db).as_("dd")
-        ed = Table("EXPERIMENT_DETECTION", schema=db).as_("ed")
-        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
+        dd = Table("DGVA_DETECTION", schema=self.db).as_("dd")
+        ed = Table("EXPERIMENT_DETECTION", schema=self.db).as_("ed")
+        de = Table("DGVA_EXPERIMENT", schema=self.db).as_("de")
         analysis_pipeline_descriptions_query = (
             Query.from_(dd)
             .join(ed).on(dd.DETECTION_ID == ed.DETECTION_ID)
@@ -892,11 +844,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return analysis_pipeline_description
 
     def _fetch_analysis_links(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
-        elu = Table("EXPERIMENT_LINK_URL", schema=db).as_("elu")
+        de = Table("DGVA_EXPERIMENT", schema=self.db).as_("de")
+        elu = Table("EXPERIMENT_LINK_URL", schema=self.db).as_("elu")
         analysis_links_query = (
             Query.from_(de)
             .join(elu).on(de.EXPERIMENT_ID == elu.EXPERIMENT_ID)
@@ -909,11 +859,9 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return analysis_links
 
     def _fetch_analysis_run_accessions(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        de = Table("DGVA_EXPERIMENT", schema=self.db).as_("de")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         analysis_run_accessions_query = (
             Query.from_(de)
             .join(ds).on(de.STUDY_ACCESSION == ds.STUDY_ACCESSION)
@@ -925,13 +873,11 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return analysis_run_accessions
     # SAMPLE SECTION
     def _fetch_analysis_ids_for_sample(self, study_accession, sample_id):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        da = Table("DGVA_ANALYSIS", schema=db).as_("da")
-        de = Table("DGVA_EXPERIMENT", schema=db).as_("de")
-        ds = Table("DGVA_SAMPLE", schema=db).as_("ds")
-        ea = Table("EXPERIMENT_ANALYSIS", schema=db).as_("ea")
+        da = Table("DGVA_ANALYSIS", schema=self.db).as_("da")
+        de = Table("DGVA_EXPERIMENT", schema=self.db).as_("de")
+        ds = Table("DGVA_SAMPLE", schema=self.db).as_("ds")
+        ea = Table("EXPERIMENT_ANALYSIS", schema=self.db).as_("ea")
         analysis_id_for_sample_query = (
             Query.from_(de)
             .select(ea.ANALYSIS_ID)
@@ -954,10 +900,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return analysis_alias_list
 
     def _fetch_sample_id_list(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        dsamp = Table("DGVA_SAMPLE", schema=db).as_("dsamp")
+        dsamp = Table("DGVA_SAMPLE", schema=self.db).as_("dsamp")
         sample_id_query = (
             Query.from_(dsamp)
             .select(dsamp.SUBMITTER_SAMPLE_ID)
@@ -968,10 +912,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return sample_id_keylist
 
     def _fetch_hold_date(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         hold_date_query = (
             Query.from_(ds)
             .select(ds.HOLD_DATE)
@@ -982,12 +924,10 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         return hold_date
 
     def _fetch_scientific_name(self, study_accession):
-        # create the schema objects
-        db = Schema("DGVA")
         # create the table objects
-        so = Table("STUDY_ORGANISM", schema=db).as_("so")
-        ds = Table("DGVA_STUDY", schema=db).as_("ds")
-        oc = Table("ORGANISM_CV", schema=db).as_("oc")
+        so = Table("STUDY_ORGANISM", schema=self.db).as_("so")
+        ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
+        oc = Table("ORGANISM_CV", schema=self.db).as_("oc")
         scientific_name_query = (
             Query.from_(ds)
             .join(so).on(so.STUDY_ACCESSION == ds.STUDY_ACCESSION)
