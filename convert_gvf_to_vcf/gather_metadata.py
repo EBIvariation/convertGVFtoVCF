@@ -38,6 +38,27 @@ def eva_add_file_metadata(retriever, json_output, vcf_output):
 def dgva_gather_metadata(retriever, json_output, study_accession):
     retriever.create_json_dgva(json_file_path=json_output, study_accession=study_accession)
 
+def gather_metadata_workflow(config, json_eva, json_dgva, study_accession, assembly, assembly_report):
+    eva_retriever = None
+    dgva_retriever = None
+    if json_eva:
+        eva_retriever = EVAMetadataRetriever(
+            path_to_config_yaml=config
+        )
+        eva_gather_metadata(eva_retriever, json_eva, study_accession, assembly,
+                            assembly_report)
+
+    if json_dgva:
+        dgva_retriever = DGVAMetadataRetriever(
+            path_to_config_yaml=config
+        )
+        dgva_gather_metadata(dgva_retriever, json_dgva, study_accession)
+    return eva_retriever, dgva_retriever
+
+def eva_update_metadata_with_vcf(eva_retriever, json_eva, vcf_output):
+    if eva_retriever and vcf_output and json_eva:
+        eva_add_file_metadata(eva_retriever, json_eva, vcf_output)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -51,18 +72,15 @@ def main():
     parser.add_argument("--assembly_report")
     args = parser.parse_args()
 
-    if args.json_output_eva:
-        eva_retriever = EVAMetadataRetriever(
-            path_to_config_yaml=args.config
-        )
-        eva_gather_metadata(eva_retriever, args.json_output_eva, args.study_accession, args.assembly, args.assembly_report)
-        eva_add_file_metadata(eva_retriever, args.json_output_eva, args.vcf_output)
-
-    if args.json_output_dgva:
-        dgva_retriever = DGVAMetadataRetriever(
-            path_to_config_yaml=args.config
-        )
-        dgva_gather_metadata(dgva_retriever, args.json_output_dgva, args.study_accession)
+    eva_retriever, dgva_retriever = gather_metadata_workflow(
+        config=args.config,
+        json_eva=args.json_output_eva,
+        json_dgva=args.json_output_dgva,
+        study_accession=args.study_accession,
+        assembly=args.assembly,
+        assembly_report=args.assembly_report
+    )
+    eva_update_metadata_with_vcf(eva_retriever, json_eva=args.json_output_eva, vcf_output=args.vcf_output)
 
 
 if __name__ == "__main__":
