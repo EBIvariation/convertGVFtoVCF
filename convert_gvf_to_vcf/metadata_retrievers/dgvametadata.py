@@ -8,8 +8,6 @@ logger = log_cfg.get_logger(__name__)
 
 from convert_gvf_to_vcf.metadata_retrievers.basemetadataretriever import BaseMetadataRetriever
 class DGVAMetadataRetriever(BaseMetadataRetriever):
-    def retrieve(self):
-        pass
 
     def create_json_dgva(self, json_file_path, study_accession):
         json_in_dgva_format = {

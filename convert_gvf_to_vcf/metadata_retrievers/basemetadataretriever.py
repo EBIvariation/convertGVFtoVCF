@@ -126,7 +126,3 @@ class BaseMetadataRetriever(ABC):
             logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty list.")
             fetch_result = []
         return fetch_result
-
-    @abstractmethod
-    def retrieve(self):
-        pass
