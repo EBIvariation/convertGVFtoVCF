@@ -3,9 +3,10 @@ import os
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 from convert_gvf_to_vcf.conversionstatistics import FileStatistics
-from convert_gvf_to_vcf.gather_metadata import eva_gather_metadata, eva_add_file_metadata
+from convert_gvf_to_vcf.gather_metadata import eva_gather_metadata, eva_add_file_metadata, dgva_gather_metadata
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.metadata_retrievers.dgvametadata import DGVAMetadataRetriever
+from convert_gvf_to_vcf.metadata_retrievers.evametadata import EVAMetadataRetriever
 from convert_gvf_to_vcf.projectpaths import ProjectPaths
 from convert_gvf_to_vcf.utils import read_in_gvf_header, read_in_gvf_data
 from convert_gvf_to_vcf.vcfline import VcfLineBuilder
@@ -399,12 +400,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("gvf_input", help="GVF input file.")
     parser.add_argument("vcf_output", help="VCF output file.")
-    parser.add_argument("--json_output", help="JSON output file.")
+    parser.add_argument("--json_output_eva", help="EVA JSON output")
+    parser.add_argument("--json_output_dgva", help="DGVa JSON output")
     parser.add_argument("--study_accession", help="DGVa Study Accession")
     parser.add_argument("-a", "--assembly", help="FASTA assembly file")
     parser.add_argument("--log", help="Path to log file")
     parser.add_argument("--config", required=True, help="Path to config file")
     parser.add_argument("--assembly_report", help="Path to assembly report file")
+
 
     args = parser.parse_args()
 
@@ -416,12 +419,18 @@ def main():
         log_cfg.add_stdout_handler()
     # Gathering of metadata
     logger.info(f"The config file is {args.config}. Gathering metadata")
-    eva_gather_metadata(args.config, args.json_output, args.study_accession, args.assembly, args.assembly_report)
     paths = ProjectPaths()
-    retriever = DGVAMetadataRetriever(args.config)
+    eva_retriever = None
+    if args.json_output_dgva:
+        dgva_retriever = DGVAMetadataRetriever(args.config)
+        dgva_gather_metadata(dgva_retriever, args.json_output_dgva, args.study_accession)
+    if args.json_output_eva:
+        eva_retriever = EVAMetadataRetriever(args.config)
+        eva_gather_metadata(eva_retriever, args.json_output_eva, args.study_accession, args.assembly, args.assembly_report)
     # Conversion: GVF to VCF
     convert(args.gvf_input, args.vcf_output, args.assembly, paths)
     # Post-conversion: adding VCF details to the JSON file
-    eva_add_file_metadata(retriever, args.json_output, args.vcf_output)
+    if eva_retriever:
+        eva_add_file_metadata(eva_retriever, args.json_output_eva, args.vcf_output)
 if __name__ == "__main__":
     main()

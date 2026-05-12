@@ -51,16 +51,18 @@ def main():
     parser.add_argument("--assembly_report")
     args = parser.parse_args()
 
-    eva_retriever = EVAMetadataRetriever(
-        path_to_config_yaml=args.config
-    )
-    eva_gather_metadata(eva_retriever, args.json_output_eva, args.study_accession, args.assembly, args.assembly_report)
-    eva_add_file_metadata(eva_retriever, args.json_output_eva, args.vcf_output)
+    if args.json_output_eva:
+        eva_retriever = EVAMetadataRetriever(
+            path_to_config_yaml=args.config
+        )
+        eva_gather_metadata(eva_retriever, args.json_output_eva, args.study_accession, args.assembly, args.assembly_report)
+        eva_add_file_metadata(eva_retriever, args.json_output_eva, args.vcf_output)
 
-    dgva_retriever = DGVAMetadataRetriever(
-        path_to_config_yaml=args.config
-    )
-    dgva_gather_metadata(dgva_retriever, args.json_output_dgva, args.study_accession)
+    if args.json_output_dgva:
+        dgva_retriever = DGVAMetadataRetriever(
+            path_to_config_yaml=args.config
+        )
+        dgva_gather_metadata(dgva_retriever, args.json_output_dgva, args.study_accession)
 
 
 if __name__ == "__main__":
