@@ -105,8 +105,8 @@ class BaseMetadataRetriever(ABC):
                 cur.execute(query)
                 # fetch the data from the cursor
                 rows = cur.fetchall() # returns list of tuples
-                logger.info(f"Fetching the data: {rows}")
-                logger.info(f"Fetching metadata query - SUCCESS - {len(rows)} records found")
+                logger.debug(f"Fetching the data: {rows}")
+                logger.debug(f"Fetching metadata query - SUCCESS - {len(rows)} records found")
                 return rows
         except Exception as e:
             logger.warning(f"Database error: {e}")
@@ -118,7 +118,7 @@ class BaseMetadataRetriever(ABC):
                 fetch_result = [row[0] for row in fetch_result_list if row]
                 if fetch_result:
                     # SUCCESS if value is present or None
-                    logger.info(f"Fetching {eva_field_name} - SUCCESS - Value(s) for {eva_field_name} found: {fetch_result}.")
+                    logger.debug(f"Fetching {eva_field_name} - SUCCESS - Value(s) for {eva_field_name} found: {fetch_result}.")
 
             else:
                 raise ValueError(f"Missing data: {eva_field_name}.")
