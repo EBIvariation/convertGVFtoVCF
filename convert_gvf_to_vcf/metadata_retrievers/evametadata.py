@@ -387,21 +387,6 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
                 pubmed_string = "PubMed:" + str(pub)
                 pubmed_publications.append(pubmed_string)
         return project_hold_date, project_links, project_parent_project, pubmed_publications
-    # def fetch_results_from_rows(self, eva_field_name, fetch_result_list):
-    #     try:
-    #         if fetch_result_list:
-    #             fetch_result = [row[0] for row in fetch_result_list if row]
-    #             if fetch_result:
-    #                 # SUCCESS if value is present or None
-    #                 logger.info(f"Fetching {eva_field_name} - SUCCESS - Value(s) for {eva_field_name} found: {fetch_result}.")
-    #
-    #         else:
-    #             raise ValueError(f"Missing data: {eva_field_name}.")
-    #     except ValueError as e:
-    #         logger.error(f"Fetching {eva_field_name}  - FAILURE - {eva_field_name} not found. {e} Setting value as empty list.")
-    #         fetch_result = []
-    #     return fetch_result
-    # VALIDATING
 
     def validate_date(self, date):
         try:
