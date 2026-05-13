@@ -6,6 +6,7 @@ from datetime import datetime
 from collections import namedtuple
 
 import oracledb
+from numpy.ma.extras import unique
 from pypika import Query, Table, Schema
 from jsonschema import validate, ValidationError
 
@@ -110,7 +111,7 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         project_description = self._fetch_project_description(study_accession)
         project_tax_id = self._fetch_tax_id(study_accession)
         project_centre_per_submitter = self._fetch_centre(study_accession)
-        project_centre = project_centre_per_submitter[0] # choose the first submitter's centre
+        project_centre = project_centre_per_submitter[0] if project_centre_per_submitter else "" # choose the first submitter's centre
 
         project_publications = self._fetch_project_publications(study_accession)
         project_parent_project = self._fetch_project_parent_project(study_accession)
@@ -146,6 +147,7 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
 
         # ensure compliance with EVA JSON schema https://github.com/EBIvariation/eva-sub-cli/blob/main/eva_sub_cli/etc/eva_schema.json
         if not self.is_project_valid(project_object):
+            print(project_object)
             raise ValueError("Project does not match the JSON schema")
         return project_object
 
@@ -373,7 +375,7 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         label = "| URL"
         if project_links != "" and project_links is not None:
             for index, link in enumerate(project_links):
-                project_links[index] =  link + label
+                project_links[index] =  f"{link}{label}" if link else ""
                 # project_links = project_links + "| URL"
         else:
             project_links = ""
@@ -638,22 +640,47 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         # create the table objects
         ds = Table("DGVA_STUDY", schema=self.db).as_("ds")
         sub = Table("DGVA_SUBMISSION", schema=self.db).as_("sub")
-        project_links_query = (
+        de = Table("DGVA_EXPERIMENT", schema=self.db).as_("de")
+        elu = Table("EXPERIMENT_LINK_URL", schema=self.db).as_("elu")
+        ec = Table("EXPERIMENT_CURATION", schema=self.db).as_("ec")
+        # TABLE_NAME:COLUMN_NAME = dgva_study:study_url
+        project_links_query_one = (
             Query.from_(ds)
             .join(sub)
             .on(ds.STUDY_ACCESSION == sub.STUDY_ACCESSION)
             .select(ds.STUDY_URL)
             .where(ds.STUDY_ACCESSION == study_accession)
         )
-        project_links_list = self.load_from_db(project_links_query.get_sql(quote_char=None))
-        project_links = self.fetch_results_from_rows("links", project_links_list)
+        # TABLE_NAME:COLUMN_NAME = experiment_link_url:url
+        project_links_query_two = (
+            Query.from_(elu)
+            .join(de)
+            .on(de.EXPERIMENT_ID == elu.EXPERIMENT_ID)
+            .select(elu.URL)
+            .where(de.STUDY_ACCESSION == study_accession)
+        )
+        # TABLE_NAME:COLUMN_NAME = experiment_curation:curated_set_link
+        project_links_query_three = (
+            Query.from_(ec)
+            .join(de)
+            .on(de.EXPERIMENT_ID == ec.EXPERIMENT_ID)
+            .select(ec.CURATED_SET_LINK)
+            .where(de.STUDY_ACCESSION == study_accession)
+        )
+        project_links_queries = [project_links_query_one, project_links_query_two, project_links_query_three]
+        project_links = set()
+        for query in project_links_queries:
+            query_links_list = self.load_from_db(query.get_sql(quote_char=None))
+            fetched_results = self.fetch_results_from_rows("links", query_links_list)
+            if fetched_results:
+                project_links.update(fetched_results)
+
         # adding analysis links here because of project_links flexibility
         analysis_links = self._fetch_analysis_links(study_accession)
-        if project_links is None:
-            project_links = list(analysis_links)
-        else:
-            project_links.extend(analysis_links)
-        return project_links
+        if analysis_links:
+            project_links.update(analysis_links)
+        project_links_list = list(project_links)
+        return project_links_list
 
     # ANALYSIS SECTION
     def _fetch_analysis_ids(self, study_accession):
