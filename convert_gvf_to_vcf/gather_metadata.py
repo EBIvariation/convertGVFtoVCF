@@ -3,14 +3,12 @@ import json
 import os.path
 import shutil
 
-from convert_gvf_to_vcf.metadataJSON import DGVaMetadataRetriever
+from convert_gvf_to_vcf.metadata_retrievers.dgvametadata import DGVAMetadataRetriever
+from convert_gvf_to_vcf.metadata_retrievers.evametadata import EVAMetadataRetriever
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 logger = log_cfg.get_logger(__name__)
 
-def gather_metadata(retriever, json_output, study_accession, assembly, assembly_report):
-    retriever.create_json_file(json_file_path=json_output, study_accession=study_accession, assembly=assembly, assembly_report=assembly_report)
-
-def add_file_metadata(retriever, json_output,vcf_output):
+def eva_add_file_metadata(retriever, json_output, vcf_output):
     files_file_name = retriever._get_file_name(vcf_output)
     files_file_size = retriever._get_file_size(vcf_output)
     files_file_md5 = retriever._get_file_md5(vcf_output)
@@ -34,23 +32,48 @@ def add_file_metadata(retriever, json_output,vcf_output):
     with open(json_output, 'w') as f_out:
         json.dump(metadata, f_out, indent=4)
 
+def gather_metadata_workflow(config, json_eva, json_dgva, study_accession, assembly, assembly_report):
+    eva_retriever = None
+    dgva_retriever = None
+    if json_eva:
+        eva_retriever = EVAMetadataRetriever(
+            path_to_config_yaml=config
+        )
+        eva_retriever.create_json_eva(json_eva, study_accession, assembly, assembly_report)
+
+    if json_dgva:
+        dgva_retriever = DGVAMetadataRetriever(
+            path_to_config_yaml=config
+        )
+        dgva_retriever.create_json_dgva(json_dgva, study_accession)
+    return eva_retriever, dgva_retriever
+
+def eva_update_metadata_with_vcf(eva_retriever, json_eva, vcf_output):
+    if eva_retriever and vcf_output and json_eva:
+        eva_add_file_metadata(eva_retriever, json_eva, vcf_output)
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config")
-    parser.add_argument("--path_config")
-    parser.add_argument("--json_output")
+    parser.add_argument("--json_output_eva")
+    parser.add_argument("--json_output_dgva")
     parser.add_argument("--study_accession")
     parser.add_argument("--vcf_output")
     parser.add_argument("--assembly")
     parser.add_argument("--assembly_report")
     args = parser.parse_args()
 
-    retriever = DGVaMetadataRetriever(
-        path_to_config_yaml=args.config,
-        path_to_path_config_yaml=args.path_config
+    eva_retriever, dgva_retriever = gather_metadata_workflow(
+        config=args.config,
+        json_eva=args.json_output_eva,
+        json_dgva=args.json_output_dgva,
+        study_accession=args.study_accession,
+        assembly=args.assembly,
+        assembly_report=args.assembly_report
     )
-    gather_metadata(retriever, args.json_output, args.study_accession, args.assembly, args.assembly_report)
-    add_file_metadata(retriever, args.json_output, args.vcf_output)
+    eva_update_metadata_with_vcf(eva_retriever, json_eva=args.json_output_eva, vcf_output=args.vcf_output)
+
+
 if __name__ == "__main__":
     main()
