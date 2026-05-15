@@ -112,7 +112,10 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         )
         submission_version_list = self.load_from_db(study_comment_query.get_sql(quote_char=None))
         [submission_version, *_] = self.fetch_results_from_rows("submissionVersion", submission_version_list) or [""]
-        return submission_version or 0
+        if submission_version and str(submission_version).isdigit():
+            return int(submission_version)
+        else:
+            return 0
 
     def _fetch_update_comment(self, study_accession):
         # create the table objects
