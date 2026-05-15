@@ -8,9 +8,6 @@ from convert_gvf_to_vcf.metadata_retrievers.evametadata import EVAMetadataRetrie
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 logger = log_cfg.get_logger(__name__)
 
-def eva_gather_metadata(retriever, json_output, study_accession, assembly, assembly_report):
-    retriever.create_json_eva(json_file_path=json_output, study_accession=study_accession, assembly=assembly, assembly_report=assembly_report)
-
 def eva_add_file_metadata(retriever, json_output, vcf_output):
     files_file_name = retriever._get_file_name(vcf_output)
     files_file_size = retriever._get_file_size(vcf_output)
@@ -35,9 +32,6 @@ def eva_add_file_metadata(retriever, json_output, vcf_output):
     with open(json_output, 'w') as f_out:
         json.dump(metadata, f_out, indent=4)
 
-def dgva_gather_metadata(retriever, json_output, study_accession):
-    retriever.create_json_dgva(json_file_path=json_output, study_accession=study_accession)
-
 def gather_metadata_workflow(config, json_eva, json_dgva, study_accession, assembly, assembly_report):
     eva_retriever = None
     dgva_retriever = None
@@ -45,14 +39,13 @@ def gather_metadata_workflow(config, json_eva, json_dgva, study_accession, assem
         eva_retriever = EVAMetadataRetriever(
             path_to_config_yaml=config
         )
-        eva_gather_metadata(eva_retriever, json_eva, study_accession, assembly,
-                            assembly_report)
+        eva_retriever.create_json_eva(json_eva, study_accession, assembly, assembly_report)
 
     if json_dgva:
         dgva_retriever = DGVAMetadataRetriever(
             path_to_config_yaml=config
         )
-        dgva_gather_metadata(dgva_retriever, json_dgva, study_accession)
+        dgva_retriever.create_json_dgva(json_dgva, study_accession)
     return eva_retriever, dgva_retriever
 
 def eva_update_metadata_with_vcf(eva_retriever, json_eva, vcf_output):
