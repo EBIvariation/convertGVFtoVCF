@@ -164,7 +164,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
             .join(de)
             .on(de.EXPERIMENT_ID == em.EXPERIMENT_ID)
             .join(ds)
-            .on(dm.METHOD_ID == em.METHOD_ID)
+            .on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
             .select(dm.METHOD_TYPE)
             .where(ds.STUDY_ACCESSION == study_accession)
         )
