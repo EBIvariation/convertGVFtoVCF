@@ -6,7 +6,6 @@ from datetime import datetime
 from collections import namedtuple
 
 import oracledb
-from numpy.ma.extras import unique
 from pypika import Query, Table, Schema
 from jsonschema import validate, ValidationError
 
@@ -145,7 +144,6 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
 
         # ensure compliance with EVA JSON schema https://github.com/EBIvariation/eva-sub-cli/blob/main/eva_sub_cli/etc/eva_schema.json
         if not self.is_project_valid(project_object):
-            print(project_object)
             raise ValueError("Project does not match the JSON schema")
         return project_object
 
