@@ -3,8 +3,7 @@ import os
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 from convert_gvf_to_vcf.conversionstatistics import FileStatistics
-from convert_gvf_to_vcf.gather_metadata import eva_gather_metadata, eva_add_file_metadata, dgva_gather_metadata, \
-    gather_metadata_workflow, eva_update_metadata_with_vcf
+from convert_gvf_to_vcf.gather_metadata import  eva_add_file_metadata, gather_metadata_workflow, eva_update_metadata_with_vcf
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.metadata_retrievers.dgvametadata import DGVAMetadataRetriever
 from convert_gvf_to_vcf.metadata_retrievers.evametadata import EVAMetadataRetriever
