@@ -112,7 +112,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
         )
         submission_version_list = self.load_from_db(study_comment_query.get_sql(quote_char=None))
         [submission_version, *_] = self.fetch_results_from_rows("submissionVersion", submission_version_list) or [""]
-        return submission_version or ""
+        return submission_version or 0
 
     def _fetch_update_comment(self, study_accession):
         # create the table objects
@@ -161,7 +161,7 @@ class DGVAMetadataRetriever(BaseMetadataRetriever):
             .join(de)
             .on(de.EXPERIMENT_ID == em.EXPERIMENT_ID)
             .join(ds)
-            .on(dm.METHOD_ID == em.METHOD_ID)
+            .on(ds.STUDY_ACCESSION == de.STUDY_ACCESSION)
             .select(dm.METHOD_TYPE)
             .where(ds.STUDY_ACCESSION == study_accession)
         )
