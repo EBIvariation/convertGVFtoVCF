@@ -56,7 +56,6 @@ def eva_update_metadata_with_vcf(eva_retriever, json_eva, vcf_output):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config")
-    parser.add_argument("--path_config")
     parser.add_argument("--json_output_eva")
     parser.add_argument("--json_output_dgva")
     parser.add_argument("--study_accession")
