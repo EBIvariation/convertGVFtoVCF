@@ -1,6 +1,5 @@
 """This contains readers and utilities"""
 import json
-import os
 import yaml
 import logging
 
@@ -112,3 +111,23 @@ def build_iupac_ambiguity_code():
         "D": ["A", "G", "T"],
         "N": ["A", "C", "G", "T"]
     }
+
+def get_validated_value(config, key_parts_to_get, expected_type, default_value=None):
+    """Gets information from a config file (ebi_eva_common_pyutils.config > cfg.load_config_file)
+    :param config: config
+    :param key_parts_to_get: key to retrieve from config file (hierarchical)
+    :param expected_type: expected_type of key to retrieve from config file
+    :param default_value: default_value of key to retrieve from config file
+    :return: value_in_config
+    """
+    # key_parts_to_get is a tuple of multiple values so unpacking
+    value_in_config = config.query(*key_parts_to_get, ret_default=default_value)
+    if value_in_config is None:
+        raise ValueError(f"Missing key required: {key_parts_to_get}")
+    if not isinstance(value_in_config, expected_type):
+        try:
+            # cast the value to its expected type
+            value_in_config = expected_type(value_in_config)
+        except (ValueError, TypeError):
+            raise TypeError(f"Key '{key_parts_to_get}' must be {expected_type.__name__}")
+    return value_in_config

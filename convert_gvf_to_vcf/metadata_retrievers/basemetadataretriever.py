@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 import oracledb
 from pypika import Schema
@@ -6,7 +6,7 @@ from ebi_eva_common_pyutils.config import cfg
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 from convert_gvf_to_vcf.projectpaths import ProjectPaths
-
+from convert_gvf_to_vcf.utils import get_validated_value
 logger = log_cfg.get_logger(__name__)
 class BaseMetadataRetriever(ABC):
     """ The responsibility of this base class is to ensure a consistent method for metadata retrieval.
@@ -18,11 +18,11 @@ class BaseMetadataRetriever(ABC):
         self.paths =ProjectPaths()
         # db connection setup
         self._connection = None
-        self._host = self._get_validated_value(cfg, ("DGVA","host"), str, default_value=None) # get information from the config dictionary
-        self._port = self._get_validated_value(cfg, ("DGVA", "port"), str, default_value=None)
-        self._username = self._get_validated_value(cfg, ("DGVA", "user"), str, default_value=None)
-        self._password = self._get_validated_value(cfg, ("DGVA", "password"), str, default_value=None)
-        self._service_name = self._get_validated_value(cfg, ("DGVA", "service_name"), str, default_value=None)
+        self._host = get_validated_value(cfg, ("DGVA","host"), str, default_value=None) # get information from the config dictionary
+        self._port = get_validated_value(cfg, ("DGVA", "port"), str, default_value=None)
+        self._username = get_validated_value(cfg, ("DGVA", "user"), str, default_value=None)
+        self._password = get_validated_value(cfg, ("DGVA", "password"), str, default_value=None)
+        self._service_name = get_validated_value(cfg, ("DGVA", "service_name"), str, default_value=None)
         # db parameters
         self._max_retries = 3
         # create the db schema objects
@@ -39,20 +39,6 @@ class BaseMetadataRetriever(ABC):
             self._connection.close()
             self._connection = None
             logger.info("Closing connection safely using a context manager - SUCCESS")
-
-    @staticmethod
-    def _get_validated_value(config, key_parts_to_get, expected_type, default_value=None):
-        # key_parts_to_get is a tuple of multiple values so unpacking
-        value_in_config = config.query(*key_parts_to_get, ret_default=default_value)
-        if value_in_config is None:
-            raise ValueError(f"Missing key required: {key_parts_to_get}")
-        if not isinstance(value_in_config, expected_type):
-            try:
-                # cast the value to its expected type
-                value_in_config = expected_type(value_in_config)
-            except (ValueError, TypeError):
-                raise TypeError(f"Key '{key_parts_to_get}' must be {expected_type.__name__}")
-        return value_in_config
 
     @property
     def connection(self):

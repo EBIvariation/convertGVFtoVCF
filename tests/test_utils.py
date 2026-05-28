@@ -1,9 +1,10 @@
 import os
 import unittest
+from unittest.mock import Mock
 
 from convert_gvf_to_vcf.projectpaths import ProjectPaths
 from convert_gvf_to_vcf.utils import read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, \
-    build_iupac_ambiguity_code, read_in_gvf_header, read_in_gvf_data
+    build_iupac_ambiguity_code, read_in_gvf_header, read_in_gvf_data, get_validated_value
 from convert_gvf_to_vcf.lookup import Lookup
 
 class TestUtils(unittest.TestCase):
@@ -69,3 +70,11 @@ class TestUtils(unittest.TestCase):
         }
         dictionary_iupac = build_iupac_ambiguity_code()
         assert dictionary_iupac == expected_dictionary_iupac
+
+    def test_get_validated_value(self):
+        self.mock_config = Mock()
+        self.mock_config.query.return_value = "1111"
+        expected = self.mock_config.query.return_value
+        result = get_validated_value(self.mock_config, ("DGVA", "port"), str, default_value=None)
+        self.assertEqual(result, expected)
+        self.mock_config.query.assert_called_once_with("DGVA", "port", ret_default=None)
