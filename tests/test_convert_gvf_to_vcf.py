@@ -3,7 +3,7 @@ import unittest
 
 
 from convert_gvf_to_vcf.lookup import Lookup
-from convert_gvf_to_vcf.convert_gvf_to_vcf import generate_vcf_header_unstructured_line, \
+from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import generate_vcf_header_unstructured_line, \
     convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line, parse_pragma, get_pragma_name_and_value, \
     get_pragma_tokens, \
     get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \

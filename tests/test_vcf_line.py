@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from convert_gvf_to_vcf.convert_gvf_to_vcf import generate_vcf_header_structured_lines
+from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import generate_vcf_header_structured_lines
 from convert_gvf_to_vcf.gvf_feature import GvfFeatureline
 from convert_gvf_to_vcf.project_paths import ProjectPaths
 from convert_gvf_to_vcf.vcf_line import VcfLine, VcfLineBuilder, VariantRange, extract_reference_allele

@@ -1,7 +1,7 @@
 import unittest
 import os
 from convert_gvf_to_vcf.conversion_statistics import FileStatistics
-from convert_gvf_to_vcf.convert_gvf_to_vcf import convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line
+from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.project_paths import ProjectPaths
 
