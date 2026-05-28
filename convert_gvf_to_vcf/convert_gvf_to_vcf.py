@@ -2,14 +2,14 @@ import argparse
 import os
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
-from convert_gvf_to_vcf.conversionstatistics import FileStatistics
+from convert_gvf_to_vcf.conversion_statistics import FileStatistics
 from convert_gvf_to_vcf.gather_metadata import  eva_add_file_metadata, gather_metadata_workflow, eva_update_metadata_with_vcf
 from convert_gvf_to_vcf.lookup import Lookup
-from convert_gvf_to_vcf.metadata_retrievers.dgvametadata import DGVAMetadataRetriever
-from convert_gvf_to_vcf.metadata_retrievers.evametadata import EVAMetadataRetriever
-from convert_gvf_to_vcf.projectpaths import ProjectPaths
+from convert_gvf_to_vcf.metadata_retrievers.dgva_metadata import DGVAMetadataRetriever
+from convert_gvf_to_vcf.metadata_retrievers.eva_metadata import EVAMetadataRetriever
+from convert_gvf_to_vcf.project_paths import ProjectPaths
 from convert_gvf_to_vcf.utils import read_in_gvf_header, read_in_gvf_data
-from convert_gvf_to_vcf.vcfline import VcfLineBuilder
+from convert_gvf_to_vcf.vcf_line import VcfLineBuilder
 
 logger = log_cfg.get_logger(__name__)
 

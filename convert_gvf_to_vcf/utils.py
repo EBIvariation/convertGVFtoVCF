@@ -3,7 +3,7 @@ import json
 import yaml
 import logging
 
-from convert_gvf_to_vcf.gvffeature import GvfFeatureline
+from convert_gvf_to_vcf.gvf_feature import GvfFeatureline
 
 logger = logging.getLogger(__name__)
 

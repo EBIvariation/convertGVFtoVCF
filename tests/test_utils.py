@@ -2,7 +2,7 @@ import os
 import unittest
 from unittest.mock import Mock
 
-from convert_gvf_to_vcf.projectpaths import ProjectPaths
+from convert_gvf_to_vcf.project_paths import ProjectPaths
 from convert_gvf_to_vcf.utils import read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, \
     build_iupac_ambiguity_code, read_in_gvf_header, read_in_gvf_data, get_validated_value
 from convert_gvf_to_vcf.lookup import Lookup

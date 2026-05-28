@@ -5,7 +5,7 @@ from pypika import Schema
 from ebi_eva_common_pyutils.config import cfg
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
-from convert_gvf_to_vcf.projectpaths import ProjectPaths
+from convert_gvf_to_vcf.project_paths import ProjectPaths
 from convert_gvf_to_vcf.utils import get_validated_value
 logger = log_cfg.get_logger(__name__)
 class BaseMetadataRetriever(ABC):

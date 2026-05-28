@@ -9,14 +9,14 @@ import oracledb
 from pypika import Query, Table, Schema
 from jsonschema import validate, ValidationError
 
-from convert_gvf_to_vcf.projectpaths import ProjectPaths
+from convert_gvf_to_vcf.project_paths import ProjectPaths
 from convert_gvf_to_vcf.utils import read_in_json_schema
 from ebi_eva_common_pyutils.config import cfg
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 logger = log_cfg.get_logger(__name__)
 
-from convert_gvf_to_vcf.metadata_retrievers.basemetadataretriever import BaseMetadataRetriever
+from convert_gvf_to_vcf.metadata_retrievers.base_metadata_retriever import BaseMetadataRetriever
 class EVAMetadataRetriever(BaseMetadataRetriever):
     """
     The responsibility of this class is to retrieve the metadata for submission to EVA.

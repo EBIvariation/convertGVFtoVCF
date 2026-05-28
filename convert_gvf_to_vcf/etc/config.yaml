@@ -2,5 +2,5 @@
 paths:
   etc_folder: "etc"
   eva_schema_file: "etc/eva_schema.json"
-  dgva_schema_file: "etc/DGVa_schema.json"
+  dgva_schema_file: "etc/dgva_schema.json"
   test_folder: "../tests"

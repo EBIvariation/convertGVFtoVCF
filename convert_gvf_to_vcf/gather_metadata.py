@@ -3,8 +3,8 @@ import json
 import os.path
 import shutil
 
-from convert_gvf_to_vcf.metadata_retrievers.dgvametadata import DGVAMetadataRetriever
-from convert_gvf_to_vcf.metadata_retrievers.evametadata import EVAMetadataRetriever
+from convert_gvf_to_vcf.metadata_retrievers.dgva_metadata import DGVAMetadataRetriever
+from convert_gvf_to_vcf.metadata_retrievers.eva_metadata import EVAMetadataRetriever
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 logger = log_cfg.get_logger(__name__)
 

@@ -3,8 +3,8 @@ from unittest import TestCase
 from unittest.mock import patch, MagicMock, Mock
 from collections import namedtuple
 
-from convert_gvf_to_vcf.metadata_retrievers.evametadata import EVAMetadataRetriever
-from convert_gvf_to_vcf.projectpaths import ProjectPaths
+from convert_gvf_to_vcf.metadata_retrievers.eva_metadata import EVAMetadataRetriever
+from convert_gvf_to_vcf.project_paths import ProjectPaths
 
 class TestEVAMetadataRetriever(TestCase):
     def setUp(self):
