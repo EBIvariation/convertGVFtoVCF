@@ -51,10 +51,10 @@ class HpcFileFinder:
                 all_extensions.add(ext)
             if files and all_extensions != {".gvf"}:
                 logger.warning(f"Files in study accession {study_accession_of_folder} are not all GVFs.")
-                gvf_files = [file for file in files if file.endswith(".gvf")]
+                gvf_files = [os.path.join(current_dir, file) for file in files if file.endswith(".gvf")]
                 study_and_files[study_accession_of_folder] = gvf_files
             else:
-                study_and_files[study_accession_of_folder] = files
+                study_and_files[study_accession_of_folder] = [os.path.join(current_dir, file) for file in files]
             return study_and_files
 
         def scan(self, study_accession=None):
