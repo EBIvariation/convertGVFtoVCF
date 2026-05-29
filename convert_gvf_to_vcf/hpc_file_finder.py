@@ -1,5 +1,8 @@
 import argparse
+import hashlib
 import os
+
+
 from ebi_eva_common_pyutils.config import cfg
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
@@ -89,10 +92,49 @@ class HpcFileFinder:
                 elif folder_name == "gvf":
                     study_and_files = self._process_gvf_directory(all_extensions, current_dir, dirs, files, study_and_files,
                                                 target_study_accession)
+                    self.deduplicate_files(study_and_files)
                 else:
                     logger.warning(f"Unconventional directory structure: {current_dir}.")
             return study_and_files
 
+        def deduplicate_files(self, study_and_files):
+            """ Deduplicate the GVF files found in the dictionary of lists {study_accession: [listofGVFs]}
+            :params study_and_files: dictionary of list with duplicated elements
+            :returns study_and_unique_files: dictionary of list with unique elements
+            """
+            seen_files = {}
+            unique_files = []
+            study_and_unique_files = {}
+            for study_accession, gvf_list in study_and_files.items():
+                for gvf in gvf_list:
+                    file_size = os.path.getsize(gvf)
+                    files_with_the_same_size = seen_files.get(file_size, [])
+                    matched_file = next((existing_file for existing_file in files_with_the_same_size if self._check_md5_match(gvf, existing_file)), None)
+                    if matched_file:
+                        logger.error(f"Duplicate files have been found: {gvf} and {matched_file}")
+                    else:
+                        unique_files.append(gvf)
+                        seen_files[file_size] = files_with_the_same_size + [gvf]
+                study_and_unique_files[study_accession] = unique_files
+            return study_and_unique_files
+
+        def get_md5(self, file_path):
+            """Gets md5 of a file path
+            :params: file_path: gvf file
+            :returns: md5
+            """
+            hasher = hashlib.md5()
+            try:
+                with open(file_path, "rb") as f:
+                    for chunk in iter(lambda: f.read(65536), b""):
+                        hasher.update(chunk)
+                return hasher.hexdigest()
+            except (OSError, IOError):
+                return None
+
+        def _check_md5_match(self, file_path_1, file_path_2):
+            """Returns True if both files have the exact same MD5 hash."""
+            return self.get_md5(file_path_1) == self.get_md5(file_path_2)
 
 
 
