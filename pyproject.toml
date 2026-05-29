@@ -33,7 +33,7 @@ classifiers = [
 [project.scripts]
 'convert_gvf_to_vcf_logic.py'='convert_gvf_to_vcf.convert_gvf_to_vcf_logic:main'
 'gather_metadata.py'='convert_gvf_to_vcf.gather_metadata:main'
-
+'hpc_file_finder.py'='convert_gvf_to_vcf.hpc_file_finder:main'
 
 [tool.setuptools]
 packages = ['convert_gvf_to_vcf']
