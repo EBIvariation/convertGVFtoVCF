@@ -1,6 +1,6 @@
 import unittest
 import os
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from convert_gvf_to_vcf.hpc_file_finder import HpcFileFinder
 from convert_gvf_to_vcf.project_paths import ProjectPaths
@@ -49,6 +49,28 @@ class TestHpcFileFinder(unittest.TestCase):
         assert "estd1" in result
         assert result["estd1"] == expected_paths
 
+    @patch('os.walk')
+    def test_scan(self, mock_walk):
+        file_finder = HpcFileFinder(ftp_dir=self.top_dir, study_accession=self.study_accession)
+        study_name = "estd1_Redon_et_al_2006"
+        files = ['estd1_Redon_et_al_2006.2014-04-01.GRCh37.Remapped.gvf', 'estd1_Redon_et_al_2006.2014-04-01.NCBI35.Submitted.gvf', 'estd1_Redon_et_al_2006.2014-04-01.GRCh37.p13.Remapped.gvf', 'estd1_Redon_et_al_2006.2014-04-01.GRCh38.Remapped.gvf']
+        expected_paths = []
+        for file in files:
+            expected_paths.append(os.path.join(self.current_dir, file))
+        file_finder._extract_target_tuple = MagicMock(return_value = None)
+        file_finder.deduplicate_files = MagicMock()
+        file_finder._process_gvf_directory = MagicMock(return_value ={self.study_accession: expected_paths})
+        study_path = os.path.join(self.top_dir, study_name)
+        gvf_path = os.path.join(study_path, "gvf")
+        mock_walk.return_value = [
+            (self.top_dir, [study_name], []),
+            (study_path, ["gvf"], []),
+            (gvf_path, [], files)
+        ]
+        result = file_finder.scan()
+        self.assertEqual(result[self.study_accession], expected_paths)
+        file_finder._process_gvf_directory.assert_called_once()
+        file_finder.deduplicate_files.assert_called_once()
 
     def test_get_md5(self):
         file_to_test = os.path.join(self.current_dir, 'estd1_Redon_et_al_2006.2014-04-01.GRCh37.Remapped.gvf')
