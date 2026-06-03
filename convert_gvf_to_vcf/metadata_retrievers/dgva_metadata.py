@@ -6,7 +6,7 @@ from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 logger = log_cfg.get_logger(__name__)
 
-from convert_gvf_to_vcf.metadata_retrievers.basemetadataretriever import BaseMetadataRetriever
+from convert_gvf_to_vcf.metadata_retrievers.base_metadata_retriever import BaseMetadataRetriever
 class DGVAMetadataRetriever(BaseMetadataRetriever):
 
     def create_json_dgva(self, json_file_path, study_accession):

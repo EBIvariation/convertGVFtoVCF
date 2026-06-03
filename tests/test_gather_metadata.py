@@ -3,7 +3,7 @@ import json
 from unittest import TestCase
 from unittest.mock import patch
 from convert_gvf_to_vcf.gather_metadata import eva_add_file_metadata
-from convert_gvf_to_vcf.projectpaths import ProjectPaths
+from convert_gvf_to_vcf.project_paths import ProjectPaths
 
 
 class TestGatherMetadata(TestCase):

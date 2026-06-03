@@ -3,8 +3,8 @@ from unittest import TestCase
 from unittest.mock import patch, MagicMock, Mock
 from collections import namedtuple
 
-from convert_gvf_to_vcf.metadata_retrievers.evametadata import EVAMetadataRetriever
-from convert_gvf_to_vcf.projectpaths import ProjectPaths
+from convert_gvf_to_vcf.metadata_retrievers.eva_metadata import EVAMetadataRetriever
+from convert_gvf_to_vcf.project_paths import ProjectPaths
 
 class TestEVAMetadataRetriever(TestCase):
     def setUp(self):
@@ -25,7 +25,7 @@ class TestEVAMetadataRetriever(TestCase):
         assert metadata_client._connection == None
         assert metadata_client._max_retries == 3
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.basemetadataretriever.oracledb.connect")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.base_metadata_retriever.oracledb.connect")
     def test_connection_new(self, mock_connection):
         mock_connection_object = Mock()
         mock_connection.return_value = mock_connection_object
@@ -34,7 +34,7 @@ class TestEVAMetadataRetriever(TestCase):
         self.assertEqual(result, mock_connection_object)
         mock_connection.assert_called_once()
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.basemetadataretriever.oracledb.connect")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.base_metadata_retriever.oracledb.connect")
     def test_connection_healthy(self, mock_connection):
         # expected behaviour: if healthy, keep the connection
         mock_connection_object_existing = Mock()
@@ -45,7 +45,7 @@ class TestEVAMetadataRetriever(TestCase):
         self.assertEqual(result, mock_connection_object_existing)
         mock_connection.assert_not_called()
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.basemetadataretriever.oracledb.connect")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.base_metadata_retriever.oracledb.connect")
     def test_connection_unhealthy(self, mock_connection):
         # expected behaviour: if unhealthy, close the connection then open a new connection
         mock_unhealthy = Mock()
@@ -62,7 +62,7 @@ class TestEVAMetadataRetriever(TestCase):
         # did you get a new connection
         self.assertEqual(result, mock_new_connection)
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.basemetadataretriever.oracledb.connect")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.base_metadata_retriever.oracledb.connect")
     def test_connection_max_retry_third_attempt_success(self, mock_connection):
         # expected behaviour: unsuccessful on first two attempts, successful on third attempt.
         mock_healthy = Mock()
@@ -78,7 +78,7 @@ class TestEVAMetadataRetriever(TestCase):
         self.assertEqual(mock_connection.call_count, 3)
 
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.basemetadataretriever.oracledb.connect")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.base_metadata_retriever.oracledb.connect")
     def test_connection_max_retry_third_attempt_fail(self, mock_connection):
         # expected behaviour: it will allow 3 retries. it will not allow the fourth attempt
         mock_connection.side_effect = [Exception("attempt1"), Exception("attempt2"), Exception("attempt3"), Exception("attempt4")]
@@ -88,7 +88,7 @@ class TestEVAMetadataRetriever(TestCase):
         # this should only allow 3 attempts
         assert mock_connection.call_count == 3
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.basemetadataretriever.oracledb.connect")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.base_metadata_retriever.oracledb.connect")
     def test_load_from_db(self, mock_connect):
         mock_connection = MagicMock()
         mock_cursor = MagicMock()
@@ -108,12 +108,12 @@ class TestEVAMetadataRetriever(TestCase):
     def test__get_validated_value(self):
         pass
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_submitter_details_all_addresses")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_submitter_details_all_centres")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_submitter_details_all_email_addresses")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_submitter_details_all_phone_numbers")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_submitter_details_all_first_names")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_submitter_details_all_last_names")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_submitter_details_all_addresses")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_submitter_details_all_centres")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_submitter_details_all_email_addresses")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_submitter_details_all_phone_numbers")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_submitter_details_all_first_names")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_submitter_details_all_last_names")
     def test_get_submitter_details(self,
                                    mock_fetch_all_last_names,
                                    mock_fetch_all_first_names,
@@ -169,14 +169,14 @@ class TestEVAMetadataRetriever(TestCase):
         self.assertEqual(expected, result)
 
     # @patch("convert_gvf_to_vcf.metadataJSON.DGVaMetadataRetriever.validate_project")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_hold_date")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_project_links")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_project_parent_project")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_project_publications")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_centre")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_tax_id")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_project_description")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_project_title")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_hold_date")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_project_links")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_project_parent_project")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_project_publications")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_centre")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_tax_id")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_project_description")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_project_title")
     def test__get_project_new(self, mock_title, mock_description, mock_tax_id, mock_centre, mock_publications, mock_parent, mock_links, mock_date):
         # all present
         mock_title.return_value = "title"
@@ -222,17 +222,17 @@ class TestEVAMetadataRetriever(TestCase):
         }
         self.assertEqual(expected, result)
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_run_accessions")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_pipeline_descriptions")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_software")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_platform")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_reference_genome")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._determine_analysis_experiment_type")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_method_type")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_analysis_type")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_description")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_alias")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_ids")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_run_accessions")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_pipeline_descriptions")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_software")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_platform")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_reference_genome")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._determine_analysis_experiment_type")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_method_type")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_analysis_type")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_description")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_alias")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_ids")
     def test__get_analysis(self,
                            mock_ids,
                            mock_alias,
@@ -300,7 +300,7 @@ class TestEVAMetadataRetriever(TestCase):
         }]
         self.assertEqual(result, expected_result)
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_sample_analysis_alias_list")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_sample_analysis_alias_list")
     def test__get_sample_pre_registered(self, mock_alias_list):
         mock_alias_list.return_value = ["alias"]
         metadata_client = EVAMetadataRetriever(self.config)
@@ -309,9 +309,9 @@ class TestEVAMetadataRetriever(TestCase):
         self.assertEqual(result, expected)
 
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_scientific_name")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_tax_id")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_sample_analysis_alias_list")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_scientific_name")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_tax_id")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_sample_analysis_alias_list")
     def test__get_sample_new(self, mock_alias_list, mock_tax_id, mock_scientific_name):
         mock_alias_list.return_value = ["alias"]
         mock_tax_id.return_value = 9606
@@ -323,8 +323,8 @@ class TestEVAMetadataRetriever(TestCase):
         self.assertEqual(result, expected)
 
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_alias")
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever._fetch_analysis_ids")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_alias")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_analysis_ids")
     def test__get_files(self, mock_ids, mock_alias):
         mock_ids.return_value = ["1", "2"]
         mock_alias.return_value = "alias_1_2"
@@ -336,7 +336,7 @@ class TestEVAMetadataRetriever(TestCase):
         self.assertEqual(result[0].get("fileName"), expected[0].get("fileName"))
 
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever.load_from_db")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever.load_from_db")
     def test__fetch_project_peer_project(self, mock_load):
         # create mock data from load_from_db (PROJECT NOT PRE-REGISTERED)
         mock_data = [(None,) ] # not pre-registered
@@ -353,7 +353,7 @@ class TestEVAMetadataRetriever(TestCase):
         accession = metadata_client._fetch_project_peer_project("STUDY789")
         self.assertEqual(accession, "PRJNA28889")
 
-    @patch("convert_gvf_to_vcf.metadata_retrievers.evametadata.EVAMetadataRetriever.load_from_db")
+    @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever.load_from_db")
     def test__determine_sample_pre_registered(self, mock_load):
         # (SAMPLE NOT PRE-REGISTERED)
         # create mock data from load_from_db (SAMPLE NOT PRE-REGISTERED)
