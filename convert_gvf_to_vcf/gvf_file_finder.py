@@ -11,28 +11,13 @@ from convert_gvf_to_vcf.utils import get_validated_value
 
 logger = log_cfg.get_logger(__name__)
 class GvfFileFinder:
-        """ The responsibility of this class is to traverse the FTP directory to find the correct GVF file paths."""
-        def __init__(self, ftp_dir, study_accession):
+        """ The responsibility of this class is to traverse the directory to find the correct GVF file paths."""
+        def __init__(self, search_dir):
             self.paths = ProjectPaths()
-            self.hpc_dir = ftp_dir
-            self.study_accession = study_accession
-
-        def _extract_target_tuple(self, study_accession):
-            """Creates a target tuple using a study accession
-            :params: study_accession
-            :return: target_study_accession (tuple)
-            """
-            if study_accession:
-                if isinstance(study_accession, str):
-                    target_study_accession = (study_accession,)
-                else:
-                    target_study_accession = tuple(study_accession)
-            else:
-                target_study_accession = None
-            return target_study_accession
+            self.search_dir = search_dir
 
         def _process_gvf_directory(self, all_extensions, current_dir, dirs, files, study_and_files,
-                                   target_study_accession):
+                                   study_accession):
             """ Processes the GVF directory (e.g. /hpc_dir/estd3_Name_et_al_2008/gvf). Returns the study accession and the GVF files.
             :params all_extensions: set of file extensions
             :params current_dir: from os.walk - root
@@ -44,7 +29,7 @@ class GvfFileFinder:
             """
             parent_dir = os.path.basename(os.path.dirname(current_dir))
             study_accession_of_folder = parent_dir.split("_")[0]
-            if target_study_accession:
+            if study_accession:
                 logger.info(
                     f"AFTER restricting target = {len(dirs)} study accessions found in HPC directory: {study_accession_of_folder}")
             logger.info(f"Found {study_accession_of_folder}: {len(files)} files.")
@@ -62,24 +47,23 @@ class GvfFileFinder:
 
         def scan(self, study_accession=None):
             """Scans entire HPC.
-            :returns: dictionary of lists {study_accession:[list_of_gvf_files]}
+            :returns: dictionary of lists {study_accession:[unique_gvf_files]}
             """
-            logger.info(f"Scanning HPC directory: {self.hpc_dir}")
+            logger.info(f"Scanning directory: {self.search_dir}")
             study_and_files = dict()
             # set target tuple
-            target_study_accession = self._extract_target_tuple(study_accession)
-            for (current_dir, dirs, files) in os.walk(self.hpc_dir):
+            for (current_dir, dirs, files) in os.walk(self.search_dir):
                 # remove hidden files
                 dirs[:] = [d for d in dirs if not d.startswith('.')]
                 # go through hpc dir of /hpc_dir/estd3_Name_et_al_2008/gvf
-                if current_dir == self.hpc_dir:
-                    if target_study_accession is None:
-                        logger.info(f"Study accessions found in HPC directory: {len(dirs)}")
+                if current_dir == self.search_dir:
+                    if study_accession is None:
+                        logger.info(f"Study accessions found in directory: {len(dirs)}")
                     # set restriction
-                    if target_study_accession:
+                    if study_accession:
                         logger.info(f"BEFORE restricting target = {len(dirs)} Study accessions found in HPC directory.")
-                        dirs[:] = [d for d in dirs if d.startswith(target_study_accession)]
-                        logger.info(f"Target study accession set to {target_study_accession}")
+                        dirs[:] = [d for d in dirs if d.startswith(study_accession)]
+                        logger.info(f"Target study accession set to {study_accession}")
                     continue
                 all_extensions = set()
                 folder_name = os.path.basename(current_dir)
@@ -91,21 +75,21 @@ class GvfFileFinder:
                 # go through gvf of /hpc_dir/estd3_Name_et_al_2008/gvf
                 elif folder_name == "gvf":
                     study_and_files = self._process_gvf_directory(all_extensions, current_dir, dirs, files, study_and_files,
-                                                target_study_accession)
-                    self.deduplicate_files(study_and_files)
+                                                study_accession)
                 else:
                     logger.warning(f"Unconventional directory structure: {current_dir}.")
-            return study_and_files
+            study_and_gvf_files = self.deduplicate_files(study_and_files)
+            return study_and_gvf_files
 
         def deduplicate_files(self, study_and_files):
             """ Deduplicate the GVF files found in the dictionary of lists {study_accession: [listofGVFs]}
             :params study_and_files: dictionary of list with duplicated elements
             :returns study_and_unique_files: dictionary of list with unique elements
             """
-            seen_files = {}
-            unique_files = []
             study_and_unique_files = {}
             for study_accession, gvf_list in study_and_files.items():
+                seen_files = {}
+                unique_files = []
                 for gvf in gvf_list:
                     file_size = os.path.getsize(gvf)
                     files_with_the_same_size = seen_files.get(file_size, [])
@@ -134,14 +118,18 @@ class GvfFileFinder:
 
         def _check_md5_match(self, file_path_1, file_path_2):
             """Returns True if both files have the exact same MD5 hash."""
-            return self.get_md5(file_path_1) == self.get_md5(file_path_2)
+            md5_path1 = self.get_md5(file_path_1)
+            md5_path2 = self.get_md5(file_path_2)
+            if md5_path1 and md5_path2:
+                return self.get_md5(file_path_1) == self.get_md5(file_path_2)
+            return False
 
 
 
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ftp_dir", required=True, help="FTP dir.")
+    parser.add_argument("--search_dir", required=True, help="Directory to search i.e. FTP dir.")
     parser.add_argument("--log", required=True, help="Path to log")
     parser.add_argument("--study_accession", help="Study accession.")
 
@@ -151,10 +139,8 @@ def main():
     if args.log:
         log_cfg.add_file_handler(args.log)
         logger.info(f"The log file is {args.log}")
-    else:
-        log_cfg.add_stdout_handler()
 
-    finder = GvfFileFinder(ftp_dir = args.ftp_dir, study_accession= args.study_accession)
+    finder = GvfFileFinder(search_dir= args.search_dir)
     gvf_data = finder.scan(args.study_accession)
     print(gvf_data)
     print("complete")

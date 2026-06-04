@@ -13,15 +13,6 @@ class TestGvfFileFinder(unittest.TestCase):
         self.current_dir = os.path.join(self.top_dir, "estd1_Redon_et_al_2006", "gvf")
         self.hpc_dir = self.current_dir
         self.study_accession = "estd1"
-    def test_extract_target_tuple(self):
-
-        target_tuple = GvfFileFinder._extract_target_tuple(self, study_accession=self.study_accession)
-        expected_target_tuple = ('estd1',)
-        self.assertEqual(target_tuple, expected_target_tuple)
-        study_accession = ["estd1"]
-        target_tuple = GvfFileFinder._extract_target_tuple(self, study_accession=study_accession)
-        expected_target_tuple = ('estd1',)
-        self.assertEqual(target_tuple, expected_target_tuple)
 
     def test_process_gvf_directory(self):
         all_extensions = set()
@@ -29,7 +20,7 @@ class TestGvfFileFinder(unittest.TestCase):
         dirs = list()
         files = ['estd1_Redon_et_al_2006.2014-04-01.GRCh37.Remapped.gvf', 'estd1_Redon_et_al_2006.2014-04-01.NCBI35.Submitted.gvf', 'estd1_Redon_et_al_2006.2014-04-01.GRCh37.p13.Remapped.gvf', 'estd1_Redon_et_al_2006.2014-04-01.GRCh38.Remapped.gvf']
         study_and_files = dict()
-        study_file_dict = GvfFileFinder._process_gvf_directory(self, all_extensions=all_extensions, current_dir=current_dir, dirs=dirs, files=files, study_and_files=study_and_files, target_study_accession=None)
+        study_file_dict = GvfFileFinder._process_gvf_directory(self, all_extensions=all_extensions, current_dir=current_dir, dirs=dirs, files=files, study_and_files=study_and_files, study_accession=None)
         assert len(study_file_dict) == 1
         assert self.study_accession in study_file_dict
         expected_paths = []
@@ -51,23 +42,26 @@ class TestGvfFileFinder(unittest.TestCase):
 
     @patch('os.walk')
     def test_scan(self, mock_walk):
-        file_finder = GvfFileFinder(ftp_dir=self.top_dir, study_accession=self.study_accession)
+        file_finder = GvfFileFinder(search_dir=self.top_dir)
         study_name = "estd1_Redon_et_al_2006"
+
+        study_path = os.path.join(self.top_dir, study_name)
+        gvf_path = os.path.join(study_path, "gvf")
+
         files = ['estd1_Redon_et_al_2006.2014-04-01.GRCh37.Remapped.gvf', 'estd1_Redon_et_al_2006.2014-04-01.NCBI35.Submitted.gvf', 'estd1_Redon_et_al_2006.2014-04-01.GRCh37.p13.Remapped.gvf', 'estd1_Redon_et_al_2006.2014-04-01.GRCh38.Remapped.gvf']
         expected_paths = []
         for file in files:
-            expected_paths.append(os.path.join(self.current_dir, file))
-        file_finder._extract_target_tuple = MagicMock(return_value = None)
-        file_finder.deduplicate_files = MagicMock()
-        file_finder._process_gvf_directory = MagicMock(return_value ={self.study_accession: expected_paths})
-        study_path = os.path.join(self.top_dir, study_name)
-        gvf_path = os.path.join(study_path, "gvf")
+            expected_paths.append(os.path.join(gvf_path, file))
+        mock_return_dict = {self.study_accession: expected_paths} # assuming no duplicates paths
+        file_finder.deduplicate_files = MagicMock(return_value=mock_return_dict)
+        file_finder._process_gvf_directory = MagicMock(return_value =mock_return_dict)
+
         mock_walk.return_value = [
             (self.top_dir, [study_name], []),
             (study_path, ["gvf"], []),
             (gvf_path, [], files)
         ]
-        result = file_finder.scan()
+        result = file_finder.scan(self.study_accession)
         self.assertEqual(result[self.study_accession], expected_paths)
         file_finder._process_gvf_directory.assert_called_once()
         file_finder.deduplicate_files.assert_called_once()
