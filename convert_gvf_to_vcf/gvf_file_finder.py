@@ -10,7 +10,7 @@ from convert_gvf_to_vcf.project_paths import ProjectPaths
 from convert_gvf_to_vcf.utils import get_validated_value
 
 logger = log_cfg.get_logger(__name__)
-class HpcFileFinder:
+class GvfFileFinder:
         """ The responsibility of this class is to traverse the FTP directory to find the correct GVF file paths."""
         def __init__(self, ftp_dir, study_accession):
             self.paths = ProjectPaths()
@@ -154,7 +154,7 @@ def main():
     else:
         log_cfg.add_stdout_handler()
 
-    finder = HpcFileFinder(ftp_dir = args.ftp_dir, study_accession= args.study_accession)
+    finder = GvfFileFinder(ftp_dir = args.ftp_dir, study_accession= args.study_accession)
     gvf_data = finder.scan(args.study_accession)
     print(gvf_data)
     print("complete")
