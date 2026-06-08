@@ -16,35 +16,6 @@ class GvfFileFinder:
         self.paths = ProjectPaths()
         self.search_dir = search_dir
 
-    def _process_gvf_directory(self, all_extensions, current_dir, dirs, files, study_and_files,
-                               study_accession):
-        """ Processes the GVF directory (e.g. /data_dir/estd3_Name_et_al_2008/gvf). Returns the study accession and the GVF files.
-        :params all_extensions: set of file extensions
-        :params current_dir: from os.walk - root
-        :params dirs: from os.walk - subdirectories
-        :params files: from os.walk - files
-        :params study_and_files: dictionary
-        :params target_study_accessions: the study accession restricted to if applicable
-        :return study_and_files: dictionary of lists {study_accession:[list_of_gvf_full_paths]}
-        """
-        parent_dir = os.path.basename(os.path.dirname(current_dir))
-        study_accession_of_folder = parent_dir.split("_")[0]
-        if study_accession:
-            logger.info(
-                f"AFTER restricting target = {len(dirs)} study accessions found in HPC directory: {study_accession_of_folder}")
-        logger.info(f"Found {study_accession_of_folder}: {len(files)} files.")
-        for file in files:
-            logger.info(f"File: {file}")
-            ext = os.path.splitext(file)[1].lower()
-            all_extensions.add(ext)
-        if files and all_extensions != {".gvf"}:
-            logger.warning(f"Files in study accession {study_accession_of_folder} are not all GVFs.")
-            gvf_files = [os.path.join(current_dir, file) for file in files if file.endswith(".gvf")]
-            study_and_files[study_accession_of_folder] = gvf_files
-        else:
-            study_and_files[study_accession_of_folder] = [os.path.join(current_dir, file) for file in files]
-        return study_and_files
-
     def _find_study_dirs(self, study_accession):
         # level 2 of /data_dir/estd3_Name_et_al_2008/gvf
         return [
