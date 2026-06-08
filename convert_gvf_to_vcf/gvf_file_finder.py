@@ -80,7 +80,8 @@ class GvfFileFinder:
             study_and_unique_files[study_accession] = unique_files
         return study_and_unique_files
 
-    def get_md5(self, file_path):
+    @staticmethod
+    def get_md5(file_path):
         """Gets md5 of a file path
         :params: file_path: gvf file
         :returns: md5
