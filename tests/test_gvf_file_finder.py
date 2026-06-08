@@ -9,9 +9,8 @@ from convert_gvf_to_vcf.project_paths import ProjectPaths
 class TestGvfFileFinder(unittest.TestCase):
     def setUp(self):
         self.paths = ProjectPaths()
-        self.top_dir = os.path.join(self.paths.test_dir, "hpc_dir")
+        self.top_dir = os.path.join(self.paths.test_dir, "data_dir")
         self.current_dir = os.path.join(self.top_dir, "estd1_Redon_et_al_2006", "gvf")
-        self.hpc_dir = self.current_dir
         self.study_accession = "estd1"
 
     def test_process_gvf_directory(self):
