@@ -17,7 +17,10 @@ class GvfFileFinder:
         self.search_dir = search_dir
 
     def _find_study_dirs(self, study_accession):
-        # level 2 of /data_dir/estd3_Name_et_al_2008/gvf
+        """ Gathers a list of study directories. This corresponds to level 2 of the structure: /data_dir/estd3_Name_et_al_2008/gvf
+        :param: study_accession
+        :return: list of study directories e.g. ['estd1_Redon_et_al_2006', 'estd3_Wang_et_al_2008']
+        """
         return [
             d for d in sorted(os.listdir(self.search_dir))
             if os.path.isdir(os.path.join(self.search_dir, d))
@@ -27,7 +30,10 @@ class GvfFileFinder:
         ]
 
     def _collect_gvf_files(self, gvf_dir):
-        # level 3 of /data_dir/estd3_Name_et_al_2008/gvf
+        """Gathers a list of GVF files. This corresponds with level 3 of /data_dir/estd3_Name_et_al_2008/gvf
+        :param: gvf_dir: full path to GVF file
+        :return: list of full paths to GVF files
+        """
         all_files = [f for f in os.listdir(gvf_dir) if os.path.isfile(os.path.join(gvf_dir, f))]
         non_gvf = [f for f in all_files if os.path.splitext(f)[1].lower() != ".gvf"]
         if non_gvf:
@@ -35,7 +41,11 @@ class GvfFileFinder:
         return [os.path.join(gvf_dir, f) for f in all_files if os.path.splitext(f)[1].lower() == ".gvf"]
 
     def scan(self, study_accession=None):
-    # level 1 of /data_dir/estd3_Name_et_al_2008/gvf
+        """Scans a directory and returns a dictionary of the {study_accession: [gvf_files]}
+        This corresponds to level 1 of /data_dir/estd3_Name_et_al_2008/gvf
+        :params: study_accession if applicable
+        :return: dictionary of the {study_accession: [gvf_files]}
+        """
         if study_accession:
             logger.info(f"Target study accession set to: {study_accession}")
         study_dirs = self._find_study_dirs(study_accession)
