@@ -35,9 +35,9 @@ class GvfFileFinder:
         :return: list of full paths to GVF files
         """
         all_files = [f for f in os.listdir(gvf_dir) if os.path.isfile(os.path.join(gvf_dir, f))]
-        non_gvf = [f for f in all_files if os.path.splitext(f)[1].lower() != ".gvf"]
-        if non_gvf:
-            logger.warning(f"Non-GVF files found in {gvf_dir}: {non_gvf}")
+        non_raw_gvf = [f for f in all_files if os.path.splitext(f)[1].lower() != ".gvf"]
+        if non_raw_gvf:
+            logger.warning(f"Non-GVF files found in {gvf_dir}: {non_raw_gvf}")
         return [os.path.join(gvf_dir, f) for f in all_files if os.path.splitext(f)[1].lower() == ".gvf"]
 
     def scan(self, study_accession=None):
