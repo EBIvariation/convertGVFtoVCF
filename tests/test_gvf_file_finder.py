@@ -52,6 +52,7 @@ class TestGvfFileFinder(unittest.TestCase):
         mock_listdir.return_value = [
             'file1.gvf',
             'file2.GVF',
+            'file3.gvf.gz',
             'readme.txt',
             'image.png'
         ]
