@@ -4,8 +4,8 @@ import json
 from collections import defaultdict
 
 
-from gather_metadata import gather_metadata_workflow, eva_update_metadata_with_vcf
-from convertGVFtoVCF import convert, ProjectPaths
+from convert_gvf_to_vcf.gather_metadata import gather_metadata_workflow, eva_update_metadata_with_vcf
+from convert_gvf_to_vcf.convertGVFtoVCF import convert, ProjectPaths
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 logger = log_cfg.get_logger(__name__)
 
@@ -42,7 +42,7 @@ class GvfMetadataCoordinator:
     def _process_multiple_gvf_files(self, gvf_files, study_accession):
         """Process if multiple gvf files are present.
         :params: gvf_files = list of gvf files
-        :params: study_accession e.g estd1
+        :params: study_accession e.g. estd1
         """
         logger.info(f"More than one GVF file found for {study_accession}. Separating by assembly.")
         # separate files by assembly {"GRCh37": [gvf_file_paths], "GRCh38": [gvf_file_paths]})
@@ -67,7 +67,6 @@ class GvfMetadataCoordinator:
                 self._determine_same_and_reconfigure_json(remapped_files, json_eva, eva_retriever)
             # TODO: check the resolution of GVF
             for individual_gvf in files_in_assembly:
-                # Build unique VCF names based on the file name to avoid overwriting files
                 base_name = os.path.basename(individual_gvf).replace(".gvf", "")
                 individual_vcf_output = os.path.join(self.base_output_dir, f"{base_name}.vcf")
                 convert(
