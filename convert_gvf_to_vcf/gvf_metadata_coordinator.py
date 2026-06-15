@@ -5,7 +5,7 @@ from collections import defaultdict
 
 
 from convert_gvf_to_vcf.gather_metadata import gather_metadata_workflow, eva_update_metadata_with_vcf
-from convert_gvf_to_vcf.convertGVFtoVCF import convert, ProjectPaths
+from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import convert, ProjectPaths
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 logger = log_cfg.get_logger(__name__)
 
@@ -28,11 +28,7 @@ class GvfMetadataCoordinator:
                 self._process_no_gvf_files(empty_studies_log, study_accession)
                 continue
             # one file in list of GVFs
-            if len(gvf_files) == 1:
-                self._process_single_gvf_file(gvf_files, study_accession)
-                continue
-            # multiple gvf files
-            elif len(gvf_files) > 1:
+            elif len(gvf_files) >= 1:
                 self._process_multiple_gvf_files(gvf_files, study_accession)
                 continue
             else:
@@ -44,27 +40,26 @@ class GvfMetadataCoordinator:
         :params: gvf_files = list of gvf files
         :params: study_accession e.g. estd1
         """
-        logger.info(f"More than one GVF file found for {study_accession}. Separating by assembly.")
+        logger.info(f"GVF file(s) found for {study_accession}. Separating by assembly.")
         # separate files by assembly {"GRCh37": [gvf_file_paths], "GRCh38": [gvf_file_paths]})
         assembly_groups = defaultdict(list)
         for gvf_file in gvf_files:
-            file_name = os.path.basename(gvf_file)
-            file_assembly = file_name.split(".")[2]
-            assembly_groups[file_assembly].append(gvf_file)
+            assembly_of_file = self.extract_assembly_name(gvf_file)
+            assembly_groups[assembly_of_file].append(gvf_file)
         for assembly_name, files_in_assembly in assembly_groups.items():
             assembly_path, assembly_report_path, json_dgva, json_eva, vcf_output = self.set_up_inputs_and_outputs(
                 assembly_name,
                 study_accession)
-            (eva_retriever, dgva_retriever, submitted_files, remapped_files) \
-                = self.retrieve_metadata(json_eva, json_dgva, study_accession, assembly_path, assembly_report_path,
-                                         files_in_assembly)
+            eva_retriever, dgva_retriever = self.retrieve_metadata(json_eva, json_dgva, study_accession, assembly_path, assembly_report_path)
+            if files_in_assembly:
+                remapped_files, submitted_files = self.check_files(files_in_assembly)
             # for those with multiple submitted files, reconfigure the JSON
             if len(submitted_files) > 1:
                 self._determine_same_and_reconfigure_json(study_accession, submitted_files, json_eva, eva_retriever)
 
             # for those with multiple submitted files, reconfigure the JSON
             if len(remapped_files) > 1:
-                self._determine_same_and_reconfigure_json(remapped_files, json_eva, eva_retriever)
+                self._determine_same_and_reconfigure_json(study_accession, remapped_files, json_eva, eva_retriever)
             # TODO: check the resolution of GVF
             for individual_gvf in files_in_assembly:
                 base_name = os.path.basename(individual_gvf).replace(".gvf", "")
@@ -82,23 +77,21 @@ class GvfMetadataCoordinator:
                         vcf_output=individual_vcf_output
                     )
 
-    def _process_single_gvf_file(self, gvf_files, study_accession):
-        """Process if a single gvf files is present- get metadata as normal.
-        :params: gvf_files = list of gvf files
-        :params: study_accession e.g estd1
+    def extract_assembly_name(self, gvf_file):
+        """Extracts the assembly name from the GVF file.
+        Expects GVF file format to be: {estd1_Redon_et_al_2006}.{YYYY-MM-DD}.{Assembly}.{Submitted/Remapped}.gvf
+        :params: gvf_file
+        :return: name of assembly e.g. GRCh37
         """
-        logger.info(f"One GVF file found for {study_accession}")
-        gvf_file = gvf_files[0]
-        assembly_name = gvf_file.split(".")[2]
-        assembly_path, assembly_report_path, json_dgva, json_eva, vcf_output = self.set_up_inputs_and_outputs(
-            assembly_name,
-            study_accession)
-        eva_retriever, dgva_retriever = self.retrieve_metadata(study_accession, assembly_name)
-        # convert GVF to VCF
-        convert(gvf_input=gvf_file, vcf_output=vcf_output, assembly=assembly_path, paths=self.project_paths)
-        # add VCF details to the JSON file post-conversion
-        if eva_retriever:
-            eva_update_metadata_with_vcf(eva_retriever=eva_retriever, json_eva=json_eva, vcf_output=vcf_output)
+        if not gvf_file:
+            return None
+        file_name = os.path.basename(gvf_file)
+        parts = [part for part in file_name.split(".") if part]
+        if len(parts) < 4 or parts[-1].lower() != "gvf":
+            print(f"Warning: Skipping invalid GVF file name structure: {file_name}")
+            return None
+        file_assembly = parts[2]
+        return file_assembly
 
     def _process_no_gvf_files(self, empty_studies_log, study_accession):
         """Process if no gvf files are present - logging.
@@ -208,9 +201,9 @@ class GvfMetadataCoordinator:
             multiple_files.append(file_block)
         return multiple_analyses, multiple_files, new_analysis_aliases
 
-    def retrieve_metadata(self, json_eva, json_dgva, study_accession, assembly_path, assembly_report_path, files_in_assembly = None):
+    def retrieve_metadata(self, json_eva, json_dgva, study_accession, assembly_path, assembly_report_path):
         """Retrieves metadata and if applicable, returns list of submitted and remapped files
-        :params  json_eva, json_dgva, study_accession, assembly_path, assembly_report_path, files_in_assembly = None
+        :params  json_eva, json_dgva, study_accession, assembly_path, assembly_report_path
         :returns eva_retriever, dgva_retriever or eva_retriever, dgva_retriever, submitted_files, remapped_files
         """
         # fetch the metadata
@@ -222,13 +215,13 @@ class GvfMetadataCoordinator:
             assembly=assembly_path,
             assembly_report=assembly_report_path
         )
-        if files_in_assembly:
-            # for each assembly version, check if multiple submitted files
-            submitted_files = [f for f in files_in_assembly if "Submitted" in os.path.basename(f)]
-            remapped_files = [f for f in files_in_assembly if "Remapped" in os.path.basename(f)]
-            return eva_retriever, dgva_retriever, submitted_files, remapped_files
-        else:
-            return eva_retriever, dgva_retriever
+        return eva_retriever, dgva_retriever
+
+    def check_files(self, files_in_assembly):
+        # for each assembly version, check if multiple submitted files
+        submitted_files = [f for f in files_in_assembly if "Submitted" in os.path.basename(f)]
+        remapped_files = [f for f in files_in_assembly if "Remapped" in os.path.basename(f)]
+        return remapped_files, submitted_files
 
     def set_up_inputs_and_outputs(self, assembly_name, study_accession):
         """Programmatically sets up input and output paths.
