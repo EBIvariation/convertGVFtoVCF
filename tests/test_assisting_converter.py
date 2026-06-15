@@ -1,10 +1,10 @@
 import os
 import unittest
 
-from convert_gvf_to_vcf.assistingconverter import get_gvf_attributes, generate_custom_structured_meta_line, \
+from convert_gvf_to_vcf.assisting_converter import get_gvf_attributes, generate_custom_structured_meta_line, \
     convert_gvf_attributes_to_vcf_values
 from convert_gvf_to_vcf.lookup import Lookup
-from convert_gvf_to_vcf.projectpaths import ProjectPaths
+from convert_gvf_to_vcf.project_paths import ProjectPaths
 
 
 class TestAssistingConverter(unittest.TestCase):
