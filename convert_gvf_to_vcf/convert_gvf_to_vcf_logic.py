@@ -264,8 +264,8 @@ def convert(gvf_input, vcf_output, assembly, paths):
     if assembly:
         logger.info(f"The provided assembly file is: {assembly}")
     assembly_file = os.path.abspath(assembly)
-    assert os.path.isfile(assembly_file), "Assembly file does not exist"
-    assert os.path.isfile(gvf_input), "GVF file does not exist"
+    assert os.path.isfile(assembly_file), f"Assembly file does not exist: {assembly_file}"
+    assert os.path.isfile(gvf_input), f"GVF file does not exist {gvf_input}"
 
 
     # Creating lookup object to store important dictionaries and log what has been stored.
@@ -280,7 +280,8 @@ def convert(gvf_input, vcf_output, assembly, paths):
         # Read input file and separate out its components
         logger.info(f"Reading in the following GVF header from {gvf_input}")
         gvf_pragmas, gvf_pragma_comments = read_in_gvf_header(gvf_input)
-
+        gvf_filename_only = os.path.basename(gvf_input)
+        gvf_file_base, _ = os.path.splitext(gvf_filename_only)
         # Preparation work:
         # Store the VCF metainformation and ensure preservation of important GVF data.
         # This information will be useful when creating the VCF header.
@@ -307,6 +308,7 @@ def convert(gvf_input, vcf_output, assembly, paths):
             chrom_vcf_lines = []
             current_chrom = None
             has_any_features = False
+            logger.info(f"Reading in: {gvf_input}")
             for gvf_entry in read_in_gvf_data(gvf_input):
                 # record GVF counts
                 report.gvf_feature_line_count += 1
@@ -342,7 +344,7 @@ def convert(gvf_input, vcf_output, assembly, paths):
 
         logger.info("Printing the summary of conversion report.")
         vcf_output_directory = os.path.dirname(vcf_output)
-        stats_summary_file = os.path.join(vcf_output_directory, "summary_stats.txt")
+        stats_summary_file = os.path.join(vcf_output_directory, f"{gvf_file_base}.gvf.stats.txt")
         report.print_report(stats_summary_file)
 
         logger.info("GVF to VCF conversion complete")

@@ -1,1 +1,19 @@
-d
+##gff-version 3
+##gvf-version 1.06
+##species http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##file-date 2014-04-01
+##genome-build NCBI GRCh37.p13
+#Study_accession: estd3
+#Study_type: Control Set
+#Display_name: Wang_et_al_2008
+#Publication: PMID=18987735;Journal=Nature;Paper_title=The diploid genome sequence of an Asian individual.;Publication_year=2008
+#Study: First_author=Jun Wang;Description=Here we present the first diploid genome sequence of an Asian individual. The genome was sequenced to 36-fold average coverage using massively parallel sequencing technology. We aligned the short reads onto the NCBI human reference genome to 99.97% coverage, and guided by the reference genome, we used uniquely mapped reads to assemble a high-quality consensus sequence for 92% of the Asian individual's genome. We identified approximately 3 million single-nucleotide polymorphisms (SNPs) inside this region, of which 13.6% were not in the dbSNP database. Genotyping analysis showed that SNP identification had high accuracy and consistency, indicating the high sequence quality of this assembly. We also carried out heterozygote phasing and haplotype prediction against HapMap CHB and JPT haplotypes (Chinese and Japanese, respectively), sequence comparison with the two available individual genomes (J. D. Watson and J. C. Venter), and structural variation identification. These variations were considered for their potential biological impact. Our sequence data and analyses demonstrate the potential usefulness of next-generation sequencing technologies for personal genomics.
+#Assembly_name: GRCh37.p13
+#subject: subject_name=YH;sex=Male;population=Han Chinese
+#sample: sample_name=YH;cell_type=Blood
+1	DGVa	complex_structural_alteration	56355	127561	.	+	.	ID=3207;Name=essv27844;Alias=2573;variant_call_so_id=SO:0001784;parent=esv5403;Start_range=56355,.;End_range=.,127561;submitter_variant_call_id=2573;sample_name=YH;remap_score=1.09388;Variant_seq=.
+1	DGVa	copy_number_variation	56355	127561	.	+	.	ID=3208;Name=esv5403;Alias=1195;variant_region_so_id=SO:0001019;Start_range=56355,.;End_range=.,127561;submitter_variant_region_id=1195;remap_score=1.09388;assertion_method=Not Recorded;Variant_seq=.
+1	DGVa	sequence_alteration	127592	215614	.	+	.	ID=3213;Name=essv25796;Alias=1838;variant_call_so_id=SO:0001059;parent=esv3355;Start_range=127592,.;End_range=.,215614;submitter_variant_call_id=1838;sample_name=YH;remap_score=.99991;Variant_seq=.
+1	DGVa	sequence_alteration	127592	215614	.	+	.	ID=3214;Name=esv3355;Alias=1681;variant_region_so_id=SO:0001059;Start_range=127592,.;End_range=.,215614;submitter_variant_region_id=1681;remap_score=.99991;assertion_method=Not Recorded;Variant_seq=.
+1	DGVa	complex_structural_alteration	213827	456096	.	+	.	ID=3219;Name=essv27210;Alias=1834;variant_call_so_id=SO:0001784;parent=esv4769;Start_range=213827,.;End_range=.,456096;submitter_variant_call_id=1834;sample_name=YH;remap_score=1;Variant_seq=.
+1	DGVa	copy_number_variation	213827	456096	.	+	.	ID=3220;Name=esv4769;Alias=567;variant_region_so_id=SO:0001019;Start_range=213827,.;End_range=.,456096;submitter_variant_region_id=567;remap_score=1;assertion_method=Not Recorded;Variant_seq=.

@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 import hashlib
 import os
 
@@ -6,6 +7,7 @@ import os
 from ebi_eva_common_pyutils.config import cfg
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
+from convert_gvf_to_vcf.gvf_metadata_coordinator import GvfMetadataCoordinator
 from convert_gvf_to_vcf.project_paths import ProjectPaths
 from convert_gvf_to_vcf.utils import get_validated_value
 
@@ -111,7 +113,11 @@ def main():
     parser.add_argument("--search_dir", required=True, help="Directory to search i.e. FTP dir.")
     parser.add_argument("--log", required=True, help="Path to log")
     parser.add_argument("--study_accession", help="Study accession.")
-
+    #########################################
+    # for gvf file co ordination only
+    parser.add_argument("--output", help="Output to gvf file coordination")
+    parser.add_argument("--config", help="Config")
+    #########################################
     args = parser.parse_args()
 
     # Set up logging functionality
@@ -125,7 +131,14 @@ def main():
     logger.info(f"Total number of GVF files: {sum(len(files) for files in gvf_data.values())}")
     logger.info(f"Searching for GVF files complete: {args.search_dir}")
 
-
+    #########################################
+    # for gvf file co ordination only
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    output_dir = os.path.join(args.output, timestamp)
+    os.makedirs(output_dir, exist_ok=True)
+    GvfMetadataCoordinator(gvf_data, output_dir, args.config).process_studies()
+    #TODO: count studies stats and top dir stats
+    #########################################
 
 if __name__ == "__main__":
     main()

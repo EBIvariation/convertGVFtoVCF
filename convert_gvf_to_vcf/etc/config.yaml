@@ -6,6 +6,14 @@ paths:
   test_folder: "../tests"
 # external paths
 assembly_paths:
-  GRCh37: ""
+  GRCh37: "tests/input/human.fa"
+  GRCh37.p13: "tests/input/human.fa"
+  GRCh38: "tests/input/human.fa"
+  NCBI35: "tests/input/human.fa"
+  NCBI36: "tests/input/human.fa"
 assembly_report_paths:
   GRCh37: ""
+  GRCh37.p13: ""
+  GRCh38: ""
+  NCBI35: ""
+  NCBI36: ""
