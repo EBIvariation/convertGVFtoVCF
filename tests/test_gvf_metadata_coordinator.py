@@ -1,16 +1,12 @@
-import os.path
 import json
-import tempfile
+import os.path
+import shutil
 import unittest
-from unittest.mock import patch, MagicMock, PropertyMock, mock_open
+from unittest.mock import patch, MagicMock, mock_open
 
-from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import convert
-from convert_gvf_to_vcf.project_paths import ProjectPaths
-from convert_gvf_to_vcf.gather_metadata import (
-    eva_update_metadata_with_vcf,
-    gather_metadata_workflow,
-)
 from convert_gvf_to_vcf.gvf_metadata_coordinator import GvfMetadataCoordinator
+from convert_gvf_to_vcf.project_paths import ProjectPaths
+
 
 class TestGvfMetadataCoordinator(unittest.TestCase):
     def setUp(self):
@@ -20,6 +16,10 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         self.etc_folder = self.paths.etc_dir
         self.output_dir = os.path.join(self.test_dir, "output", "gvf_metadata_coord")
         os.makedirs(self.output_dir, exist_ok=True)
+
+    def tearDown(self):
+        if os.path.exists(self.output_dir):
+            shutil.rmtree(self.output_dir)
 
     @patch('convert_gvf_to_vcf.gvf_metadata_coordinator.logger')
     def test_process_studies(self, mock_logger):
@@ -107,7 +107,6 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
 
     def test_process_single_assembly(self):
         coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
-
         study_name = "estd1_Redon_et_al_2006"
         date = "2014-04-01"
         files_in_assembly = [f"{study_name}.{date}.GRCh37.Remapped.gvf",
@@ -116,7 +115,6 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         ]
         assembly_name = "GRCh38"
         study_accession = "estd1"
-
         gvf_name_groups = {
             files_in_assembly[0]: (study_name, date, assembly_name)
         }
@@ -296,5 +294,6 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
 
         self.assertEqual(multiple_files[1]["analysisAlias"], "study1_alias_file_2")
         self.assertEqual(multiple_files[1]["fileName"], f"{study_name}.{date_2}.GRCh38.Remapped.gvf")
+
 if __name__ == '__main__':
     unittest.main()
