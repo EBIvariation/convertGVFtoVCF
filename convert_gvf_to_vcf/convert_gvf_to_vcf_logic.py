@@ -261,12 +261,17 @@ def convert(gvf_input, vcf_output, assembly, paths):
     logger.info(f"The provided input file is: {gvf_input}")
     logger.info(f"The provided output file is: {vcf_output}")
 
-    if assembly:
-        logger.info(f"The provided assembly file is: {assembly}")
-    assembly_file = os.path.abspath(assembly)
+    assert assembly, "An assembly argument must be provided"
+    logger.info(f"The provided assembly file is: {assembly}")
+    if hasattr(paths, 'get_assembly_path'):
+        assembly_file = paths.get_assembly_path(assembly)
+    else:
+        # find project directory (2 levels up)
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # full path
+        assembly_file = os.path.normpath(os.path.abspath(os.path.join(base_dir, assembly)))
     assert os.path.isfile(assembly_file), f"Assembly file does not exist: {assembly_file}"
     assert os.path.isfile(gvf_input), f"GVF file does not exist {gvf_input}"
-
 
     # Creating lookup object to store important dictionaries and log what has been stored.
     reference_lookup = Lookup(assembly_file, paths)
@@ -277,7 +282,7 @@ def convert(gvf_input, vcf_output, assembly, paths):
         logger.info(f"Storing the assembly file: {assembly_file}")
         logger.info("Storing the IUPAC ambiguity dictionary.")
 
-        # Read input file and separate out its components
+        # Read tests file and separate out its components
         logger.info(f"Reading in the following GVF header from {gvf_input}")
         gvf_pragmas, gvf_pragma_comments = read_in_gvf_header(gvf_input)
         gvf_filename_only = os.path.basename(gvf_input)
@@ -400,7 +405,7 @@ def cleanup_temp_files(list_of_temp_files):
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("gvf_input", help="GVF input file.")
+    parser.add_argument("gvf_input", help="GVF tests file.")
     parser.add_argument("vcf_output", help="VCF output file.")
     parser.add_argument("--json_output_eva", help="EVA JSON output")
     parser.add_argument("--json_output_dgva", help="DGVa JSON output")
