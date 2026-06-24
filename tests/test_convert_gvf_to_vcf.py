@@ -178,7 +178,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert gvf_features[0] == "chromosome1	DGVa	copy_number_loss	1	2	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."
         # check statistics file exists and what is inside it
         vcf_output_directory = os.path.join(self.tests_folder, "input")
-        stats_file = os.path.join(vcf_output_directory, "summary_stats.txt")
+        gvf_filename_only = os.path.basename(self.input_file)
+        gvf_file_base, _ = os.path.splitext(gvf_filename_only)
+        stats_file = os.path.join(vcf_output_directory, f"{gvf_file_base}.gvf.stats.txt")
+
         assert os.path.exists(stats_file) == True
         stats_lines = []
         with open(stats_file, 'r') as file:

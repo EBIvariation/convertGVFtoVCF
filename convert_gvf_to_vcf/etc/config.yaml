@@ -4,3 +4,16 @@ paths:
   eva_schema_file: "etc/eva_schema.json"
   dgva_schema_file: "etc/dgva_schema.json"
   test_folder: "../tests"
+# external paths
+assembly_paths:
+  GRCh37: "tests/input/human.fa"
+  GRCh37.p13: "tests/input/human.fa"
+  GRCh38: "tests/input/human.fa"
+  NCBI35: "tests/input/human.fa"
+  NCBI36: "tests/input/human.fa"
+assembly_report_paths:
+  GRCh37: ""
+  GRCh37.p13: ""
+  GRCh38: ""
+  NCBI35: ""
+  NCBI36: ""

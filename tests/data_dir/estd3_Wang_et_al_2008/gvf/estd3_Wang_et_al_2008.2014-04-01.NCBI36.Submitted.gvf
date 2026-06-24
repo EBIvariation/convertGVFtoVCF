@@ -1,1 +1,30 @@
-a
+##gff-version 3
+##gvf-version 1.06
+##species http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##file-date 2014-04-01
+##genome-build NCBI NCBI36
+#Study_accession: estd3
+#Study_type: Control Set
+#Display_name: Wang_et_al_2008
+#Publication: PMID=18987735;Journal=Nature;Paper_title=The diploid genome sequence of an Asian individual.;Publication_year=2008
+#Study: First_author=Jun Wang;Description=Here we present the first diploid genome sequence of an Asian individual. The genome was sequenced to 36-fold average coverage using massively parallel sequencing technology. We aligned the short reads onto the NCBI human reference genome to 99.97% coverage, and guided by the reference genome, we used uniquely mapped reads to assemble a high-quality consensus sequence for 92% of the Asian individual's genome. We identified approximately 3 million single-nucleotide polymorphisms (SNPs) inside this region, of which 13.6% were not in the dbSNP database. Genotyping analysis showed that SNP identification had high accuracy and consistency, indicating the high sequence quality of this assembly. We also carried out heterozygote phasing and haplotype prediction against HapMap CHB and JPT haplotypes (Chinese and Japanese, respectively), sequence comparison with the two available individual genomes (J. D. Watson and J. C. Venter), and structural variation identification. These variations were considered for their potential biological impact. Our sequence data and analyses demonstrate the potential usefulness of next-generation sequencing technologies for personal genomics.
+#Assembly_name: NCBI36
+#subject: subject_name=YH;sex=Male;population=Han Chinese
+#sample: sample_name=YH;cell_type=Blood
+1	DGVa	copy_number_loss	953701	954430	.	+	.	ID=1;Name=essv26856;Alias=851;variant_call_so_id=SO:0001743;parent=esv4415;Start_range=953701,.;End_range=.,954430;submitter_variant_call_id=851;sample_name=YH;Variant_seq=.
+1	DGVa	copy_number_variation	953701	954430	.	+	.	ID=2;Name=esv4415;Alias=1085;variant_region_so_id=SO:0001019;Start_range=953701,.;End_range=.,954430;submitter_variant_region_id=1085;assertion_method=Not Recorded;Variant_seq=.
+1	DGVa	copy_number_loss	1173061	1173724	.	+	.	ID=7;Name=essv27718;Alias=1871;variant_call_so_id=SO:0001743;parent=esv5277;Start_range=1173061,.;End_range=.,1173724;submitter_variant_call_id=1871;sample_name=YH;Variant_seq=.
+1	DGVa	copy_number_variation	1173061	1173724	.	+	.	ID=8;Name=esv5277;Alias=92;variant_region_so_id=SO:0001019;Start_range=1173061,.;End_range=.,1173724;submitter_variant_region_id=92;assertion_method=Not Recorded;Variant_seq=.
+1	DGVa	copy_number_loss	1222311	1223087	.	+	.	ID=11;Name=essv25491;Alias=2390;variant_call_so_id=SO:0001743;parent=esv3050;Start_range=1222311,.;End_range=.,1223087;submitter_variant_call_id=2390;sample_name=YH;Variant_seq=.
+1	DGVa	copy_number_variation	1222311	1223087	.	+	.	ID=12;Name=esv3050;Alias=366;variant_region_so_id=SO:0001019;Start_range=1222311,.;End_range=.,1223087;submitter_variant_region_id=366;assertion_method=Not Recorded;Variant_seq=.
+1	DGVa	copy_number_loss	1292241	1292688	.	+	.	ID=17;Name=essv26261;Alias=433;variant_call_so_id=SO:0001743;parent=esv3820;Start_range=1292241,.;End_range=.,1292688;submitter_variant_call_id=433;sample_name=YH;Variant_seq=.
+1	DGVa	copy_number_variation	1292241	1292688	.	+	.	ID=18;Name=esv3820;Alias=1701;variant_region_so_id=SO:0001019;Start_range=1292241,.;End_range=.,1292688;submitter_variant_region_id=1701;assertion_method=Not Recorded;Variant_seq=.
+1	DGVa	copy_number_loss	1856164	1857032	.	+	.	ID=25;Name=essv27862;Alias=1073;variant_call_so_id=SO:0001743;parent=esv5421;Start_range=1856164,.;End_range=.,1857032;submitter_variant_call_id=1073;sample_name=YH;Variant_seq=.
+1	DGVa	copy_number_variation	1856164	1857032	.	+	.	ID=26;Name=esv5421;Alias=2100;variant_region_so_id=SO:0001019;Start_range=1856164,.;End_range=.,1857032;submitter_variant_region_id=2100;assertion_method=Not Recorded;Variant_seq=.
+1	DGVa	copy_number_variation	2027516	2028082	.	+	.	ID=31;Name=esv4759;Alias=1878;variant_region_so_id=SO:0001019;Start_range=2027516,.;End_range=.,2028082;submitter_variant_region_id=1878;assertion_method=Not Recorded;Variant_seq=.
+1	DGVa	copy_number_loss	2027516	2028082	.	+	.	ID=32;Name=essv27200;Alias=1593;variant_call_so_id=SO:0001743;parent=esv4759;Start_range=2027516,.;End_range=.,2028082;submitter_variant_call_id=1593;sample_name=YH;Variant_seq=.
+1	DGVa	copy_number_loss	2043376	2045793	.	+	.	ID=35;Name=essv27282;Alias=1237;variant_call_so_id=SO:0001743;parent=esv4841;Start_range=2043376,.;End_range=.,2045793;submitter_variant_call_id=1237;sample_name=YH;Variant_seq=.
+1	DGVa	copy_number_variation	2043376	2045793	.	+	.	ID=36;Name=esv4841;Alias=211;variant_region_so_id=SO:0001019;Start_range=2043376,.;End_range=.,2045793;submitter_variant_region_id=211;assertion_method=Not Recorded;Variant_seq=.
+1	DGVa	copy_number_loss	2063591	2063822	.	+	.	ID=39;Name=essv26735;Alias=2467;variant_call_so_id=SO:0001743;parent=esv4294;Start_range=2063591,.;End_range=.,2063822;submitter_variant_call_id=2467;sample_name=YH;Variant_seq=.
+1	DGVa	copy_number_variation	2063591	2063822	.	+	.	ID=40;Name=esv4294;Alias=2;variant_region_so_id=SO:0001019;Start_range=2063591,.;End_range=.,2063822;submitter_variant_region_id=2;assertion_method=Not Recorded;Variant_seq=.
+1	DGVa	copy_number_loss	2866419	2866691	.	+	.	ID=49;Name=essv25550;Alias=986;variant_call_so_id=SO:0001743;parent=esv3109;Start_range=2866419,.;End_range=.,2866691;submitter_variant_call_id=986;sample_name=YH;Variant_seq=.
