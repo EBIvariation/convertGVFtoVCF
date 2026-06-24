@@ -1,5 +1,5 @@
 """
-This is contains functions to assist the conversion of gvf attributes
+This contains functions to assist the conversion of gvf attributes
 """
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
@@ -63,35 +63,69 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     :param all_possible_lines_dictionary: all possible VCF header lines
     :return gvf_attribute_dictionary, vcf_info_values, vcf_format_values: dict of GVF attributes and VCF values.
     """
+    # parse GVF attributes
     gvf_attribute_dictionary = get_gvf_attributes(column9_of_gvf)
+    # create dictionaries to store INFO and FORMAT values
     vcf_info_values = {} # key is info field value; value is value
     vcf_format_values = {} # key is format field value; value is value
+    # create list to track unmapped attributes that do not belong in mapping_attribute_dict
     dropped_gvf_attributes = []
     for attrib_key, attrib_value in gvf_attribute_dictionary.items():
+        # determine if this found in the mapping rules
         if attrib_key in mapping_attribute_dict:
             field_values = mapping_attribute_dict[attrib_key]
+            # determine if this is found in the INFO or FORMAT COLUMN
             for field in field_values:
                 if field == "INFO":
-                    header = generate_custom_structured_meta_line(
-                        field=field,
-                        idkey=field_values[field]["FieldKey"],
-                        number=field_values[field]["Number"],
-                        data_type=field_values[field]["Type"],
-                        description=field_values[field]["Description"],
-                        optional_data=None
-                    )
-                    field_lines_dictionary[field].append(header)
-                    vcf_info_values[field_values[field]["FieldKey"]] = gvf_attribute_dictionary[attrib_key]
+                    process_vcf_info_field(attrib_key, field, field_lines_dictionary, field_values,
+                                           gvf_attribute_dictionary, vcf_info_values)
                 elif field == "FORMAT":
-                    field_lines_dictionary[field].append(all_possible_lines_dictionary[field][field_values[field]["FieldKey"]])
-                    sample_name = gvf_attribute_dictionary.get("sample_name")
-                    if sample_name in vcf_format_values:
-                        vcf_format_values[sample_name].update({field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]})
-                    else:
-                        vcf_format_values[sample_name] = {field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]}
+                    process_vcf_format_field(all_possible_lines_dictionary, attrib_key, field, field_lines_dictionary,
+                                             field_values, gvf_attribute_dictionary, vcf_format_values)
                 else:
                     logger.warning(f"Unsupported Field: {field}")
         else:
             logger.info(f"catching attribute keys for review at a later date {attrib_key} {attrib_value}")
             dropped_gvf_attributes.append(attrib_key)
     return gvf_attribute_dictionary, vcf_info_values, vcf_format_values
+
+
+def process_vcf_format_field(all_possible_lines_dictionary, attrib_key, field, field_lines_dictionary, field_values,
+                             gvf_attribute_dictionary, vcf_format_values):
+    """Maps GVF attributes to VCF FORMAT fields and stores them in a dictionary
+    :param all_possible_lines_dictionary: a master dictionary of all possible lines
+    :param attrib_key: key to extract value from gvf_attribute_dictionary
+    :param field: current field to be processed
+    :param field_lines_dictionary: dictionary of compiled VCF lines per field (value is list)
+    :param field_values: configuration dictionary (FieldKey, Number, Type, Description) by field
+    :param gvf_attribute_dictionary: parsed attributes from the GVF line
+    :param vcf_format_values: dictionary of sample names to FORMAT field key-value pairs
+    """
+    field_lines_dictionary[field].append(all_possible_lines_dictionary[field][field_values[field]["FieldKey"]])
+    sample_name = gvf_attribute_dictionary.get("sample_name")
+    if sample_name in vcf_format_values:
+        vcf_format_values[sample_name].update({field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]})
+    else:
+        vcf_format_values[sample_name] = {field_values[field]["FieldKey"]: gvf_attribute_dictionary[attrib_key]}
+
+
+def process_vcf_info_field(attrib_key, field, field_lines_dictionary, field_values, gvf_attribute_dictionary,
+                           vcf_info_values):
+    """Maps GVF attributes to VCF INFO field and stores them in a dictionary
+    :param attrib_key: key to extract value from gvf_attribute_dictionary
+    :param field: current field to be processed
+    :param field_lines_dictionary: dictionary of compiled VCF lines per field (value is list)
+    :param field_values: configuration dictionary (FieldKey, Number, Type, Description) by field
+    :param gvf_attribute_dictionary: parsed attributes from the GVF line
+    :param vcf_info_values: dictionary of sample names to INFO field key-value pairs
+    """
+    header = generate_custom_structured_meta_line(
+        field=field,
+        idkey=field_values[field]["FieldKey"],
+        number=field_values[field]["Number"],
+        data_type=field_values[field]["Type"],
+        description=field_values[field]["Description"],
+        optional_data=None
+    )
+    field_lines_dictionary[field].append(header)
+    vcf_info_values[field_values[field]["FieldKey"]] = gvf_attribute_dictionary[attrib_key]

@@ -30,6 +30,7 @@ class ProjectPaths:
     def get_assembly_path(self, assembly_input):
         """ Gets the assembly path
         :params assembly_input: assembly name in config.yaml e.g. GRCh38 or path
+        :return full_path: assembly full path
         """
         if not assembly_input:
             return None

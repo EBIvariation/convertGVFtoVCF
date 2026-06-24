@@ -50,6 +50,11 @@ class VcfLineBuilder:
         self.ordered_list_of_samples = ordered_list_of_samples
 
     def build_vcf_line(self, gvf_feature_line_object):
+        """Converts a GVF feature line object into a standard VCF line object.
+        It translates the GVF attributes and obtains the reference (REF) and alternate (ALT) alleles.
+        :params gvf_feature_line_object: GVF feature line object to be converted
+        :return VcfLine object
+        """
         # Attributes which store important key-values dicts
         (vcf_value_from_gvf_attribute,  # used to populate the VCF fields. This is a dict of non-converted GVF attribute keys and their values.
          vcf_values_for_info,  # a dict that stores INFO key-values to form VCF line. This includes converted GVF attribute keys (+ other SV INFO).
@@ -495,10 +500,15 @@ class VcfLine:
 
     @property
     def format_keys(self):
+        """Collects and orders FORMAT keys across samples
+        :return list of ordered FORMAT keys with GT anchored at the front
+        """
+        # deduplicate format keys
         set_of_format_key = set([format_key
                                  for format_value in self.vcf_values_for_format.values()
                                  for format_key in format_value.keys()
                                  ])
+        # handle empty data
         if len(set_of_format_key) == 0:
             set_of_format_key = set('.')
         return self._order_format_keys(set_of_format_key)  # a list of ordered format keys
@@ -554,7 +564,7 @@ class VcfLine:
     # functions responsible for INFO are below
 
     def fill_merge_dicts(self, merged_info_dict, key, previous_line_info_value, current_line_info_value):
-        """ Logic for merging info dicts
+        """ Logic for merging info dicts. Merges specific INFO field value from two VCF lines into a dictionary.
         :param: merged_info_dict: merged dictionary
         :param: key: key for merged info dict
         :param: previous_line_info_value
