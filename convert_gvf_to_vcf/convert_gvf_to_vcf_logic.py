@@ -323,6 +323,7 @@ def convert(gvf_input, vcf_output, assembly, paths):
         reference_lookup.close()
 
 
+#helper functions for convert
 def stream_gvf_to_vcf_data(gvf_input, report, samples, vcf_builder, vcf_output):
     """Streams GVF rows to VCF
     :param gvf_input: GVF file
@@ -378,7 +379,6 @@ def resolve_assembly_path(assembly, paths):
     return assembly_file
 
 
-#helper functions for convert
 def construct_vcf_output(vcf_header_file, vcf_data_file, vcf_output):
     with open(vcf_output, "w") as vcf_output:
         with open(vcf_header_file, "r") as vcf_header_fh:
@@ -415,7 +415,13 @@ def record_vcf_entry(open_data_lines, previous_vcf_line, report):
     report.vcf_variant_region_SOID.update([previous_vcf_line.info_dict.get("VARREGSOID")])
     report.vcf_variant_call_SOID.update([previous_vcf_line.info_dict.get("VARCALLSOID")])
     report.vcf_sample_number_count.update(previous_vcf_line.order_sample_names)
-    report.vcf_format_counter.update(previous_vcf_line.vcf_values_for_format)
+    # processing format
+    format_data = previous_vcf_line.vcf_values_for_format # e.g. {'sample_name': {'GT': '1/.'}}
+    format_tags = []
+    for sample_key, format_dict_by_sample in format_data.items():
+        if isinstance(format_dict_by_sample, dict):
+            format_tags.extend(format_dict_by_sample.keys())
+    report.vcf_format_counter.update(format_tags)
 
 def cleanup_temp_files(list_of_temp_files):
     for temp_file in list_of_temp_files:
@@ -432,7 +438,7 @@ def main():
     parser.add_argument("--json_output_eva", help="EVA JSON output")
     parser.add_argument("--json_output_dgva", help="DGVa JSON output")
     parser.add_argument("--study_accession", help="DGVa Study Accession")
-    parser.add_argument("-a", "--assembly", help="FASTA assembly file")
+    parser.add_argument("-a", "--assembly", required=True, help="FASTA assembly file")
     parser.add_argument("--log", help="Path to log file")
     parser.add_argument("--config", required=True, help="Path to config file")
     parser.add_argument("--assembly_report", help="Path to assembly report file")

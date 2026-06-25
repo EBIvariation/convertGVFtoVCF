@@ -562,7 +562,6 @@ class VcfLine:
         return '\t'.join(list_of_format_values_per_sample)
 
     # functions responsible for INFO are below
-
     def fill_merge_dicts(self, merged_info_dict, key, previous_line_info_value, current_line_info_value):
         """ Logic for merging info dicts. Merges specific INFO field value from two VCF lines into a dictionary.
         :param: merged_info_dict: merged dictionary

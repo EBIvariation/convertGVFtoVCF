@@ -87,8 +87,42 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
         else:
             logger.info(f"catching attribute keys for review at a later date {attrib_key} {attrib_value}")
             dropped_gvf_attributes.append(attrib_key)
+    vcf_type = determine_vcf_type(vcf_info_values,vcf_format_values)
+    if vcf_type == "SITES-ONLY":
+        infer_genotype(gvf_attribute_dictionary, vcf_format_values)
+    print("vcf_format_values", vcf_format_values)
+
     return gvf_attribute_dictionary, vcf_info_values, vcf_format_values
 
+def infer_genotype(gvf_attribute_dictionary, vcf_format_values):
+    sample_name = gvf_attribute_dictionary.get("sample_name") or "UNKNOWN_SAMPLE"
+    print(sample_name)
+    if sample_name not in vcf_format_values:
+        vcf_format_values[sample_name] = {}
+    if "GT" not in vcf_format_values[sample_name]:
+        vcf_format_values[sample_name]["GT"] = "1/."
+
+
+def determine_vcf_type(vcf_info_values, vcf_format_values):
+    """Determines the type of VCF for the VCF line.
+    Uses INFO and FORMAT values to determine if genotyped, populated or site-only.
+    :param vcf_info_values: dictionary of INFO values
+    :param vcf_format_values: dictionary of FORMAT values
+    """
+    has_genotypes = "GT" in vcf_format_values
+    has_allele_frequencies = "AF" in vcf_info_values
+    has_allele_counts = ("AC" in vcf_info_values) and ("AN" in vcf_info_values)
+    if has_genotypes:
+        return "GENOTYPED"
+    elif has_allele_frequencies and has_allele_counts:
+        return "POPULATED"
+    # if not an EVA-accepted VCF file (see https://www.ebi.ac.uk/eva/?Submit-Data)
+    elif not ( has_genotypes or has_allele_frequencies or has_allele_counts):
+        logger.info("The VCF file has been determined as site-only. This will be converted to genotypes. ")
+        return "SITES-ONLY"
+    else:
+        logger.info("unable to infer the vcf type")
+        return "UNKNOWN"
 
 def process_vcf_format_field(all_possible_lines_dictionary, attrib_key, field, field_lines_dictionary, field_values,
                              gvf_attribute_dictionary, vcf_format_values):
