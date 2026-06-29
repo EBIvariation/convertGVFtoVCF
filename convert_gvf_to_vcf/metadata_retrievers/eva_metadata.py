@@ -239,7 +239,7 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
             "name": sample_id,
             "characteristics": {
                 "organism": [{"text": scientific_name}],
-                "tax_id":[{"text": sample_tax_id}],
+                "taxId":[{"text": sample_tax_id}],
                 "collection date": [{"text": collection_date}],
                 "geographic location (country and/or sea)": [{"text": geographic_location_country_and_or_sea}]
             }
