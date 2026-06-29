@@ -319,7 +319,19 @@ class TestEVAMetadataRetriever(TestCase):
 
         metadata_client = EVAMetadataRetriever(self.config)
         result = metadata_client._get_sample_new("STUDY123", "favourite_sample")
-        expected = {'analysisAlias': ['alias'], 'sampleInVCF': 'favourite_sample', 'bioSampleObject': {'sample_title': 'favourite_sample', 'scientific_name': 'homo sapiens', 'tax_id': 9606, 'collection date': 'not provided', 'geographic location (country and/or sea)': 'not provided'}}
+        expected = {
+            'analysisAlias': ['alias'],
+            'sampleInVCF': 'favourite_sample',
+            'bioSampleObject': {
+                'name': 'favourite_sample',
+                'characteristics': {
+                    'organism': [{'text': 'homo sapiens'}],
+                    'tax_id': [{'text': '9606'}],
+                    'collection date': [{'text': 'not provided'}],
+                    'geographic location (country and/or sea)': [{'text': 'not provided'}]
+                }
+            }
+        }
         self.assertEqual(result, expected)
 
 
