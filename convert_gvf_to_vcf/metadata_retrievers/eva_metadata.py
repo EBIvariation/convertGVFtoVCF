@@ -236,11 +236,13 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         collection_date = "not provided"
         geographic_location_country_and_or_sea = "not provided"
         biosample_object = {
-            "sample_title": sample_id,
-            "scientific_name": scientific_name,
-            "tax_id": sample_tax_id,
-            "collection date": collection_date,
-            "geographic location (country and/or sea)": geographic_location_country_and_or_sea
+            "name": sample_id,
+            "characteristics": {
+                "organism": [{"text": scientific_name}],
+                "tax_id":[{"text": sample_tax_id}],
+                "collection date": [{"text": collection_date}],
+                "geographic location (country and/or sea)": [{"text": geographic_location_country_and_or_sea}]
+            }
         }
         sample_object = {
             "analysisAlias": sample_analysis_alias_list,
