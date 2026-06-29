@@ -326,7 +326,7 @@ class TestEVAMetadataRetriever(TestCase):
                 'name': 'favourite_sample',
                 'characteristics': {
                     'organism': [{'text': 'homo sapiens'}],
-                    'tax_id': [{'text': '9606'}],
+                    'tax_id': [{'text': 9606}],
                     'collection date': [{'text': 'not provided'}],
                     'geographic location (country and/or sea)': [{'text': 'not provided'}]
                 }
