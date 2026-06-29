@@ -314,7 +314,7 @@ class TestEVAMetadataRetriever(TestCase):
     @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_sample_analysis_alias_list")
     def test__get_sample_new(self, mock_alias_list, mock_tax_id, mock_scientific_name):
         mock_alias_list.return_value = ["alias"]
-        mock_tax_id.return_value = 9606
+        mock_tax_id.return_value = '9606'
         mock_scientific_name.return_value = "homo sapiens"
 
         metadata_client = EVAMetadataRetriever(self.config)
@@ -326,7 +326,7 @@ class TestEVAMetadataRetriever(TestCase):
                 'name': 'favourite_sample',
                 'characteristics': {
                     'organism': [{'text': 'homo sapiens'}],
-                    'tax_id': [{'text': 9606}],
+                    'tax_id': [{'text': '9606'}],
                     'collection date': [{'text': 'not provided'}],
                     'geographic location (country and/or sea)': [{'text': 'not provided'}]
                 }
@@ -395,7 +395,7 @@ class TestEVAMetadataRetriever(TestCase):
         method_types = ["Sequencing"]
         metadata_client = EVAMetadataRetriever(self.config)
         result = metadata_client._determine_analysis_experiment_type(analysis_types, method_types)
-        expected = "whole_genome_sequencing"
+        expected = "Whole genome sequencing"
         self.assertEqual(result, expected)
 
 
