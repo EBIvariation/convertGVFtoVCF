@@ -195,7 +195,6 @@ class VcfLineBuilder:
             info_dict: dict of key-value pairs for INFO field (END, IMPRECISE, CIPOS, CIEND, SVLEN),
             is_imprecise: boolean
         """
-
         # Set up info dictionary
         info_dict = {}
         # Setting up the info keys with None as a default value
@@ -635,12 +634,13 @@ class VcfLine:
             del self.info_dict["CIPOS"]
         if "CIEND" in self.info_dict and self.info_dict.get('CIEND') is None:
             del self.info_dict["CIEND"]
-        #ensure twice as many CIEND values as ALT values
-        number_of_alt_alleles = 0 if self.alt == "." else len(self.alt.split(","))
-        if number_of_alt_alleles > 1:
-            ciend_pattern = self.info_dict["CIEND"]
-            repeated_ciend = [ciend_pattern] * number_of_alt_alleles
-            self.info_dict["CIEND"] = repeated_ciend.join(",")
+
+        # #ensure twice as many CIEND values as ALT values
+        # number_of_alt_alleles = 0 if self.alt == "." else len(self.alt.split(","))
+        # if number_of_alt_alleles and self.info_dict.get("CIEND"):
+        #     ciend_pattern = str(self.info_dict.get("CIEND"))
+        #     repeated_ciend = [ciend_pattern] * number_of_alt_alleles
+        #     self.info_dict["CIEND"] = ",".join(repeated_ciend)
         # Format the string
         info_string = ";".join(f"{key}={value}" if key != "IMPRECISE" else f"{value}" for key,value in self.info_dict.items())
         return info_string
