@@ -635,6 +635,12 @@ class VcfLine:
             del self.info_dict["CIPOS"]
         if "CIEND" in self.info_dict and self.info_dict.get('CIEND') is None:
             del self.info_dict["CIEND"]
+        #ensure twice as many CIEND values as ALT values
+        number_of_alt_alleles = 0 if self.alt == "." else len(self.alt.split(","))
+        if number_of_alt_alleles > 1:
+            ciend_pattern = self.info_dict["CIEND"]
+            repeated_ciend = [ciend_pattern] * number_of_alt_alleles
+            self.info_dict["CIEND"] = repeated_ciend.join(",")
         # Format the string
         info_string = ";".join(f"{key}={value}" if key != "IMPRECISE" else f"{value}" for key,value in self.info_dict.items())
         return info_string
