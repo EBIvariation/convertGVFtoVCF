@@ -351,14 +351,16 @@ def stream_gvf_to_vcf_data(gvf_input, report, samples, vcf_builder, vcf_output):
             current_vcf_line = vcf_builder.build_vcf_line(gvf_entry)
             # is_missing_format_value will only be true if all the format field are missing.
             is_missing_format_value = is_missing_format_value and current_vcf_line.format_keys == ['.']
-            # On chromosome change, flush the vcf_lines for the previous chromosome
+            # On chromosome change, sort then flush the vcf_lines for the previous chromosome
             if current_chrom is not None and current_vcf_line.chrom != current_chrom:
+                chrom_vcf_lines.sort(key=lambda x: int(x.pos))
                 flush_chrom_vcf_lines(chrom_vcf_lines, open_data_lines, samples, report)
                 chrom_vcf_lines = []
             current_chrom = current_vcf_line.chrom
             chrom_vcf_lines.append(current_vcf_line)
-        # Flush the final chromosome vcf_lines
+        # Sort then flush the final chromosome vcf_lines
         if chrom_vcf_lines:
+            chrom_vcf_lines.sort(key=lambda x: int(x.pos))
             flush_chrom_vcf_lines(chrom_vcf_lines, open_data_lines, samples, report)
         if not has_any_features:
             logger.warning("No feature lines were found for this GVF file.")
