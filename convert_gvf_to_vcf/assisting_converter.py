@@ -90,13 +90,11 @@ def convert_gvf_attributes_to_vcf_values(column9_of_gvf,
     vcf_type = determine_vcf_type(vcf_info_values,vcf_format_values)
     if vcf_type == "SITES-ONLY":
         infer_genotype(gvf_attribute_dictionary, vcf_format_values)
-    print("vcf_format_values", vcf_format_values)
 
     return gvf_attribute_dictionary, vcf_info_values, vcf_format_values
 
 def infer_genotype(gvf_attribute_dictionary, vcf_format_values):
     sample_name = gvf_attribute_dictionary.get("sample_name") or "UNKNOWN_SAMPLE"
-    print(sample_name)
     if sample_name not in vcf_format_values:
         vcf_format_values[sample_name] = {}
     if "GT" not in vcf_format_values[sample_name]:
