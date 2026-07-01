@@ -133,10 +133,11 @@ def main():
         logger.info("==== FULL INSTALLED PACKAGES LIST ====")
 
         # Extracts every single library installed in this environment
-        all_packages = sorted([f"{d.metadata['Name']}=={d.version}" for d in distributions()])
+        all_packages = sorted({f"{d.metadata['Name']}=={d.version}" for d in distributions()})
 
         for package in all_packages:
             logger.info(f"[PACKAGE] {package}")
+
 
         logger.info("=======================================")
         logger.info(f"The log file is {args.log}")
