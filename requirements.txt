@@ -4,7 +4,6 @@ cached-property==1.5.2
 certifi==2026.6.17
 cffi==2.0.0
 charset-normalizer==3.4.7
--e git+https://github.com/khetherin/convertGVFtoVCF.git@2a2746774e9e03577b0d592f0ff1b56ce81f6d37#egg=convertGVFtoVCF
 cryptography==49.0.0
 decorator==5.3.1
 ebi_eva_common_pyutils==0.8.3
@@ -16,7 +15,6 @@ lxml==5.4.0
 numpy==2.4.6
 openpyxl==3.1.5
 oracledb==4.0.1
-packaging @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_packaging_1777103621/work
 py==1.11.0
 pycparser==3.0
 PyPika==0.51.1
