@@ -393,11 +393,12 @@ def construct_vcf_output(vcf_header_file, vcf_data_file, vcf_output):
 
 def flush_chrom_vcf_lines(vcf_lines, open_data_lines, samples, report):
     """Sort the per-chromosome vcf_lines by (pos, ref), then merge adjacent equal lines and write."""
-    vcf_lines.sort(key=lambda v: (v.pos, v.ref))
+    vcf_lines.sort(key=lambda v: (int(v.pos), v.ref.strip()))
     previous = None
     for current in vcf_lines:
         if previous:
-            if current == previous:
+            # if current == previous:
+            if current.chrom.strip() == previous.chrom.strip() and current.pos.strip() == previous.pos.strip():
                 current.merge(previous, list_of_sample_names=samples)
                 report.vcf_number_of_merges += 1
             else:
