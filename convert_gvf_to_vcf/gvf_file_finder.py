@@ -2,7 +2,9 @@ import argparse
 from datetime import datetime
 import hashlib
 import os
+#####
 import sys
+from importlib.metadata import distributions
 
 
 from ebi_eva_common_pyutils.config import cfg
@@ -128,6 +130,15 @@ def main():
         log_cfg.add_file_handler(args.log)
         logger.info(f"====GVF File Finder v{VERSION}====")
         logger.info(f"Running on Python version: {sys.version}")
+        logger.info("==== FULL INSTALLED PACKAGES LIST ====")
+
+        # Extracts every single library installed in this environment
+        all_packages = sorted([f"{d.metadata['Name']}=={d.version}" for d in distributions()])
+
+        for package in all_packages:
+            logger.info(f"[PACKAGE] {package}")
+
+        logger.info("=======================================")
         logger.info(f"The log file is {args.log}")
 
     finder = GvfFileFinder(search_dir= args.search_dir)
