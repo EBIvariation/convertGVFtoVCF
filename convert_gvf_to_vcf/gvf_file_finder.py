@@ -108,6 +108,7 @@ class GvfFileFinder:
 
 
 def main():
+    VERSION = "1.0.0"
     # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--search_dir", required=True, help="Directory to search i.e. FTP dir.")
@@ -118,11 +119,13 @@ def main():
     parser.add_argument("--output", help="Output to gvf file coordination")
     parser.add_argument("--config", help="Config")
     #########################################
+    parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {VERSION}")
     args = parser.parse_args()
 
     # Set up logging functionality
     if args.log:
         log_cfg.add_file_handler(args.log)
+        logger.info(f"====GVF File Finder v{VERSION}====")
         logger.info(f"The log file is {args.log}")
 
     finder = GvfFileFinder(search_dir= args.search_dir)
