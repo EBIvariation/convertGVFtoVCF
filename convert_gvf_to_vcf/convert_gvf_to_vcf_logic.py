@@ -398,7 +398,7 @@ def flush_chrom_vcf_lines(vcf_lines, open_data_lines, samples, report):
     for current in vcf_lines:
         if previous:
             # if current == previous:
-            if current.chrom.strip() == previous.chrom.strip() and current.pos.strip() == previous.pos.strip():
+            if current.chrom.strip() == previous.chrom.strip() and current.pos == previous.pos:
                 current.merge(previous, list_of_sample_names=samples)
                 report.vcf_number_of_merges += 1
             else:
