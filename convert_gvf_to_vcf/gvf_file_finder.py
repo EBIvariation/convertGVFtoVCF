@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 import hashlib
 import os
+import sys
 
 
 from ebi_eva_common_pyutils.config import cfg
@@ -126,6 +127,7 @@ def main():
     if args.log:
         log_cfg.add_file_handler(args.log)
         logger.info(f"====GVF File Finder v{VERSION}====")
+        logger.info(f"Running on Python version: {sys.version}")
         logger.info(f"The log file is {args.log}")
 
     finder = GvfFileFinder(search_dir= args.search_dir)
