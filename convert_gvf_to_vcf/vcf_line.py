@@ -656,10 +656,12 @@ class VcfLine:
         sorted_merged_id_set = sorted(set(map(str, merged_id.split(";"))))
         sorted_merged_id = ";".join(sorted_merged_id_set)
         merged_alt = self.merge_and_add(self.alt, other_vcf_line.alt, ",")
+        sorted_merged_alt_set = sorted(set(map(str, merged_alt.split(","))))
+        sorted_merged_alt = ",".join(sorted_merged_alt_set)
         merged_filter = self.merge_and_add(self.filter, other_vcf_line.filter, ";")
 
         self.id = other_vcf_line.id = sorted_merged_id
-        self.alt = other_vcf_line.alt = merged_alt
+        self.alt = other_vcf_line.alt = sorted_merged_alt
         self.filter = other_vcf_line.filter = merged_filter
         # Merging INFO using info_dict
         self.merge_info_dicts(other_vcf_line)
