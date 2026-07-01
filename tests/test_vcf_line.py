@@ -283,7 +283,9 @@ class TestVcfline(unittest.TestCase):
         self.other_vcf_line = VcfLine(chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>', qual='.', filter='.',
                                 info_dict={'NAME': 'nssv9912199', 'SVLEN': '4'},
                                 vcf_values_for_format={'sample2':{'GT':'0/1'}}, order_sample_names=['sample2'])
-
+        self.multiple_ALT_vcf_line = VcfLine(chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>,<DUP>', qual='.', filter='.',
+                                info_dict={'NAME': 'nssv9912199', 'SVLEN': '4', 'CIEND': '-5,5,-10,10'},
+                                vcf_values_for_format={'sample2':{'GT':'1/2'}}, order_sample_names=['sample2'])
     def test__str__(self):
         assert str(self.vcf_line) == 'Chromosome1\t76\t1\tT\t<DEL>\t.\t.\tNAME=nssv1412199;SVLEN=1\tGT\t0/1'
 
@@ -354,9 +356,15 @@ class TestVcfline(unittest.TestCase):
         assert self.vcf_line.vcf_values_for_format == expected_merge_vcf_values_for_format
 
     def test_format_info_string(self):
+        # single ALT
         formatted_info_string = VcfLine.format_info_string(self.vcf_line)
         expected_info_string = "NAME=nssv1412199;SVLEN=1"
         assert formatted_info_string == expected_info_string
+        # multiple ALT
+        formatted_info_string = VcfLine.format_info_string(self.multiple_ALT_vcf_line)
+        expected_info_string = "NAME=nssv9912199;SVLEN=4;CIEND=-5,5,-10,10"
+        assert formatted_info_string == expected_info_string
+
 
     def test_merge(self):
         list_of_samples = ['sample1']
