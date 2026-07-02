@@ -1,7 +1,10 @@
 """
 The purpose of this file is to populate for each field of a VCF line (and perform any modifications/calculations to achieve this)
 """
+
+
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
+
 from convert_gvf_to_vcf.assisting_converter import convert_gvf_attributes_to_vcf_values
 from dataclasses import dataclass
 from typing import Optional,Union
@@ -50,6 +53,11 @@ class VcfLineBuilder:
         self.ordered_list_of_samples = ordered_list_of_samples
 
     def build_vcf_line(self, gvf_feature_line_object):
+        """Converts a GVF feature line object into a standard VCF line object.
+        It translates the GVF attributes and obtains the reference (REF) and alternate (ALT) alleles.
+        :params gvf_feature_line_object: GVF feature line object to be converted
+        :return VcfLine object
+        """
         # Attributes which store important key-values dicts
         (vcf_value_from_gvf_attribute,  # used to populate the VCF fields. This is a dict of non-converted GVF attribute keys and their values.
          vcf_values_for_info,  # a dict that stores INFO key-values to form VCF line. This includes converted GVF attribute keys (+ other SV INFO).
@@ -190,7 +198,6 @@ class VcfLineBuilder:
             info_dict: dict of key-value pairs for INFO field (END, IMPRECISE, CIPOS, CIEND, SVLEN),
             is_imprecise: boolean
         """
-
         # Set up info dictionary
         info_dict = {}
         # Setting up the info keys with None as a default value
@@ -495,10 +502,15 @@ class VcfLine:
 
     @property
     def format_keys(self):
+        """Collects and orders FORMAT keys across samples
+        :return list of ordered FORMAT keys with GT anchored at the front
+        """
+        # deduplicate format keys
         set_of_format_key = set([format_key
                                  for format_value in self.vcf_values_for_format.values()
                                  for format_key in format_value.keys()
                                  ])
+        # handle empty data
         if len(set_of_format_key) == 0:
             set_of_format_key = set('.')
         return self._order_format_keys(set_of_format_key)  # a list of ordered format keys
@@ -552,9 +564,8 @@ class VcfLine:
         return '\t'.join(list_of_format_values_per_sample)
 
     # functions responsible for INFO are below
-
     def fill_merge_dicts(self, merged_info_dict, key, previous_line_info_value, current_line_info_value):
-        """ Logic for merging info dicts
+        """ Logic for merging info dicts. Merges specific INFO field value from two VCF lines into a dictionary.
         :param: merged_info_dict: merged dictionary
         :param: key: key for merged info dict
         :param: previous_line_info_value
@@ -574,6 +585,39 @@ class VcfLine:
                 merged_info_dict[key] = f"{previous_line_info_value},{current_line_info_value}"
         return merged_info_dict
 
+    def merge_ci(self, other_vcf_line, merged_info_dict):
+        """Maps CI values to (multiple) ALT alleles"""
+        multiple_alts = self.alt.split(",") + other_vcf_line.alt.split(",")
+        unique_alts = sorted(list(set(multiple_alts)))
+        for ci_key in ["CIEND", "CIPOS"]:
+            allele_to_intervals = {}
+            # processing this vcf line AND the other_vcf_line
+            for vcf_line in [self, other_vcf_line]:
+                if ci_key not in vcf_line.info_dict or not vcf_line.info_dict[ci_key]:
+                    continue
+                vcf_line_alts = vcf_line.alt.split(",")
+                ci_values = str(vcf_line.info_dict[ci_key]).split(",")
+                i = 0
+                for allele in vcf_line_alts:
+                    if i + 1 < len(ci_values):
+                        lower_bound = int(ci_values[i])
+                        upper_bound = int(ci_values[i + 1])
+                        # if identical symbolic alleles exist, expand the interval to largest
+                        if allele in allele_to_intervals:
+                            previous_lower_bound, previous_upper_bound = map(int, allele_to_intervals[allele].split(","))
+                            lower_bound = min(lower_bound, previous_lower_bound)
+                            upper_bound = max(upper_bound, previous_upper_bound)
+
+                        allele_to_intervals[allele] = f"{lower_bound},{upper_bound}"
+                    i += 2
+            ci_value_pairs = []
+            for allele in unique_alts:
+                if allele in allele_to_intervals:
+                    ci_value_pairs.append(allele_to_intervals[allele])
+            if ci_value_pairs:
+                merged_info_dict[ci_key] = ",".join(ci_value_pairs)
+        return merged_info_dict
+
     def merge_info_dicts(self, other_vcf_line):
         """ Merges and stores the INFO dictionaries for the INFO field of a VCF line.
         :param: other_vcf_line
@@ -585,6 +629,8 @@ class VcfLine:
         # Aim is to store SV INFO
         # info_dict = dict that stores all INFO key-values (including INFO from merged lines and SV INFO).
         for info_dict_key in self.info_dict.keys() | other_vcf_line.info_dict.keys():
+            if info_dict_key in ["CIEND", "CIPOS"]:
+                continue
             this_info_dict_value = self.info_dict.get(info_dict_key)
             other_info_dict_value = other_vcf_line.info_dict.get(info_dict_key)
             merged_info_dict = self.fill_merge_dicts(merged_info_dict,info_dict_key, this_info_dict_value,other_info_dict_value)
@@ -594,6 +640,7 @@ class VcfLine:
         if key_to_remove in merged_info_dict:
             del merged_info_dict[key_to_remove]
 
+        merged_info_dict = self.merge_ci(other_vcf_line, merged_info_dict)
         # Store merged info dict for this VCF line and the other VCF line.
         self.info_dict = merged_info_dict
         other_vcf_line.info_dict = merged_info_dict
@@ -626,6 +673,8 @@ class VcfLine:
             del self.info_dict["CIPOS"]
         if "CIEND" in self.info_dict and self.info_dict.get('CIEND') is None:
             del self.info_dict["CIEND"]
+
+        # #ensure twice as many CIEND values as ALT values
         # Format the string
         info_string = ";".join(f"{key}={value}" if key != "IMPRECISE" else f"{value}" for key,value in self.info_dict.items())
         return info_string
@@ -641,10 +690,12 @@ class VcfLine:
         sorted_merged_id_set = sorted(set(map(str, merged_id.split(";"))))
         sorted_merged_id = ";".join(sorted_merged_id_set)
         merged_alt = self.merge_and_add(self.alt, other_vcf_line.alt, ",")
+        sorted_merged_alt_set = sorted(set(map(str, merged_alt.split(","))))
+        sorted_merged_alt = ",".join(sorted_merged_alt_set)
         merged_filter = self.merge_and_add(self.filter, other_vcf_line.filter, ";")
 
         self.id = other_vcf_line.id = sorted_merged_id
-        self.alt = other_vcf_line.alt = merged_alt
+        self.alt = other_vcf_line.alt = sorted_merged_alt
         self.filter = other_vcf_line.filter = merged_filter
         # Merging INFO using info_dict
         self.merge_info_dicts(other_vcf_line)
