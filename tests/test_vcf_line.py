@@ -283,6 +283,27 @@ class TestVcfline(unittest.TestCase):
         self.other_vcf_line = VcfLine(chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>', qual='.', filter='.',
                                 info_dict={'NAME': 'nssv9912199', 'SVLEN': '4'},
                                 vcf_values_for_format={'sample2':{'GT':'0/1'}}, order_sample_names=['sample2'])
+        # for ci limits
+        self.vcf_line_A_single_allele =  VcfLine(
+            chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>', qual='.', filter='.',
+            info_dict={'NAME': 'nssv9912199', 'SVLEN': '4', 'CIEND': "-5,5", "CIPOS": "-1,1"},
+            vcf_values_for_format={'sample2':{'GT':'0/1'}}, order_sample_names=['sample2']
+        )
+        self.vcf_line_A_multiple_allele =  VcfLine(
+            chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>,<DUP>', qual='.', filter='.',
+            info_dict={
+                'NAME': 'nssv9912199', 'SVLEN': '4',
+                'CIEND': "-5,5,-15,15",
+                'CIPOS': "-1,1,-3,3"
+            },
+            vcf_values_for_format={'sample2':{'GT':'0/1'}}, order_sample_names=['sample2']
+        )
+        self.vcf_line_B = VcfLine(
+            chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DUP>', qual='.', filter='.',
+            info_dict={'NAME': 'nssv9912199', 'SVLEN': '4', 'CIEND': "-20,20", "CIPOS": "-4,5"},
+            vcf_values_for_format={'sample2':{'GT':'0/1'}}, order_sample_names=['sample2']
+        )
+        # for multiple alleles
         self.multiple_ALT_vcf_line = VcfLine(chrom='Chromosome1', pos='76', id='1', ref='T', alt='<DEL>,<DUP>', qual='.', filter='.',
                                 info_dict={'NAME': 'nssv9912199', 'SVLEN': '4', 'CIEND': '-5,5,-10,10'},
                                 vcf_values_for_format={'sample2':{'GT':'1/2'}}, order_sample_names=['sample2'])
@@ -355,6 +376,21 @@ class TestVcfline(unittest.TestCase):
         expected_merge_vcf_values_for_format = {'sample1': {'GT': '0/1'}, 'sample2': {'GT': '0/1'}}
         assert self.vcf_line.vcf_values_for_format == expected_merge_vcf_values_for_format
 
+    def test_merge_ci(self):
+        # both VCF lines have a single allele
+        # self.vcf_line_A_single_allele =  alt='<DEL>',  'CIEND': "-5,5", "CIPOS": "-1,1"},
+        # self.vcf_line_B               =  alt='<DUP>',  'CIEND': "-20,20", "CIPOS": "-4,5"}
+        merged_info_dict = {}
+        result = self.vcf_line_A_single_allele.merge_ci(other_vcf_line=self.vcf_line_B, merged_info_dict= merged_info_dict)
+        self.assertEqual(result.get("CIEND"), "-5,5,-20,20")
+        self.assertEqual(result.get("CIPOS"), "-1,1,-4,5")
+        # VCF line with multiple alleles
+        # self.vcf_line_A_multiple_allele =  alt='<DEL>,<DUP>', 'CIEND': "-5,5,-15,15", 'CIPOS': "-1,1,-3,3"
+        # self.vcf_line_B                 =  alt='<DUP>',       'CIEND': "-20,20",      "CIPOS": "-4,5"}
+        merged_info_dict = {}
+        result = self.vcf_line_A_multiple_allele.merge_ci(other_vcf_line=self.vcf_line_B, merged_info_dict= merged_info_dict)
+        self.assertEqual(result.get("CIEND"), "-5,5,-20,20")
+        self.assertEqual(result.get("CIPOS"), "-1,1,-4,5")
     def test_format_info_string(self):
         # single ALT
         formatted_info_string = VcfLine.format_info_string(self.vcf_line)

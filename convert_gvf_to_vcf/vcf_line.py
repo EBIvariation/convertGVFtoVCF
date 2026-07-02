@@ -1,7 +1,10 @@
 """
 The purpose of this file is to populate for each field of a VCF line (and perform any modifications/calculations to achieve this)
 """
+
+
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
+
 from convert_gvf_to_vcf.assisting_converter import convert_gvf_attributes_to_vcf_values
 from dataclasses import dataclass
 from typing import Optional,Union
@@ -582,6 +585,39 @@ class VcfLine:
                 merged_info_dict[key] = f"{previous_line_info_value},{current_line_info_value}"
         return merged_info_dict
 
+    def merge_ci(self, other_vcf_line, merged_info_dict):
+        """Maps CI values to (multiple) ALT alleles"""
+        multiple_alts = self.alt.split(",") + other_vcf_line.alt.split(",")
+        unique_alts = sorted(list(set(multiple_alts)))
+        for ci_key in ["CIEND", "CIPOS"]:
+            allele_to_intervals = {}
+            # processing this vcf line AND the other_vcf_line
+            for vcf_line in [self, other_vcf_line]:
+                if ci_key not in vcf_line.info_dict or not vcf_line.info_dict[ci_key]:
+                    continue
+                vcf_line_alts = vcf_line.alt.split(",")
+                ci_values = str(vcf_line.info_dict[ci_key]).split(",")
+                i = 0
+                for allele in vcf_line_alts:
+                    if i + 1 < len(ci_values):
+                        lower_bound = int(ci_values[i])
+                        upper_bound = int(ci_values[i + 1])
+                        # if identical symbolic alleles exist, expand the interval to largest
+                        if allele in allele_to_intervals:
+                            previous_lower_bound, previous_upper_bound = map(int, allele_to_intervals[allele].split(","))
+                            lower_bound = min(lower_bound, previous_lower_bound)
+                            upper_bound = max(upper_bound, previous_upper_bound)
+
+                        allele_to_intervals[allele] = f"{lower_bound},{upper_bound}"
+                    i += 2
+            ci_value_pairs = []
+            for allele in unique_alts:
+                if allele in allele_to_intervals:
+                    ci_value_pairs.append(allele_to_intervals[allele])
+            if ci_value_pairs:
+                merged_info_dict[ci_key] = ",".join(ci_value_pairs)
+        return merged_info_dict
+
     def merge_info_dicts(self, other_vcf_line):
         """ Merges and stores the INFO dictionaries for the INFO field of a VCF line.
         :param: other_vcf_line
@@ -593,6 +629,8 @@ class VcfLine:
         # Aim is to store SV INFO
         # info_dict = dict that stores all INFO key-values (including INFO from merged lines and SV INFO).
         for info_dict_key in self.info_dict.keys() | other_vcf_line.info_dict.keys():
+            if info_dict_key in ["CIEND", "CIPOS"]:
+                continue
             this_info_dict_value = self.info_dict.get(info_dict_key)
             other_info_dict_value = other_vcf_line.info_dict.get(info_dict_key)
             merged_info_dict = self.fill_merge_dicts(merged_info_dict,info_dict_key, this_info_dict_value,other_info_dict_value)
@@ -602,6 +640,7 @@ class VcfLine:
         if key_to_remove in merged_info_dict:
             del merged_info_dict[key_to_remove]
 
+        merged_info_dict = self.merge_ci(other_vcf_line, merged_info_dict)
         # Store merged info dict for this VCF line and the other VCF line.
         self.info_dict = merged_info_dict
         other_vcf_line.info_dict = merged_info_dict
@@ -636,11 +675,6 @@ class VcfLine:
             del self.info_dict["CIEND"]
 
         # #ensure twice as many CIEND values as ALT values
-        # number_of_alt_alleles = 0 if self.alt == "." else len(self.alt.split(","))
-        # if number_of_alt_alleles and self.info_dict.get("CIEND"):
-        #     ciend_pattern = str(self.info_dict.get("CIEND"))
-        #     repeated_ciend = [ciend_pattern] * number_of_alt_alleles
-        #     self.info_dict["CIEND"] = ",".join(repeated_ciend)
         # Format the string
         info_string = ";".join(f"{key}={value}" if key != "IMPRECISE" else f"{value}" for key,value in self.info_dict.items())
         return info_string
