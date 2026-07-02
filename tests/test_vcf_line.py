@@ -364,7 +364,17 @@ class TestVcfline(unittest.TestCase):
         formatted_info_string = VcfLine.format_info_string(self.multiple_ALT_vcf_line)
         expected_info_string = "NAME=nssv9912199;SVLEN=4;CIEND=-5,5,-10,10"
         assert formatted_info_string == expected_info_string
-
+        # test number of CIEND values is double the number of ALT alleles
+        if "," in self.multiple_ALT_vcf_line.alt:
+            alt = self.multiple_ALT_vcf_line.alt
+            alt_alleles = alt.split(",")
+            number_of_alt_alleles = len(alt_alleles)
+            info_values = formatted_info_string.split(";")
+            for info_value in info_values:
+                if "CIEND" in info_value:
+                    ciend_values = info_value.split("=")[1]
+                    number_of_ciend_values = len(ciend_values.split(","))
+                    assert number_of_ciend_values == 2* number_of_alt_alleles
 
     def test_merge(self):
         list_of_samples = ['sample1']
