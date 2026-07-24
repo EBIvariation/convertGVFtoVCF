@@ -13,13 +13,17 @@ import os
 import shutil
 
 
-def eva_add_file_metadata(retriever, json_output, vcf_output, study_accession):
-    """Add the Files section of the metadata JSON, post-conversion
+def eva_update_metadata_with_vcf(retriever, json_output, vcf_output, study_accession):
+    """Update metadata with VCF files, adds the Files section of the metadata JSON, post-conversion
     :params retriever: eva metadata
     :params json_output: path for output
     :params vcf_output: path for VCF files to be added to metadata
     :params: study_accession: study e.g. estd1
     """
+    if not (retriever and json_output and vcf_output):
+        logger.warning("Skipping metadata update: Missing required inputs.")
+        return
+
     files_file_name = retriever._get_file_name(vcf_output)
     files_file_size = retriever._get_file_size(vcf_output)
     files_file_md5 = retriever._get_file_md5(vcf_output)
@@ -79,9 +83,6 @@ def gather_metadata_workflow(config, json_eva, json_dgva, study_accession, assem
         dgva_retriever.create_json_dgva(json_dgva, study_accession)
     return eva_retriever, dgva_retriever
 
-def eva_update_metadata_with_vcf(eva_retriever, json_eva, vcf_output, study_accession):
-    if eva_retriever and vcf_output and json_eva:
-        eva_add_file_metadata(eva_retriever, json_eva, vcf_output, study_accession)
 
 
 def main():

@@ -5,7 +5,7 @@ import subprocess
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 from convert_gvf_to_vcf.conversion_statistics import FileStatistics
-from convert_gvf_to_vcf.gather_metadata import  eva_add_file_metadata, gather_metadata_workflow, eva_update_metadata_with_vcf
+from convert_gvf_to_vcf.gather_metadata import  gather_metadata_workflow, eva_update_metadata_with_vcf
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.metadata_retrievers.dgva_metadata import DGVAMetadataRetriever
 from convert_gvf_to_vcf.metadata_retrievers.eva_metadata import EVAMetadataRetriever
