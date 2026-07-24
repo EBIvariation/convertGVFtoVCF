@@ -3,7 +3,7 @@ import json
 import tempfile
 from unittest import TestCase
 from unittest.mock import patch, MagicMock
-from convert_gvf_to_vcf.gather_metadata import eva_add_file_metadata
+from convert_gvf_to_vcf.gather_metadata import eva_update_metadata_with_vcf
 from convert_gvf_to_vcf.project_paths import ProjectPaths
 
 
@@ -23,7 +23,7 @@ class TestGatherMetadata(TestCase):
         self.json_file_dgva = os.path.join(self.tests_folder, "output", "a_dgva.json")
 
     @patch('convert_gvf_to_vcf.gather_metadata.EVAMetadataRetriever')
-    def test_add_file_metadata(self, MockRetriever):
+    def test_eva_update_metadata_with_vcf(self, MockRetriever):
 
         mock_retriever = MockRetriever.return_value
         mock_retriever._get_file_name.return_value = "test.vcf"
@@ -41,7 +41,7 @@ class TestGatherMetadata(TestCase):
             with open(json_output, "w") as f:
                 json.dump(initial_data, f)
 
-            eva_add_file_metadata(mock_retriever, json_output, vcf_output, "estd1")
+            eva_update_metadata_with_vcf(mock_retriever, json_output, vcf_output, "estd1")
 
             expected_backup_path = os.path.join(tmpdir, "output_preconverted.json")
             self.assertTrue(os.path.exists(expected_backup_path))
