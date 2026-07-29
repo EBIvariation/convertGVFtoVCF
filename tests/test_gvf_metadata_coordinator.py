@@ -1,3 +1,4 @@
+import builtins
 import json
 import os.path
 import shutil
@@ -61,6 +62,67 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
                                        "eva_submission_estd1.json")
         coordinator._process_gvf_files.assert_called_once_with(multiple_gvf_files, "estd1", expected_json_2)
 
+    def test_process_gvf_files(self):
+        coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
+
+        study_name = "estd1_Redon_et_al_2006"
+        date = "2014-04-01"
+        assembly_name = "GRCh38"
+        study_accession = "estd1"
+        master_json = "tests/output/master_metadata.json"
+
+        files_in_assembly = [f"{study_name}.{date}.{assembly_name}.Remapped.gvf"]
+
+        mock_assembly_to_paths = {assembly_name: files_in_assembly}
+        mock_gvf_name_groups = {files_in_assembly[0]: (study_name, date, assembly_name)}
+
+        coordinator._group_files_by_assembly = MagicMock(
+            return_value=(mock_assembly_to_paths, mock_gvf_name_groups))
+
+        mock_initial_master = {
+            "submitterDetails": None, "project": None, "analysis": [], "sample": [], "files": []
+        }
+        coordinator._initialize_master_metadata = MagicMock(return_value=mock_initial_master)
+        coordinator.set_up_inputs_and_outputs = MagicMock(return_value=(
+            "/path/to/assembly", "/path/to/report", "dgva.json", "eva.json", "out.vcf"
+        ))
+        mock_eva_metadata = {
+            "submitterDetails": [{"firstName": "John", "lastName": "Doe", "email": "john@doe.com"}],
+            "project": {"title": "Test Variant Project"}
+        }
+        coordinator._stage_assembly_metadata = MagicMock(return_value=mock_eva_metadata)
+        coordinator.determine_submitted_and_remapped_files = MagicMock(return_value=(
+            ["remapped.gvf"], ["submitted.gvf"]
+        ))
+        coordinator.convert_individual_gvf = MagicMock(return_value="/path/to/submission/out.vcf")
+        coordinator._add_multiple_assemblies_into_metadata = MagicMock()
+        coordinator._save_master_metadata = MagicMock()
+        coordinator._process_gvf_files(
+            gvf_files=files_in_assembly,
+            study_accession=study_accession,
+            master_json=master_json
+        )
+
+        self.assertEqual(coordinator.assembly_path, "/path/to/assembly")
+        self.assertEqual(coordinator.assembly_report_path, "/path/to/report")
+        self.assertEqual(coordinator.json_dgva_path, "dgva.json")
+        self.assertEqual(coordinator.json_eva_path, "eva.json")
+        self.assertEqual(coordinator.vcf_output_path, "out.vcf")
+
+        coordinator._group_files_by_assembly.assert_called_once_with(files_in_assembly)
+        coordinator._initialize_master_metadata.assert_called_once()
+        coordinator.set_up_inputs_and_outputs.assert_called_once_with(study_name, date, assembly_name)
+        coordinator._stage_assembly_metadata.assert_called_once_with(assembly_name, study_accession)
+        coordinator.determine_submitted_and_remapped_files.assert_called_once_with(files_in_assembly)
+        coordinator.convert_individual_gvf.assert_called_once_with(files_in_assembly[0])
+        coordinator._add_multiple_assemblies_into_metadata.assert_called_once_with(
+            json_eva="eva.json",
+            gvf_files=["remapped.gvf"],  # Uses remapped_files if populated
+            master_metadata=mock_initial_master,
+            vcf_path="/path/to/submission/out.vcf"
+        )
+        coordinator._save_master_metadata.assert_called_once_with(mock_initial_master, master_json)
+
     @patch('convert_gvf_to_vcf.gvf_metadata_coordinator.eva_update_metadata_with_vcf')
     @patch('convert_gvf_to_vcf.gvf_metadata_coordinator.convert')
     def test_convert_individual_gvf(self, mock_convert, mock_update):
@@ -68,29 +130,32 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         coordinator.base_output_dir = "tests/output"
         coordinator.project_paths = self.paths
 
+        assembly = "tests/input/human.fa"
+        coordinator.assembly_path = assembly
+        coordinator.json_eva_path = "eva.json"
+        coordinator.eva_retriever = "mock_retriever"
+
         study_accession = "estd1"
         vcf_file = "tests/output/submission/estd1_Redon_et_al_2006/estd1_Redon_et_al_2006.2014-04-01.GRCh37.Remapped.vcf"
         input_gvf = "tests/data_dir/estd1_Redon_et_al_2006/gvf/estd1_Redon_et_al_2006.2014-04-01.GRCh37.Remapped.gvf"
 
-        coordinator.convert_individual_gvf(
-            assembly_path="tests/input/human.fa",
-            eva_retriever="mock_retriever",
-            individual_gvf=input_gvf,
-            json_eva="eva.json"
-        )
+        output_result = coordinator.convert_individual_gvf(individual_gvf=input_gvf)
 
         mock_convert.assert_called_once_with(
             gvf_input=input_gvf,
             vcf_output=vcf_file,
-            assembly="tests/input/human.fa",
+            assembly=assembly,
             paths=self.paths
         )
+
         mock_update.assert_called_once_with(
-            eva_retriever="mock_retriever",
-            json_eva="eva.json",
+            retriever="mock_retriever",
+            json_output="eva.json",
             vcf_output=vcf_file,
             study_accession=study_accession
         )
+
+        self.assertEqual(output_result, vcf_file)
 
     def test_suffix_assembly_metadata(self):
         mock_metadata = {
@@ -108,8 +173,7 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         self.assertEqual(mock_metadata["files"][0]["analysisAlias"], "estd1_analysis_GRCh38")
         self.assertEqual(mock_metadata["sample"][0]["analysisAlias"], ["estd1_analysis_GRCh38"])
 
-
-    def test_finalize_master_metadata_cleanup(self):
+    def test_cleanup_master_metadata(self):
         mock_master_metadata = {
             "sample": [
                 {"sampleInVCF": "NA18570", "analysisAlias": ["estd1_GRCh38"]},
@@ -123,7 +187,7 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
 
         coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
 
-        coordinator._finalize_master_metadata_cleanup(mock_master_metadata)
+        coordinator._cleanup_master_metadata(mock_master_metadata)
         sample = mock_master_metadata["sample"][0]["sampleInVCF"]
         analysisAlias = mock_master_metadata["sample"][0]["analysisAlias"]
 
@@ -138,23 +202,16 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         self.assertEqual(mock_master_metadata["files"][0]["fileName"], "submitted.vcf")
         self.assertEqual(mock_master_metadata["files"][1]["fileName"], "remapped.vcf")
 
-    def test_process_single_assembly(self):
+    def test_stage_assembly_metadata(self):
         coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
-        study_name = "estd1_Redon_et_al_2006"
-        date = "2014-04-01"
-        files_in_assembly = [f"{study_name}.{date}.GRCh37.Remapped.gvf",
-                     f"{study_name}.{date}.GRCh38.Remapped.gvf",
-                     f"{study_name}.{date}.GRCh37.Submitted.gvf"
-        ]
+
         assembly_name = "GRCh38"
         study_accession = "estd1"
-        gvf_name_groups = {
-            files_in_assembly[0]: (study_name, date, assembly_name)
-        }
 
-        coordinator.set_up_inputs_and_outputs = MagicMock(return_value=(
-            "/path/to/assembly", "/path/to/report", "dgva.json", "eva.json", "out.vcf"
-        ))
+        coordinator.assembly_path = "/path/to/assembly"
+        coordinator.assembly_report_path = "/path/to/report"
+        coordinator.json_dgva_path = "dgva.json"
+        coordinator.json_eva_path = "eva.json"
 
         mock_eva_retriever = MagicMock()
         mock_dgva_retriever = MagicMock()
@@ -162,27 +219,23 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
             mock_eva_retriever, mock_dgva_retriever
         ))
 
-        coordinator.check_files = MagicMock(return_value=(
-            ["remapped.gvf"], ["submitted.gvf"]
-        ))
+        mock_initial_metadata = {"submitterDetails": "initial_data"}
+        coordinator._load_json_file = MagicMock(return_value=mock_initial_metadata)
+        coordinator._suffix_assembly_metadata = MagicMock()
 
-        result = coordinator._process_single_assembly(
-            assembly_name, files_in_assembly, gvf_name_groups, study_accession
-        )
+        with patch.object(builtins, 'open', mock_open()):
+            result_eva_metadata = coordinator._stage_assembly_metadata(assembly_name, study_accession)
 
-        assembly_path, eva_retriever, json_eva, remapped_files, submitted_files = result
-
-        self.assertEqual(assembly_path, "/path/to/assembly")
-        self.assertEqual(eva_retriever, mock_eva_retriever)
-        self.assertEqual(json_eva, "eva.json")
-        self.assertEqual(remapped_files, ["remapped.gvf"])
-        self.assertEqual(submitted_files, ["submitted.gvf"])
-
-        coordinator.set_up_inputs_and_outputs.assert_called_once_with(study_name,date, "GRCh38")
+        self.assertEqual(result_eva_metadata, mock_initial_metadata)
         coordinator.retrieve_metadata.assert_called_once_with(
-            "eva.json", "dgva.json", study_accession, "/path/to/assembly", "/path/to/report"
+            "eva.json",
+            "dgva.json",
+            study_accession,
+            "/path/to/assembly",
+            "/path/to/report"
         )
-        coordinator.check_files.assert_called_once_with(files_in_assembly)
+        coordinator._load_json_file.assert_called_once_with("eva.json")
+        coordinator._suffix_assembly_metadata.assert_called_once_with(mock_initial_metadata, assembly_name)
 
     def test_group_files_by_assembly(self):
         coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
@@ -230,92 +283,57 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         self.assertEqual(date_3, date)
         self.assertEqual(assembly_3, "GRCh37")
 
-
-    def test_reconfigure_assembly_metadata(self):
+    def test_add_multiple_assemblies_into_metadata(self):
         coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
         study_name = "estd1_Redon_et_al_2006"
-        date_1 = "2014-04-01"
-        date_2 = "2015-04-01"
-        gvf_files = [f"{study_name}.{date_1}.GRCh38.Remapped.gvf",
-                     f"{study_name}.{date_2}.GRCh38.Remapped.gvf"
+        gvf_files = [
+            f"{study_name}.2014-04-01.GRCh38.Remapped.gvf",
+            f"{study_name}.2015-04-01.GRCh38.Remapped.gvf"
         ]
 
-        metadata_to_add= {
-            "submitterDetails": [
-                {
-                    "firstName": "NameTest",
-                    "lastName": "SurnameTest",
-                    "email": "a@b.com",
-                    "laboratory": "LabTest",
-                    "centre": "CentreTest"
-                }
-            ],
-            "project": {
-                "projectAccession": "PRJEB12345"
-            },
-            "analysis": [
-                {
-                    "analysisTitle": "TitleTest",
-                    "analysisAlias": "AliasTest",
-                    "description": "DesctiptionTest",
-                    "experimentType": "Whole genome sequencing",
-                    "referenceGenome": "GCA_000001405.15"
-                }
-            ],
-            "sample": [
-                {
-                    "analysisAlias": ["AliasTest"],
-                    "sampleInVCF": "Sample1",
-                    "bioSampleAccession": "SAMEA123456"
-                }
-            ],
-            "files": [
-                {
-                    "analysisAlias": "AliasTest",
-                    "fileName": "test.vcf"
-                }
-            ]
+        metadata_to_add = {
+            "submitterDetails": [{"firstName": "NameTest"}],
+            "project": {"projectAccession": "PRJEB12345"},
+            "analysis": [{"analysisAlias": "AliasTest"}],
+            "sample": [{"analysisAlias": ["AliasTest"], "sampleInVCF": "Sample1"}],
+            "files": [{"analysisAlias": "AliasTest", "fileName": "test.vcf"}]
         }
-        with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as temp_file:
-            json.dump(metadata_to_add, temp_file)
-            temp_json_path = temp_file.name
-
-
-        coordinator._update_analysis_and_file_blocks = MagicMock(return_value=["new_alias"])
-        coordinator._update_sample_block = MagicMock()
 
         master_metadata = {
-            "submitterDetails": None,
-            "project": None,
-            "analysis": [],
-            "sample": [],
-            "files": []
+            "submitterDetails": None, "project": None, "analysis": [], "sample": [], "files": []
         }
-        vcf_path="/a/path/to/my.vcf"
-        coordinator._reconfigure_assembly_metadata(
-            json_eva=temp_json_path,
-            gvf_files=gvf_files,
-            master_metadata=master_metadata,
-            vcf_path=vcf_path
-        )
+        vcf_path = "/a/path/to/my.vcf"
 
-        coordinator._update_analysis_and_file_blocks.assert_called_once_with(
-            metadata_to_add=metadata_to_add,
-            files=gvf_files,
-            master_metadata=master_metadata,
-            vcf_path=vcf_path
-        )
 
-        coordinator._update_sample_block.assert_called_once_with(
-            new_analysis_aliases=["new_alias"],
-            metadata_to_add=metadata_to_add,
-            master_metadata=master_metadata
-        )
-        try:
-            os.remove(temp_json_path)
-        except OSError:
-            pass
+        with patch.object(GvfMetadataCoordinator, '_update_analysis_and_file_blocks',
+                          return_value=["new_alias"]) as mock_analysis_block, \
+                patch.object(GvfMetadataCoordinator, '_update_sample_block') as mock_sample_block:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_json_path = os.path.join(temp_dir, "eva_metadata.json")
+                with open(temp_json_path, 'w', encoding='utf-8') as temp_out:
+                    json.dump(metadata_to_add, temp_out)
 
+                result_metadata = coordinator._add_multiple_assemblies_into_metadata(
+                    json_eva=temp_json_path,
+                    gvf_files=gvf_files,
+                    master_metadata=master_metadata,
+                    vcf_path=vcf_path
+                )
+
+                self.assertEqual(result_metadata, metadata_to_add)
+
+            mock_analysis_block.assert_called_once_with(
+                metadata_to_add=metadata_to_add,
+                files=gvf_files,
+                master_metadata=master_metadata,
+                vcf_path=vcf_path
+            )
+
+            mock_sample_block.assert_called_once_with(
+                new_analysis_aliases=["new_alias"],
+                metadata_to_add=metadata_to_add,
+                master_metadata=master_metadata
+            )
 
     def test_update_analysis_and_file_blocks(self):
         coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
