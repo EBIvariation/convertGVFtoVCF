@@ -232,7 +232,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert len(data_lines) == 2, f"Expected 2 VCF data lines, got {len(data_lines)}"
         # After sorting: pos=4 (DEL) must come before pos=5 (gain)
         assert data_lines[0][1] == '4'
-        assert data_lines[0][3] == 'TACGT'
+        assert data_lines[0][3] == 'T'
         assert data_lines[0][4] == '<DEL>'
         assert data_lines[1][1] == '5'
         assert data_lines[1][3] == 'A'

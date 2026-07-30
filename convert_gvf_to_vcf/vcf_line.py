@@ -460,13 +460,13 @@ class VcfLineBuilder:
         :param end : end position
         :param pos : start position
         :param ref : reference allele
-        :return alt, pos, ref : where ref has a padded base added to it
+        :return alt, pos, ref : where ref is now the padded base
         """
         if pos == 1:
             padded_base, padded_ref = self.append_padded_base(chrom, end, ref)
         else:
             padded_base, pos, padded_ref = self.prepend_padded_base(chrom, pos, ref)
-        ref = self.check_ref(padded_ref)
+        ref = self.check_ref(padded_base)
         return alt, pos, ref
 
     def _is_nucleotide_sequence(self, sequence_to_check):
