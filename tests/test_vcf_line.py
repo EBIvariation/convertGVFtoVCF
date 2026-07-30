@@ -75,17 +75,17 @@ class TestVcfLineBuilder(unittest.TestCase):
         assert vcf_line.info_dict['NAME'] == 'nssv1412199'
         assert vcf_line.info_dict['ALIAS'] == 'CNV28955'
 
-    def test_add_padded_base(self):
-        padded_base, pos, ref, alt = self.vcf_builder.add_padded_base(chrom='chromosome1', pos=79, end=80, ref="A", alt='.', placed_before=True)
+    def test_prepend_padded_base(self):
+        padded_base, new_pos, new_ref= self.vcf_builder.prepend_padded_base(chrom='chromosome1', pos=79, ref="A")
         assert padded_base == 'C'
-        assert pos  == 78
-        assert ref == 'CA'
-        assert alt  == '.'
-        padded_base, pos, ref, alt = self.vcf_builder.add_padded_base(chrom='chromosome1', pos=1, end=2, ref="A", alt='.', placed_before=False)
+        assert new_pos  == 78
+        assert new_ref == 'CA'
+
+    def test_append_padded_base(self):
+        padded_base, new_ref        = self.vcf_builder.append_padded_base(chrom='chromosome1', end=2, ref="A")
         assert padded_base == 'C'
-        assert pos  == 1
-        assert ref == 'AC'
-        assert alt  == '.'
+        assert new_ref == 'AC'
+
 
     def test_get_ref(self):
         reference_allele = self.vcf_builder.get_ref(vcf_value_from_gvf_attribute={}, chrom='chromosome1', pos=1, end=1)
