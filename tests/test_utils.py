@@ -55,6 +55,7 @@ class TestUtils(unittest.TestCase):
 
         # fresh instance
         gvf_reader = GvfFileReader(self.input_file)
+        gvf_features_gen = gvf_reader.read_in_gvf_data()
         reader_iter = iter(gvf_reader)
         assert type(reader_iter).__name__ ==  'generator'
         # 7 lines in the GVF
