@@ -145,7 +145,6 @@ class EnvironmentLogger:
             return "Not found"
 
     def log_environment_packages(self, logger):
-    # def log_environment_packages(logger, file_name, VERSION):
         """Logs the versions of packages used."""
         app_version = self.get_version()
         logger.info(f"===={self.entry_point_file} v{app_version}====")
