@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from convert_gvf_to_vcf.project_paths import ProjectPaths
 from convert_gvf_to_vcf.utils import read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, \
-    build_iupac_ambiguity_code, read_in_gvf_header, read_in_gvf_data, get_validated_value, EnvironmentLogger
+    build_iupac_ambiguity_code, GvfFileReader, get_validated_value, EnvironmentLogger
 from convert_gvf_to_vcf.lookup import Lookup
 
 class TestUtils(unittest.TestCase):
@@ -38,7 +38,8 @@ class TestUtils(unittest.TestCase):
         assert len(symbolic_allele_dictionary) > 0
 
     def test_read_in_gvf_header(self):
-        gvf_pragmas, gvf_non_essentials = read_in_gvf_header(self.input_file)
+        gvf_reader = GvfFileReader(self.input_file)
+        gvf_pragmas, gvf_non_essentials = gvf_reader.read_in_gvf_header()
         assert gvf_pragmas[0] == '##gff-version 3'
         assert all((gvf_pragma.startswith('##') for gvf_pragma in gvf_pragmas))
         assert len(gvf_pragmas) == 5
@@ -46,7 +47,8 @@ class TestUtils(unittest.TestCase):
         assert len(gvf_non_essentials) == 15
 
     def test_read_in_gvf_data(self):
-        gvf_features_gen = read_in_gvf_data(self.input_file)
+        gvf_reader = GvfFileReader(self.input_file)
+        gvf_features_gen = gvf_reader.read_in_gvf_data()
         assert type(gvf_features_gen).__name__ ==  'generator'
         # 7 lines in the GVF
         lines = list(gvf_features_gen)
