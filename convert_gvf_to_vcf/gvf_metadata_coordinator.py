@@ -23,115 +23,224 @@ class GvfMetadataCoordinator:
         """
         empty_studies_log = []
         for study_accession, gvf_files in self.scan_results.items():
+            if gvf_files:
+                study_name, _, _ = self.parse_gvf_filename(gvf_files[0])
+            else:
+                study_name = study_accession
+            study_master_json_path = os.path.join(self.base_output_dir, "submission", study_name,
+                                       f"eva_submission_{study_accession}.json")
             # empty list of GVF files
             if not gvf_files:
                 self._process_no_gvf_files(empty_studies_log, study_accession)
                 continue
             # one file in list of GVFs
-            elif len(gvf_files) >= 1:
-                self._process_gvf_files(gvf_files, study_accession)
-                continue
+            if len(gvf_files) >= 1:
+                self._process_gvf_files(gvf_files, study_accession, study_master_json_path)
             else:
-                print("not in a recognised format")
+                logger.info("Not in a recognised format")
+
         logger.info(f"Number of empty studies encountered: {len(empty_studies_log)}")
 
-    def _process_gvf_files(self, gvf_files, study_accession):
+    @staticmethod
+    def _process_no_gvf_files(empty_studies_log, study_accession):
+        """Process if no gvf files are present - logging.
+        :params: empty_studies_log = list of empty studies
+        :params: study_accession e.g. estd1
+        """
+        logger.info(f"No GVF files found for {study_accession}")
+        empty_studies_log.append(study_accession)
+
+    def _process_gvf_files(self, gvf_files, study_accession, master_json):
         """Process if gvf files are present.
         :params: gvf_files = list of gvf files
         :params: study_accession e.g. estd1
+        :params: master_json = path to master metadata JSON
         """
         logger.info(f"GVF file(s) found for {study_accession}. Separating by assembly.")
         # separate files by assembly {"GRCh37": [gvf_file_paths], "GRCh38": [gvf_file_paths]})
-        assembly_groups, gvf_name_groups = self._group_files_by_assembly(gvf_files)
-        for assembly_name, files_in_assembly in assembly_groups.items():
-            assembly_path, eva_retriever, json_eva, remapped_files, submitted_files = self._process_single_assembly(
-                assembly_name, files_in_assembly, gvf_name_groups, study_accession)
-            # for those with multiple submitted files, reconfigure the JSON
-            self.reconfigure_metadata(eva_retriever, json_eva, remapped_files, study_accession, submitted_files)
-            # TODO: check the resolution of GVF
-            for individual_gvf in files_in_assembly:
-                self.convert_individual_gvf(assembly_path, eva_retriever, individual_gvf, json_eva)
-
-    def convert_individual_gvf(self, assembly_path, eva_retriever, individual_gvf, json_eva):
-        """Converts and unpdates metadata for a single gvf file
-        :param assembly_path: path to assembly
-        :param eva_retriever: eva metadata
-        :param individual_gvf: gvf file
-        :param json_eva: JSON file
-        """
-        base_name = os.path.basename(individual_gvf).replace(".gvf", "")
-        individual_vcf_output = os.path.join(self.base_output_dir, f"{base_name}.vcf")
-        if individual_gvf and individual_vcf_output and assembly_path and self.project_paths:
-            convert(
-                gvf_input=individual_gvf,
-                vcf_output=individual_vcf_output,
-                assembly=assembly_path,
-                paths=self.project_paths
+        assembly_to_gvf_file_paths, gvf_name_groups = self._group_files_by_assembly(gvf_files)
+        # master metadata starts off empty and eva_metadata is added to this
+        master_metadata = self._initialize_master_metadata()
+        # loop through each assembly
+        for assembly_name, gvf_files_for_assembly in assembly_to_gvf_file_paths.items():
+            if not gvf_files_for_assembly:
+                logger.error(f"No files in this assembly: {assembly_name}")
+                continue
+            # get the context information
+            first_file = gvf_files_for_assembly[0]
+            study, date, assembly = gvf_name_groups[first_file]
+            # set up paths
+            self.assembly_path, self.assembly_report_path, self.json_dgva_path, self.json_eva_path, self.vcf_output_path = self.set_up_inputs_and_outputs(
+                study,
+                date,
+                assembly_name)
+            # update metadata based on this assembly
+            eva_metadata = self._stage_assembly_metadata(assembly_name, study_accession)
+            if eva_metadata:
+                # populate master metadata with existing metadata (first metadata file)
+                if master_metadata["submitterDetails"] is None:
+                    master_metadata["submitterDetails"] = eva_metadata.get("submitterDetails")
+                    master_metadata["project"] = eva_metadata.get("project")
+            remapped_files, submitted_files = self.determine_submitted_and_remapped_files(gvf_files_for_assembly)
+            vcf_path = None
+            for individual_gvf in gvf_files_for_assembly:
+                vcf_path = self.convert_individual_gvf(individual_gvf)
+            self._add_multiple_assemblies_into_metadata(
+                json_eva=self.json_eva_path,
+                gvf_files=remapped_files if remapped_files else gvf_files_for_assembly,
+                master_metadata=master_metadata,
+                vcf_path=vcf_path
             )
-            if eva_retriever:
-                eva_update_metadata_with_vcf(
-                    eva_retriever=eva_retriever,
-                    json_eva=json_eva,
-                    vcf_output=individual_vcf_output
-                )
-        else:
+        self._save_master_metadata(master_metadata, master_json)
+    @staticmethod
+    def _initialize_master_metadata():
+        """Set up an empty dictionary for master metadata."""
+        return {
+            "submitterDetails": None,
+            "project": None,
+            "analysis": [],
+            "sample": [],
+            "files": []
+        }
+
+    def _save_master_metadata(self, master_metadata, master_json):
+        """Saves the completed master metadata.
+        :param: master_metadata: metadata to save
+        :param: master_json: path to save to
+        """
+        if master_metadata["submitterDetails"] is None:
+            return
+        self._cleanup_master_metadata(master_metadata)
+        os.makedirs(os.path.dirname(master_json), exist_ok=True)
+        with open(master_json, 'w', encoding='utf-8') as master_out:
+            json.dump(master_metadata, master_out)
+        logger.info(f"Saved aggregated master metadata to {master_json}")
+
+    def _load_json_file(self, file_path):
+        """Load a metadata JSON file"""
+        if not file_path or not os.path.isfile(file_path) or os.path.getsize(file_path) == 0:
+            return {}
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return {}
+
+    def _suffix_assembly_metadata(self, metadata, assembly_name):
+        """Add assembly name to the end (analysisAlias, analysisTitle)
+        :param metadata = metadata to be changed
+        :param assembly_name = name to add
+        """
+        suffix = f"_{assembly_name}"
+        for analysis in metadata.get("analysis", []):
+            analysis["analysisAlias"] = f"{analysis.get('analysisAlias', '')}{suffix}"
+            analysis["analysisTitle"] = f"{analysis.get('analysisTitle', '')}{suffix}"
+        for files in metadata.get("files", []):
+            files["analysisAlias"] = f"{files.get('analysisAlias', '')}{suffix}"
+        for sample in metadata.get("sample", []):
+            sample["analysisAlias"] = [f"{alias}{suffix}" for alias in sample.get("analysisAlias", [])]
+
+
+    def _cleanup_master_metadata(self, master_metadata):
+        """Checks for duplicates and merges aliases
+        :param master_metadata: metadata to be cleaned"""
+        if "submitterDetails" in master_metadata and master_metadata["submitterDetails"]:
+            seen_emails = set()
+            unique_submitters = []
+            for submitter in master_metadata["submitterDetails"]:
+                email_lower = submitter.get("email", "").lower()
+                if email_lower not in seen_emails:
+                    seen_emails.add(email_lower)
+                    unique_submitters.append(submitter)
+            master_metadata["submitterDetails"] = unique_submitters
+        merged_samples = {}
+        for sample in master_metadata["sample"]:
+            sample_name = sample.get("sampleInVCF")
+            if sample_name not in merged_samples:
+                merged_samples[sample_name] = sample
+            else:
+                combined_aliases = set(
+                    merged_samples[sample_name].get("analysisAlias", []) + sample.get("analysisAlias", []))
+                merged_samples[sample_name]["analysisAlias"] = list(combined_aliases)
+
+        master_metadata["sample"] = list(merged_samples.values())
+        master_metadata["files"] = [f for f in master_metadata["files"] if f.get("fileName") != ""]
+
+    def convert_individual_gvf(self,individual_gvf):
+        """Converts and updates metadata for a single gvf file
+        :param individual_gvf: gvf file
+        :return individual_vcf_output : vcf file
+        """
+        study, _, _ = self.parse_gvf_filename(individual_gvf)
+        if not study:
+            logger.error(f"Could not parse study from: {individual_gvf}")
+            return
+        study_accession = study.split("_")[0]
+
+        study_submission_directory = os.path.join(self.base_output_dir, "submission", study)
+        os.makedirs(study_submission_directory, exist_ok=True)
+
+        base_name = os.path.basename(individual_gvf).replace(".gvf", "")
+        individual_vcf_output = os.path.join(study_submission_directory, f"{base_name}.vcf")
+
+        if not (individual_gvf and individual_vcf_output and self.assembly_path and self.project_paths):
             logger.error("Missing parameters to convert:\n\t"
                          f"gvf {individual_gvf}\n\t"
                          f"vcf {individual_vcf_output}\n\t"
-                         f"assembly {assembly_path}\n\t"
+                         f"assembly {self.assembly_path}\n\t"
                          f"or project paths")
+            return None
 
-    def reconfigure_metadata(self, eva_retriever, json_eva, remapped_files, study_accession, submitted_files):
-        """Determines if EVA metadata needs reconfiguring and running the reconfiguration of the JSON file
-        :params eva_retriever: metadata handle
-        :params json_eva: JSON file
-        :params remapped files: list of remapped gvf files
-        :params study_accession: study accession e.g. estd1
-        :params submitted_files: list of submitted gvf files
-        """
-        if len(submitted_files) > 1:
-            self._determine_same_and_reconfigure_json(study_accession, submitted_files, json_eva, eva_retriever)
+        convert(
+            gvf_input=individual_gvf,
+            vcf_output=individual_vcf_output,
+            assembly=self.assembly_path,
+            paths=self.project_paths
+        )
 
-        # for those with multiple submitted files, reconfigure the JSON
-        if len(remapped_files) > 1:
-            self._determine_same_and_reconfigure_json(study_accession, remapped_files, json_eva, eva_retriever)
+        if hasattr(self, 'eva_retriever') and self.eva_retriever:
+            logger.info("Updating JSON with vcf info")
+            eva_update_metadata_with_vcf(
+                retriever=self.eva_retriever,
+                json_output=self.json_eva_path,
+                vcf_output=individual_vcf_output,
+                study_accession=study_accession
+            )
 
-    def _process_single_assembly(self, assembly_name, files_in_assembly, gvf_name_groups, study_accession):
-        """ Process an assembly by organising input and output files, retrieving EVA metadata for the assembly and
-        determining associated submitted and remapped files
+        return individual_vcf_output
+
+    def _stage_assembly_metadata(self, assembly_name, study_accession):
+        """ Retrieving EVA metadata for the assembly and suffix with the assembly name
         :params: assembly_name e.g. GRCh38
-        :params:files_in_assembly: list of gvf files associated with that assembly
-        :params: gvf_name_groups:  a dictionary where gvf file is key and (study, date, assembly) is tuple
+        :params: study_accession e.g. estd1
+        :return: eva_metadata : updated and suffixed with assembly
         """
-        first_file = files_in_assembly[0]
-        study, date, assembly = gvf_name_groups[first_file]
-        assembly_path, assembly_report_path, json_dgva, json_eva, vcf_output = self.set_up_inputs_and_outputs(study,
-                                                                                                              date,
-                                                                                                              assembly_name)
-        eva_retriever, dgva_retriever = self.retrieve_metadata(json_eva, json_dgva, study_accession, assembly_path,
-                                                               assembly_report_path)
-        remapped_files, submitted_files = None, None
-        if files_in_assembly:
-            remapped_files, submitted_files = self.check_files(files_in_assembly)
-        else:
-            logger.error(f"No files in this assembly: {assembly_name}")
-        return assembly_path, eva_retriever, json_eva, remapped_files, submitted_files
+        # get metadata
+        eva_retriever, dgva_retriever = self.retrieve_metadata(self.json_eva_path, self.json_dgva_path, study_accession, self.assembly_path,
+                                                               self.assembly_report_path)
+        # suffix metadata
+        eva_metadata = self._load_json_file(self.json_eva_path)
+        if eva_metadata:
+            self._suffix_assembly_metadata(eva_metadata, assembly_name)
+            with open(self.json_eva_path, 'w', encoding='utf-8') as f_out:
+                json.dump(eva_metadata, f_out)
+        return eva_metadata
 
     def _group_files_by_assembly(self, gvf_files):
         """ Groups files by the assembly. Returns dictionary based on assembly
         :params: gvf file
         :return:
-            assembly_groups - a dictionary where key is assembly and values is gvf files {"GRCh37": [gvf_file_paths], "GRCh38": [gvf_file_paths]})
+            assembly_to_gvffilepaths - a dictionary where key is assembly and values is gvf files {"GRCh37": [gvf_file_paths], "GRCh38": [gvf_file_paths]})
             gvf_name_groups - a dictionary where gvf file is key and (study, date, assembly) is tuple
         """
-        assembly_groups = defaultdict(list)
+        assembly_to_gvf_file_paths = defaultdict(list)
         gvf_name_groups = {}
         for gvf_file in gvf_files:
             # gvf_file = {estd1_Redon_et_al_2006}.{YYYY-MM-DD}.{Assembly}.{Submitted/Remapped}.gvf
             study, date, assembly = self.parse_gvf_filename(gvf_file)
-            assembly_groups[assembly].append(gvf_file)
+            assembly_to_gvf_file_paths[assembly].append(gvf_file)
             gvf_name_groups[gvf_file] = (study, date, assembly)
-        return assembly_groups, gvf_name_groups
+        return assembly_to_gvf_file_paths, gvf_name_groups
 
     @staticmethod
     def parse_gvf_filename(gvf_file):
@@ -159,97 +268,83 @@ class GvfMetadataCoordinator:
         assembly = parts[2]
         return study, date, assembly
 
-    @staticmethod
-    def _process_no_gvf_files(empty_studies_log, study_accession):
-        """Process if no gvf files are present - logging.
-        :params: empty_studies_log = list of empty studies
-        :params: study_accession e.g. estd1
-        """
-        logger.info(f"No GVF files found for {study_accession}")
-        empty_studies_log.append(study_accession)
-
-    def _determine_same_and_reconfigure_json(self, study_accession, submitted_or_remapped_files, json_eva, eva_retriever):
-        """Determine if same biological or technical replicates, is so reconfigure JSON
-        study_accession, target_files, json_eva, eva_retriever
-        """
-        determined_replicates = set()
-        for _ in submitted_or_remapped_files:
-            # determine if they are the same (i.e. biological or technical replicates)
-            reference = eva_retriever._fetch_analysis_reference_genome(study_accession) or None
-            analysis_types = eva_retriever._fetch_analysis_analysis_type(study_accession)
-            method_types = eva_retriever._fetch_analysis_method_type(study_accession)
-            experiment = eva_retriever._determine_analysis_experiment_type(analysis_types, method_types) or None
-            replicate_signature = (reference, tuple(experiment), tuple(method_types))
-            determined_replicates.add(replicate_signature)
-        # If all files share the same metadata, reconfigure the JSON file in its analysis section
-        if len(determined_replicates) == 1:
-            self._reconfigure_json_multi_analysis(json_eva, submitted_or_remapped_files)
-        else:
-            # Leave json as it is (they differ so do not merge)
-            pass
-
-    def _reconfigure_json_multi_analysis(self, json_eva, gvf_files):
-        """Reconfigures the EVA JSON with multiple files. This affects analysis, files and sample sections.
+    def _add_multiple_assemblies_into_metadata(self, json_eva, gvf_files, master_metadata, vcf_path):
+        """Reconfigures the EVA metadata JSON with multiple files. This affects analysis, files and sample sections.
         :params: json_eva Path to EVA JSON file
-        :params: files list of GVF files
+        :params: gvf_files list of GVF files
+        :params: master_metadata : to be updated
+        :return: metadata - reconfigured for multiple assemblies
         """
         try:
             with open(json_eva, 'r') as f_in:
                 metadata = json.load(f_in)
-            # find the important sections of the JSON file, leave the JSON file alone if not present.
-            analysis_list = metadata.get("analysis", [])
-            files_list = metadata.get("files", [])
-            sample_list = metadata.get("sample", [])
-
-            if not analysis_list or not files_list or not sample_list:
-                return
-            # update analysis and file blocks with new analysis aliases
-            multiple_analyses, multiple_files, new_analysis_aliases = self._update_analysis_and_file_blocks(analysis_list, gvf_files,
-                                                                                                            files_list)
-            # after going through each GVF file, update the analysis alias in the sample block with the new analysis aliases
-            self._update_sample_block(new_analysis_aliases, sample_list)
-
-            # update the analysis, files and sample sections with the multiple datasets
-            metadata["analysis"] = multiple_analyses
-            metadata["files"] = multiple_files
-            metadata["sample"] = sample_list
-
-            # output to JSON
-            with open(json_eva, 'w') as f_out:
-                json.dump(metadata, f_out, indent=4)
-
         except (FileNotFoundError, json.JSONDecodeError) as err:
-            print(f"Failed to update multi-analysis schema in JSON due to error: {err}")
+            logger.error(f"Failed to update multi-analysis schema in JSON due to error: {err}")
+            return None
+        # find the important sections of the JSON file, leave the JSON file alone if not present.
+        if not all(metadata.get(key) for key in ["analysis", "files", "sample"]):
+            return
+        # update analysis and file blocks with new analysis aliases
+        new_analysis_aliases = self._update_analysis_and_file_blocks(
+            metadata_to_add=metadata,
+            files=gvf_files,
+            master_metadata=master_metadata,
+            vcf_path=vcf_path
+        )
+        # after going through each GVF file, update the analysis alias in the sample block with the new analysis aliases
+        self._update_sample_block(
+            new_analysis_aliases=new_analysis_aliases,
+            metadata_to_add=metadata,
+            master_metadata=master_metadata
+        )
+        return metadata
 
     @staticmethod
-    def _update_sample_block(new_analysis_aliases, sample_list):
+    def _update_sample_block(new_analysis_aliases, metadata_to_add, master_metadata):
         """Updates sample part of EVA JSON with new analysis aliases
         :params new_analysis_aliases: list of new names
         :params sample_list: block of EVA JSON
         """
-        for sample_entry in sample_list:
-            if "analysisAlias" in sample_entry and isinstance(sample_entry["analysisAlias"], list):
-                sample_entry["analysisAlias"] = new_analysis_aliases
+        sample_list = metadata_to_add.get("sample", [])
+
+        for initial_sample_block in sample_list:
+            if not isinstance(initial_sample_block, dict):
+                continue
+
+            for alias in new_analysis_aliases:
+                copied_sample = copy.deepcopy(initial_sample_block)
+                if "analysisAlias" in copied_sample and isinstance(copied_sample["analysisAlias"], list):
+                    copied_sample["analysisAlias"] = [alias]
+                else:
+                    copied_sample["analysisAlias"] = alias
+                master_metadata["sample"].append(copied_sample)
 
     @staticmethod
-    def _update_analysis_and_file_blocks(analysis_list, files, files_list):
+    def _update_analysis_and_file_blocks(metadata_to_add, files, master_metadata, vcf_path):
         """Updates analysis and file parts of the EVA JSON
-        :params analysis_list: block of EVA JSON
-        :params files: gvf giles
-        :params files_list: block of EVA JSON
-        :return multiple_analyses, multiple_files, new_analysis_alias: blocks for EVA JSON
+        :params metadata_to_add: metadata_to_add
+        :params files: gvf files
+        :params master_metadata: master metadata to be updated
+        :return new_analysis_aliases
         """
+        analysis_list = metadata_to_add.get("analysis", [])
+        files_list = metadata_to_add.get("files", [])
         # get the first blocks of the EVA JSON schema and expand on those
-        initial_analysis_block = analysis_list[0]
-        initial_file_block = files_list[0]
+        raw_analysis = analysis_list[0] if isinstance(analysis_list, list) and analysis_list else analysis_list
+        raw_file = files_list[0] if isinstance(files_list, list) and files_list else files_list
 
-        multiple_analyses = []
-        multiple_files = []
+        initial_analysis_block = raw_analysis if isinstance(raw_analysis, dict) else {}
+        initial_file_block = raw_file if isinstance(raw_file, dict) else {}
+        #
+        # if isinstance(analysis_list, list):
+        #     master_metadata["analysis"].extend(copy.deepcopy(analysis_list))
+        # if isinstance(files_list, list):
+        #     master_metadata["files"].extend(copy.deepcopy(files_list))
+
         new_analysis_aliases = []
 
         # change the Analysis and File blocks for each GVF file
         for index, file_path in enumerate(files, start=1):
-            file_name = os.path.basename(file_path)
 
             # rename the analysis alias string
             base_alias = initial_analysis_block.get("analysisAlias", "analysis")
@@ -259,14 +354,14 @@ class GvfMetadataCoordinator:
             # copy the analysis block and update that with new analysis alias
             analysis_block = copy.deepcopy(initial_analysis_block)
             analysis_block["analysisAlias"] = unique_alias
-            multiple_analyses.append(analysis_block)
+            master_metadata["analysis"].append(analysis_block)
 
             # copy the file block and update that with new analysis alias
             file_block = copy.deepcopy(initial_file_block)
             file_block["analysisAlias"] = unique_alias
-            file_block["fileName"] = file_name
-            multiple_files.append(file_block)
-        return multiple_analyses, multiple_files, new_analysis_aliases
+            file_block["fileName"] = vcf_path
+            master_metadata["files"].append(file_block)
+        return new_analysis_aliases
 
     def retrieve_metadata(self, json_eva, json_dgva, study_accession, assembly_path, assembly_report_path):
         """Retrieves metadata and if applicable, returns list of submitted and remapped files
@@ -282,11 +377,11 @@ class GvfMetadataCoordinator:
             assembly=assembly_path,
             assembly_report=assembly_report_path
         )
+
         return eva_retriever, dgva_retriever
 
     @staticmethod
-    def check_files(files_in_assembly):
-        # for each assembly version, check if multiple submitted files
+    def determine_submitted_and_remapped_files(files_in_assembly):
         submitted_files = [f for f in files_in_assembly if "Submitted" in os.path.basename(f)]
         remapped_files = [f for f in files_in_assembly if "Remapped" in os.path.basename(f)]
         return remapped_files, submitted_files
@@ -295,16 +390,14 @@ class GvfMetadataCoordinator:
         """Programmatically sets up input and output paths.
         :params assembly_name e.g. GRCh37
         :params study_accession e.g. estd1
-        :return assembly_path, assembly_report_path, json_dgva, json_eva, vcf_output: input, input, output, output, output
+        :return assembly_path, assembly_report_path, json_dgva_path, json_eva_path, vcf_output_path: input, input, output, output, output
         """
         # get the inputs
         assembly_path = self.project_paths.assembly_paths.get(assembly_name)
         assembly_report_path = self.project_paths.assembly_report_paths.get(assembly_name)
 
         # programmatically generate the output files by assembly
-        json_eva = os.path.join(self.base_output_dir, f"{study}.{date}.{assembly_name}.eva.json")
-        json_dgva = os.path.join(self.base_output_dir, f"{study}.{date}.{assembly_name}.dgva.json")
-        vcf_output = os.path.join(self.base_output_dir, f"{study}.{date}.{assembly_name}.vcf")
-        return assembly_path, assembly_report_path, json_dgva, json_eva, vcf_output
-
-
+        json_eva_path = os.path.join(self.base_output_dir, f"{study}.{date}.{assembly_name}.eva.json")
+        json_dgva_path = os.path.join(self.base_output_dir, f"{study}.{date}.{assembly_name}.dgva.json")
+        vcf_output_path = os.path.join(self.base_output_dir, f"{study}.{date}.{assembly_name}.vcf")
+        return assembly_path, assembly_report_path, json_dgva_path, json_eva_path, vcf_output_path

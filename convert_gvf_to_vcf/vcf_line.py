@@ -20,9 +20,13 @@ def extract_reference_allele(seqIo_fasta, chromosome_name, position, end):
     :return: reference_allele: bases found at this chromosome_name between position and end in this fasta_file
     """
     zero_indexed_position = position - 1  # minus one because zero indexed
-    reference_allele = seqIo_fasta[chromosome_name].seq[zero_indexed_position:end]
-    return str(reference_allele)
-
+    try:
+        reference_allele = seqIo_fasta[chromosome_name].seq[zero_indexed_position:end]
+        return str(reference_allele)
+    except KeyError as original_error:
+        error_message=f"Chromosome Naming Convention - clash detected. GVF chromosome name '{chromosome_name}' not in FASTA."
+        logger.error(error_message)
+        raise ValueError(error_message) from original_error
 @dataclass
 class VariantRange:
     """

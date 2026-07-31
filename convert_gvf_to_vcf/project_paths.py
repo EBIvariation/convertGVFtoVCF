@@ -14,7 +14,8 @@ class ProjectPaths:
         # reading in
         try:
             with open(self.full_config_path, 'r') as f:
-                data = yaml.safe_load(f) or {}
+                # data = yaml.safe_load(f) or {}
+                data = yaml.safe_load(os.path.expandvars(f.read())) or {}
         except FileNotFoundError:
             raise FileNotFoundError(f"Required config missing at: {self.full_config_path}")
         # internal paths section of config
@@ -39,7 +40,9 @@ class ProjectPaths:
             target_path = self.assembly_paths[assembly_input]
         else:
             target_path = assembly_input
-
+        if "$" in target_path:
+            # to resolve ${REF_PATH} in config.yaml
+            target_path = os.path.expandvars(target_path)
         # get full path
         if os.path.isabs(target_path):
             full_path = target_path
