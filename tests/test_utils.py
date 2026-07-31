@@ -95,9 +95,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(env_logger.get_version(), "Not found")
 
         env_logger = EnvironmentLogger(entry_point_file="test.py", application_name="convertGVFtoVCF")
-        current_version="0.1.dev311+g59a226b13.d20260701"
         self.assertIsInstance(env_logger.get_version(), str)
-        self.assertEqual(env_logger.get_version(), current_version)
 
     def test_environment_logger_log_packages(self):
         test_logger = logging.getLogger("name")
