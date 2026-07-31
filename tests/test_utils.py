@@ -1,10 +1,11 @@
+import logging
 import os
 import unittest
 from unittest.mock import Mock
 
 from convert_gvf_to_vcf.project_paths import ProjectPaths
 from convert_gvf_to_vcf.utils import read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, \
-    build_iupac_ambiguity_code, read_in_gvf_header, read_in_gvf_data, get_validated_value
+    build_iupac_ambiguity_code, read_in_gvf_header, read_in_gvf_data, get_validated_value, EnvironmentLogger
 from convert_gvf_to_vcf.lookup import Lookup
 
 class TestUtils(unittest.TestCase):
@@ -78,3 +79,26 @@ class TestUtils(unittest.TestCase):
         result = get_validated_value(self.mock_config, ("DGVA", "port"), str, default_value=None)
         self.assertEqual(result, expected)
         self.mock_config.query.assert_called_once_with("DGVA", "port", ret_default=None)
+
+    # environment logger
+    def test_environment_logger_get_version(self):
+        env_logger= EnvironmentLogger(entry_point_file="test.py", application_name="non_existent_package_12345")
+        self.assertEqual(env_logger.get_version(), "Not found")
+
+        env_logger = EnvironmentLogger(entry_point_file="test.py", application_name="convertGVFtoVCF")
+        current_version="0.1.dev311+g59a226b13.d20260701"
+        self.assertIsInstance(env_logger.get_version(), str)
+        self.assertEqual(env_logger.get_version(), current_version)
+
+    def test_environment_logger_log_packages(self):
+        test_logger = logging.getLogger("name")
+        entry_file = "/a/path/to/test_script.py"
+        env_logger = EnvironmentLogger(entry_point_file=entry_file, application_name="convertGVFtoVCF")
+
+        with self.assertLogs(test_logger, level="INFO") as captured:
+            env_logger.log_environment_packages(test_logger)
+        log_output = "\n".join(captured.output)
+        self.assertIn(entry_file, log_output)
+        self.assertIn("Python version:", log_output)
+        self.assertIn("FULL INSTALLED PACKAGES LIST", log_output)
+
