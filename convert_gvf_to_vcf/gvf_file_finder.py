@@ -8,7 +8,7 @@ from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
 from convert_gvf_to_vcf.gvf_metadata_coordinator import GvfMetadataCoordinator
 from convert_gvf_to_vcf.project_paths import ProjectPaths
-from convert_gvf_to_vcf.utils import get_validated_value, log_environment_packages, get_version
+from convert_gvf_to_vcf.utils import get_validated_value, EnvironmentLogger
 
 logger = log_cfg.get_logger(__name__)
 class GvfFileFinder:
@@ -107,7 +107,9 @@ class GvfFileFinder:
 
 
 def main():
-    VERSION = get_version()
+    env_logger = EnvironmentLogger(entry_point_file=__file__)
+    VERSION = env_logger.get_version()
+
     # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--search_dir", required=True, help="Directory to search i.e. FTP dir.")
@@ -125,8 +127,7 @@ def main():
     if args.log:
         log_cfg.add_file_handler(args.log)
         logger.info(f"The log file is {args.log}")
-        file_name = __file__
-        log_environment_packages(logger, file_name, VERSION)
+        env_logger.log_environment_packages(logger)
 
     finder = GvfFileFinder(search_dir= args.search_dir)
     gvf_data = finder.scan(args.study_accession)
