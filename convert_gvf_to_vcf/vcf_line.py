@@ -112,21 +112,30 @@ class VcfLineBuilder:
         return self.field_lines_dictionary
 
     # Functions which are responsible for token generation/population for the VCF line
-    def add_padded_base(self, chrom, pos, end, ref, alt, placed_before : bool):
-        """ Adds a padded base to the REF and ALT allele of a VCF line.
-        :param ref: reference allele
-        :param alt: alt allele
-        :param placed_before: padded base is placed before ref or alt True or False
-        :return: (padded_base, pos, ref, alt)
+    def prepend_padded_base(self, chrom, pos, ref):
+        """Adds padded base to the start of the reference allele. Subtracts the starting position by 1 to account for this.
+        :param: chrom: chromosome name
+        :param: pos: start position
+        :param: ref: reference allele to add the padded base to the start
+        :return: padded_base, new_pos, padded_ref
         """
-        if placed_before:
-            pos = pos - 1
-            padded_base = extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chrom, pos, pos)
-            ref = padded_base + ref
-        else:
-            padded_base = extract_reference_allele(self.reference_lookup.assembly_fasta_indexed, chrom, end, end)
-            ref = ref + padded_base
-        return padded_base, pos, ref, alt
+        new_pos = pos - 1
+        padded_base = extract_reference_allele(
+            self.reference_lookup.assembly_fasta_indexed, chrom, new_pos, new_pos
+        )
+        return padded_base, new_pos, f"{padded_base}{ref}"
+
+    def append_padded_base(self, chrom, end, ref):
+        """Suffixes the reference allele with the padded base.
+        :param: chrom: chromosome name
+        :param: end: end position
+        :param: ref: reference allele to add the padded base to the end
+        :return: padded_base, padded_ref
+        """
+        padded_base = extract_reference_allele(
+            self.reference_lookup.assembly_fasta_indexed, chrom, end, end
+        )
+        return padded_base, f"{ref}{padded_base}"
 
     def convert_iupac_ambiguity_code(self, ref_to_convert):
         """ If the REF allele of a VCF line contains an IUPAC ambiguity code, converts it.
@@ -147,15 +156,12 @@ class VcfLineBuilder:
         """ Checks whether a reference allele meets the requirements of the VCF specification.
         :param ref_allele_to_be_checked: reference allele to check
         :return: checked_reference_allele: reference allele that meets the requirements of the VCF specification"""
-        if isinstance(ref_allele_to_be_checked, str):
-            if not all(base in "ACGTN" for base in ref_allele_to_be_checked):
-                checked_reference_allele = self.convert_iupac_ambiguity_code(ref_allele_to_be_checked)
-            else:
-                checked_reference_allele = ref_allele_to_be_checked
-        else:
+        if not isinstance(ref_allele_to_be_checked, str):
             logger.warning(f"Ref allele must be a string: {ref_allele_to_be_checked}. Setting to missing value.")
-            checked_reference_allele = "."
-        return checked_reference_allele
+            return "."
+        if not self._is_nucleotide_sequence(ref_allele_to_be_checked):
+            return self.convert_iupac_ambiguity_code(ref_allele_to_be_checked)
+        return ref_allele_to_be_checked
 
 
     def get_ref(self, vcf_value_from_gvf_attribute, chrom, pos, end):
@@ -410,33 +416,67 @@ class VcfLineBuilder:
         :return: symbolic_allele, self.info, lines_standard_ALT, lines_standard_INFO
         """
         info_dict = {}
-        if any(base in vcf_value_from_gvf_attribute["Variant_seq"] for base in ["A", "C", "G", "T", "N"]):
-            alt = vcf_value_from_gvf_attribute["Variant_seq"]
-        elif vcf_value_from_gvf_attribute["Variant_seq"] == '.':
-            symbolic_allele, info_dict, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(vcf_value_from_gvf_attribute, pos, end, length, ref, so_type)
+        variant_seq = vcf_value_from_gvf_attribute.get("Variant_seq", ".")
 
-            if symbolic_allele is None:
-                alt = "."
-            elif (vcf_value_from_gvf_attribute["Variant_seq"] == "." or vcf_value_from_gvf_attribute["Variant_seq"] == "-") and symbolic_allele is not None:
-                alt = symbolic_allele
-                # add padded bases
-                if pos == 1:
-                    #print("pos, ref, alt",self.pos,self.ref, alt)
-                    padded_base, pos, ref, alt = self.add_padded_base(chrom, pos, end, ref, alt, False)
-                    ref = self.check_ref(ref)
-                else:
-                    #print("pos, ref, alt", self.pos,self.ref, alt)
-                    padded_base, pos, ref, alt = self.add_padded_base(chrom, pos, end, ref, alt, True)
-                    ref = self.check_ref(ref)
-            else:
-                alt = "."
-                logger.warning(f"Cannot identify symbolic allele: {symbolic_allele}. Variant type is not supported.")
+        if self._is_nucleotide_sequence(variant_seq):
+            alt = variant_seq
+        elif variant_seq == '.':
+            alt, info_dict, pos, ref = self.determine_symbolic_variant(chrom, end, info_dict, length, pos, ref, so_type,
+                                                                       variant_seq, vcf_value_from_gvf_attribute)
+        else:
+            alt = "." # set as a missing value
+            logger.warning("Could not determine the alternative allele.")
+        return pos, ref, alt, info_dict
+
+    def determine_symbolic_variant(self, chrom, end, info_dict, length, pos, ref, so_type, variant_seq,
+                                   vcf_value_from_gvf_attribute):
+        """Determine if a symbolic allele and pad REF  if needed.
+        :param chrom: chromosome
+        :param end: end position
+        :param info_dict: INFO values
+        :param length:  end - pos
+        :param ref: REF allele
+        :param so_type: sequence ontology type
+        :param variant_seq: a gvf attribute
+        :param vcf_value_from_gvf_attribute: a list of gvf attributes
+        :return: alt, info_dict, pos, ref
+        """
+        symbolic_allele, info_dict, lines_standard_alt, lines_standard_info = self.generate_symbolic_allele(
+            vcf_value_from_gvf_attribute, pos, end, length, ref, so_type)
+        if symbolic_allele is None:
+            alt = "."
+        elif (variant_seq == "." or variant_seq == "-") and symbolic_allele is not None:
+            alt = symbolic_allele
+            alt, pos, ref = self._pad_symbolic_allele(alt, chrom, end, pos, ref)
         else:
             alt = "."
-            logger.warning("Could not determine the alternative allele.")
-        #TODO: awaiting clarification to keep or remove this for SVCLAIM
-        #is_abundance = self.has_svclaim_abundance_evidence(vcf_value_from_gvf_attribute, alt, info_dict)
-        return pos, ref, alt, info_dict
+            logger.warning(f"Cannot identify symbolic allele: {symbolic_allele}. Variant type is not supported.")
+        return alt, info_dict, pos, ref
+
+    def _pad_symbolic_allele(self, alt, chrom, end, pos, ref):
+        """ Pads the REF allele according to the POS
+        :param alt : alternative allele
+        :param chrom : chromsome
+        :param end : end position
+        :param pos : start position
+        :param ref : reference allele
+        :return alt, pos, ref : where ref is now the padded base
+        """
+        if pos == 1:
+            padded_base, padded_ref = self.append_padded_base(chrom, end, ref)
+        else:
+            padded_base, pos, padded_ref = self.prepend_padded_base(chrom, pos, ref)
+        ref = self.check_ref(padded_base)
+        return alt, pos, ref
+
+    def _is_nucleotide_sequence(self, sequence_to_check):
+        """Checks if the sequence mets the VCF specification:
+        -- Each base must be one of A,C,G,T,N (case insensitive)
+        :param sequence_to_check: sequence
+        :return boolean
+        """
+        accepted_bases = {"A", "C", "G", "T", "N", "a", "c", "t", "g", "n"}
+        return set(sequence_to_check).issubset(accepted_bases)
 
 
 class VcfLine:
