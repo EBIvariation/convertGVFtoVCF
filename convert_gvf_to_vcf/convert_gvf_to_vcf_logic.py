@@ -273,7 +273,6 @@ def convert(gvf_input, vcf_output, assembly, paths):
     sorted_gvf_input = sort_gvf_file(gvf_input)
     gvf_input = sorted_gvf_input
 
-    gvf_reader = GvfFileReader(gvf_input)
     # Creating lookup object to store important dictionaries and log what has been stored.
     reference_lookup = Lookup(assembly_file, paths)
     try:
@@ -285,7 +284,11 @@ def convert(gvf_input, vcf_output, assembly, paths):
 
         # Read input file and separate out its components
         logger.info(f"Reading in the following GVF header from {gvf_input}")
-        gvf_pragmas, gvf_pragma_comments = gvf_reader.read_in_gvf_header()
+        header_reader = GvfFileReader(gvf_input)
+        for _ in header_reader:
+            break # stops at first data line
+        gvf_pragmas = header_reader.pragmas
+        gvf_pragma_comments = header_reader.non_essential
         gvf_filename_only = os.path.basename(gvf_input)
         gvf_file_base, _ = os.path.splitext(gvf_filename_only)
         # Preparation work:
@@ -307,6 +310,7 @@ def convert(gvf_input, vcf_output, assembly, paths):
         # VCF dataline generation
         # Convert each feature line in the GVF file to a VCF object (stores all the data for a line in the VCF file).
         # NOTE: Main Logic lives here.
+        gvf_reader = GvfFileReader(gvf_input) # Fresh instance required
         is_missing_format_value, vcf_data_file = stream_gvf_to_vcf_data(gvf_reader, report, samples, vcf_builder,
                                                                         vcf_output)
 
@@ -370,7 +374,7 @@ def stream_gvf_to_vcf_data(gvf_reader, report, samples, vcf_builder, vcf_output)
         current_chrom = None
         has_any_features = False
         logger.info(f"Reading in: {gvf_reader.gvf_file}")
-        for gvf_entry in gvf_reader.read_in_gvf_data():
+        for gvf_entry in gvf_reader:
             # record GVF counts
             report.gvf_feature_line_count += 1
             report.gvf_chromosome_count[gvf_entry.seqid] += 1
