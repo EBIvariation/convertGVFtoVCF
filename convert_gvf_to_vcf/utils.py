@@ -136,22 +136,30 @@ def get_validated_value(config, key_parts_to_get, expected_type, default_value=N
             raise TypeError(f"Key '{key_parts_to_get}' must be {expected_type.__name__}")
     return value_in_config
 
-def get_version():
-    """Gets the dynamic version of the name in pyproject.toml file"""
-    try:
-        return importlib.metadata.version("convertGVFtoVCF")
-    except Exception:
-        return "Not found"
+class EnvironmentLogger:
+    """The responsibility of this class is to log versions. Intended for diagnostic purposes."""
 
-def log_environment_packages(logger, file_name, VERSION):
-    """Logs the versions of packages used."""
-    logger.info(f"===={file_name} v{VERSION}====")
-    logger.info(f"Running on Python version: {sys.version}")
-    logger.info("==== FULL INSTALLED PACKAGES LIST ====")
+    def __init__(self,entry_point_file, application_name="convertGVFtoVCF"):
+        self.entry_point_file = entry_point_file
+        self.application_name = application_name
 
-    # Extracts every single library installed in this environment
-    all_packages = sorted({f"{d.metadata['Name']}=={d.version}" for d in distributions()})
+    def get_version(self):
+        """Gets the dynamic version of the name in pyproject.toml file"""
+        try:
+            return importlib.metadata.version(self.application_name)
+        except Exception:
+            return "Not found"
 
-    for package in all_packages:
-        logger.info(f"[PACKAGE] {package}")
-    logger.info("=======================================")
+    def log_environment_packages(self, logger):
+        """Logs the versions of packages used."""
+        app_version = self.get_version()
+        logger.info(f"===={self.entry_point_file} v{app_version}====")
+        logger.info(f"Running on Python version: {sys.version}")
+        logger.info("==== FULL INSTALLED PACKAGES LIST ====")
+
+        # Extracts every single library installed in this environment
+        all_packages = sorted({f"{d.metadata['Name']}=={d.version}" for d in distributions()})
+
+        for package in all_packages:
+            logger.info(f"[PACKAGE] {package}")
+        logger.info("=======================================")
