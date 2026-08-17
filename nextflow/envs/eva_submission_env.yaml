@@ -1,0 +1,11 @@
+name: eva_submission_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - "ebi-eva-common-pyutils[eva-internal]>=1.0.0"
+    - "eva-sub-cli"
