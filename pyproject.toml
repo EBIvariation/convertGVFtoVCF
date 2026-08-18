@@ -38,10 +38,11 @@ classifiers = [
 
 
 [tool.setuptools]
-packages = ['convert_gvf_to_vcf']
+packages = ["convert_gvf_to_vcf", "nextflow"]
 
 [tool.setuptools.package-data]
 'convert_gvf_to_vcf'=['etc/*']
+'nextflow' = ['**/*']
 
 [tool.setuptools.dynamic]
 dependencies = {file = 'requirements.txt'}
