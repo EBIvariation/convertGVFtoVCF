@@ -285,7 +285,8 @@ def convert(gvf_input, vcf_output, assembly, paths):
         # Read input file and separate out its components
         logger.info(f"Reading in the following GVF header from {gvf_input}")
         header_reader = GvfFileReader(gvf_input)
-        next(header_reader)
+        for _ in header_reader:
+            break # stops at first data line
         gvf_pragmas = header_reader.pragmas
         gvf_pragma_comments = header_reader.non_essential
         gvf_filename_only = os.path.basename(gvf_input)
