@@ -39,17 +39,16 @@ class GvfAttributeParser:
         :param column9_of_gvf: column of the GVF file
         """
         self._raw_column9 = column9_of_gvf
-        self.attributes = self.get_gvf_attributes(column9_of_gvf)
+        self.attributes = self.get_gvf_attributes(self._raw_column9)
 
-    def get_gvf_attributes(self, column9_of_gvf):
+    def get_gvf_attributes(self):
         """Get a dictionary of GVF attributes
-        :param column9_of_gvf:  column - the final column of the GVF file
         :return: gvf_attribute_dictionary: a dictionary of attribute keys and their values
         """
         gvf_attribute_dictionary = {}  # attribute key => value
         # parse by semicolon this creates attribute
         # parse by equals sign this creates tag-values, if the value is a comma, create a list
-        attributes_in_gvf_line = column9_of_gvf.split(";")
+        attributes_in_gvf_line = self._raw_column9.split(";")
         for attribute in attributes_in_gvf_line:
             attribute_key, attribute_value = attribute.split("=")
             if "," in attribute_value:
