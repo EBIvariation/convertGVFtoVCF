@@ -10,7 +10,7 @@ from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.metadata_retrievers.dgva_metadata import DGVAMetadataRetriever
 from convert_gvf_to_vcf.metadata_retrievers.eva_metadata import EVAMetadataRetriever
 from convert_gvf_to_vcf.project_paths import ProjectPaths
-from convert_gvf_to_vcf.utils import read_in_gvf_header, read_in_gvf_data
+from convert_gvf_to_vcf.utils import GvfFileReader
 from convert_gvf_to_vcf.vcf_line import VcfLineBuilder
 
 logger = log_cfg.get_logger(__name__)
@@ -284,7 +284,11 @@ def convert(gvf_input, vcf_output, assembly, paths):
 
         # Read input file and separate out its components
         logger.info(f"Reading in the following GVF header from {gvf_input}")
-        gvf_pragmas, gvf_pragma_comments = read_in_gvf_header(gvf_input)
+        header_reader = GvfFileReader(gvf_input)
+        for _ in header_reader:
+            break # stops at first data line
+        gvf_pragmas = header_reader.pragmas
+        gvf_pragma_comments = header_reader.non_essential
         gvf_filename_only = os.path.basename(gvf_input)
         gvf_file_base, _ = os.path.splitext(gvf_filename_only)
         # Preparation work:
@@ -306,8 +310,10 @@ def convert(gvf_input, vcf_output, assembly, paths):
         # VCF dataline generation
         # Convert each feature line in the GVF file to a VCF object (stores all the data for a line in the VCF file).
         # NOTE: Main Logic lives here.
-        is_missing_format_value, vcf_data_file = stream_gvf_to_vcf_data(gvf_input, report, samples, vcf_builder,
+        gvf_reader = GvfFileReader(gvf_input) # Fresh instance required
+        is_missing_format_value, vcf_data_file = stream_gvf_to_vcf_data(gvf_reader, report, samples, vcf_builder,
                                                                         vcf_output)
+
 
         # VCF header generation
         header_lines_per_type = vcf_builder.build_vcf_header()
@@ -351,9 +357,9 @@ def sort_gvf_file(gvf_input):
 
 
 
-def stream_gvf_to_vcf_data(gvf_input, report, samples, vcf_builder, vcf_output):
+def stream_gvf_to_vcf_data(gvf_reader, report, samples, vcf_builder, vcf_output):
     """Streams GVF rows to VCF
-    :param gvf_input: GVF file
+    :param gvf_reader: GvfFileReader instance
     :param report: statistics report object
     :param samples: list of sample names
     :param vcf_builder: builder to transform GVF record to VCFline object
@@ -367,8 +373,8 @@ def stream_gvf_to_vcf_data(gvf_input, report, samples, vcf_builder, vcf_output):
         chrom_vcf_lines = []
         current_chrom = None
         has_any_features = False
-        logger.info(f"Reading in: {gvf_input}")
-        for gvf_entry in read_in_gvf_data(gvf_input):
+        logger.info(f"Reading in: {gvf_reader.gvf_file}")
+        for gvf_entry in gvf_reader:
             # record GVF counts
             report.gvf_feature_line_count += 1
             report.gvf_chromosome_count[gvf_entry.seqid] += 1

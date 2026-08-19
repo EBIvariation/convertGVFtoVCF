@@ -45,36 +45,30 @@ def read_pragma_mapper(pragma_mapper_file):
             pragma_to_vcf_header[pragma] = vcf_header
     return pragma_to_vcf_header
 
-def read_in_gvf_header(gvf_input):
-    """ Reads in the user provided GVF file.
-    :param gvf_input: The input GVF file
-    :return:
-        - gvf_pragmas: list of pragma lines (start with ## at the top of GVF file)
-        - gvf_non_essential: list of non essential pragma (start with # near the top of GVF file)
-    """
-    gvf_pragmas = []  # list of pragma lines starting with: ##
-    gvf_non_essential = []  # list of non-essential lines starting with: #
-    with open(gvf_input) as gvf_file:
-        for line in gvf_file:
-            if line.startswith("##"):
-                gvf_pragmas.append(line.rstrip())
-            elif line.startswith("#"):
-                gvf_non_essential.append(line.rstrip())
-            else:
-                break
-    return gvf_pragmas, gvf_non_essential
+class GvfFileReader:
+    """The responsibility of this class is to read the GVF file."""
+    def __init__(self, gvf_file):
+        """Initialise the reader with the file path
+        :param gvf_file: The path to input GVF file
+        """
+        self.gvf_file = gvf_file
+        self.pragmas = [] # list of pragma lines starting with: ##
+        self.non_essential = []  # list of non-essential lines starting with: #
 
-def read_in_gvf_data(gvf_input):
-    """ Reads in the user provided GVF file.
-    :param gvf_input: arguments.gvf_input : The input GVF file
-    :return iterator of GvfFeatureline objects
-    """
-
-    with open(gvf_input) as gvf_file:
-        for line in gvf_file:
-            if not line.startswith("#"):
-                f_list = line.rstrip().split("\t")
-                yield GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
+    def __iter__(self):
+        """Reads in the GVF file, stores the pragma (#) and pragma comments (##) and yields GvfFeatureLine objects
+        :return: iterator of GvfFeatureline objects
+        """
+        with open(self.gvf_file) as file:
+            for line in file:
+                if line.startswith("##"):
+                    self.pragmas.append(line.rstrip())
+                elif line.startswith("#"):
+                    self.non_essential.append(line.rstrip())
+                else:
+                    f_list = line.rstrip().split("\t")
+                    if len(f_list) >= 9:
+                        yield GvfFeatureline(f_list[0], f_list[1], f_list[2], f_list[3], f_list[4], f_list[5], f_list[6], f_list[7], f_list[8])
 
 def generate_symbolic_allele_dict(mapping_dictionary):
     """Reads in mapping dictionary and returns a symbolic allele dictionary.

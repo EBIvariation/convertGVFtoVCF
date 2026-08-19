@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from convert_gvf_to_vcf.project_paths import ProjectPaths
 from convert_gvf_to_vcf.utils import read_yaml, read_pragma_mapper, generate_symbolic_allele_dict, \
-    build_iupac_ambiguity_code, read_in_gvf_header, read_in_gvf_data, get_validated_value, EnvironmentLogger
+    build_iupac_ambiguity_code, GvfFileReader, get_validated_value, EnvironmentLogger
 from convert_gvf_to_vcf.lookup import Lookup
 
 class TestUtils(unittest.TestCase):
@@ -37,19 +37,28 @@ class TestUtils(unittest.TestCase):
         symbolic_allele_dictionary = generate_symbolic_allele_dict(self.reference_lookup.mapping_attribute_dict)
         assert len(symbolic_allele_dictionary) > 0
 
-    def test_read_in_gvf_header(self):
-        gvf_pragmas, gvf_non_essentials = read_in_gvf_header(self.input_file)
-        assert gvf_pragmas[0] == '##gff-version 3'
-        assert all((gvf_pragma.startswith('##') for gvf_pragma in gvf_pragmas))
-        assert len(gvf_pragmas) == 5
-        assert all((gvf_non_essential.startswith('#') for gvf_non_essential in gvf_non_essentials))
-        assert len(gvf_non_essentials) == 15
+    def test__iter__(self):
+        gvf_reader = GvfFileReader(self.input_file)
+        # assert empty lists
+        assert gvf_reader.pragmas == []
+        assert gvf_reader.non_essential == []
 
-    def test_read_in_gvf_data(self):
-        gvf_features_gen = read_in_gvf_data(self.input_file)
-        assert type(gvf_features_gen).__name__ ==  'generator'
+        # force generator to populate header list
+        gvf_features = list(gvf_reader)
+        assert gvf_reader.pragmas[0] == '##gff-version 3'
+        assert all((gvf_pragma.startswith('##') for gvf_pragma in gvf_reader.pragmas))
+        assert len(gvf_reader.pragmas) == 5
+        assert all((gvf_non_essential.startswith('#') for gvf_non_essential in gvf_reader.non_essential))
+        assert len(gvf_reader.non_essential) == 15
+        assert len(gvf_features) > 0
+        assert gvf_features[0].seqid is not None
+
+        # fresh instance
+        gvf_reader = GvfFileReader(self.input_file)
+        reader_iter = iter(gvf_reader)
+        assert type(reader_iter).__name__ ==  'generator'
         # 7 lines in the GVF
-        lines = list(gvf_features_gen)
+        lines = list(reader_iter)
         assert len(lines) == 7
         assert type(lines[0]).__name__ ==  'GvfFeatureline'
         assert lines[0].start == '1'
