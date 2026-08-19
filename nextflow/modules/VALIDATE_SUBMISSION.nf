@@ -16,7 +16,8 @@ process VALIDATE_SUBMISSION {
     def submit_study_dir = "${params.output_dir}/submission/${input_study_name}"
     def metadata_json = "${submit_study_dir}/eva_submission_${study_accession}.json"
     """
-    eva-sub-cli.py \\
+    export PYTHONPATH="${params.executable.eva_sub_cli.script_path}"
+    ${params.executable.eva_sub_cli.interpreter} ${params.executable.eva_sub_cli.script_path}/eva-sub-cli.py \\
         --submission_dir "${submit_study_dir}" \\
         --metadata_json "${metadata_json}" \\
         --tasks validate \\
