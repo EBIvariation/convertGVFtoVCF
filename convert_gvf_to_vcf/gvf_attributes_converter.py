@@ -88,12 +88,12 @@ class GvfAttributeTransformer:
             if attrib_key in self._mapping_attribute_dict:
                 field_values = self._mapping_attribute_dict[attrib_key]
                 for field in field_values:
-                    self.process_vcf_fields(attrib_key, field, field_values, self.gvf_parser,
+                    self.process_vcf_fields(attrib_key, field, field_values,
                                             vcf_format_values, vcf_info_values)
             else:
                 logger.info(f"catching attribute keys for review at a later date {attrib_key} {attrib_value}")
                 dropped_gvf_attributes.append(attrib_key)
-        self.apply_genotype_inference(self.gvf_parser, vcf_format_values, vcf_info_values)
+        self.apply_genotype_inference(vcf_format_values, vcf_info_values)
         return gvf_attribute_dictionary, vcf_info_values, vcf_format_values
 
     def apply_genotype_inference(self, vcf_format_values, vcf_info_values):

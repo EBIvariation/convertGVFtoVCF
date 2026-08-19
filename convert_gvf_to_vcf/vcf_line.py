@@ -67,12 +67,13 @@ class VcfLineBuilder:
         transformer = GvfAttributeTransformer(
             mapping_attribute_dict=self.reference_lookup.mapping_attribute_dict,
             field_lines_dictionary=self.field_lines_dictionary,
-            all_possible_lines_dictionary=self.all_possible_lines_dictionary
+            all_possible_lines_dictionary=self.all_possible_lines_dictionary,
+            gvf_parser=gvf_parser
         )
 
         (vcf_value_from_gvf_attribute,
          vcf_values_for_info,
-         vcf_values_for_format) = transformer.convert_gvf_attributes_to_vcf_values(gvf_parser)
+         vcf_values_for_format) = transformer.convert_gvf_attributes_to_vcf_values()
 
 
         # Attributes which might form useful parts of INFO field in VCF lines (useful information from GVF)

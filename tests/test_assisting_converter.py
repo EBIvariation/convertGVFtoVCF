@@ -94,10 +94,10 @@ class TestAssistingConverter(unittest.TestCase):
         transformer = GvfAttributeTransformer(
             mapping_attribute_dict=self.mapping_dictionary,
             field_lines_dictionary=self.field_lines_dictionary,
-            all_possible_lines_dictionary=self.all_possible_lines_dictionary
+            all_possible_lines_dictionary=self.all_possible_lines_dictionary,
+            gvf_parser=gvf_parser
         )
-        gvf_attribute_dictionary, vcf_info_values, vcf_format_values = transformer.convert_gvf_attributes_to_vcf_values(
-            gvf_parser)
+        gvf_attribute_dictionary, vcf_info_values, vcf_format_values = transformer.convert_gvf_attributes_to_vcf_values()
 
 
         # testing gvf_attribute_dictionary
