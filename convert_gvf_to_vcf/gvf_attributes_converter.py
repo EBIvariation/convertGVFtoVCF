@@ -39,7 +39,7 @@ class GvfAttributeParser:
         :param column9_of_gvf: column of the GVF file
         """
         self._raw_column9 = column9_of_gvf
-        self._attributes = self.get_gvf_attributes(column9_of_gvf)
+        self.attributes = self.get_gvf_attributes(column9_of_gvf)
 
     def get_gvf_attributes(self, column9_of_gvf):
         """Get a dictionary of GVF attributes
@@ -79,7 +79,7 @@ class GvfAttributeTransformer:
         :return gvf_attribute_dictionary, vcf_info_values, vcf_format_values: dict of GVF attributes and VCF values.
         """
         # parse GVF attributes
-        gvf_attribute_dictionary = gvf_parser._attributes
+        gvf_attribute_dictionary = gvf_parser.attributes
         # create dictionaries to store INFO and FORMAT values
         vcf_info_values = {} # key is info field value; value is value
         vcf_format_values = {} # key is format field value; value is value
@@ -105,7 +105,7 @@ class GvfAttributeTransformer:
         """
         vcf_type = self.determine_vcf_type(vcf_info_values, vcf_format_values)
         if vcf_type == "SITES-ONLY":
-            self.infer_genotype(gvf_parser._attributes, vcf_format_values)
+            self.infer_genotype(gvf_parser.attributes, vcf_format_values)
 
     def process_vcf_fields(self, attrib_key, field, field_values, gvf_parser, vcf_format_values,
                            vcf_info_values):
@@ -118,9 +118,9 @@ class GvfAttributeTransformer:
         :param vcf_info_values: dictionary of sample names to INFO field key-value pairs
         """
         if field == "INFO":
-            self.process_vcf_info_field(attrib_key, field, field_values, gvf_parser._attributes, vcf_info_values)
+            self.process_vcf_info_field(attrib_key, field, field_values, gvf_parser.attributes, vcf_info_values)
         elif field == "FORMAT":
-            self.process_vcf_format_field(attrib_key, field, field_values, gvf_parser._attributes, vcf_format_values)
+            self.process_vcf_format_field(attrib_key, field, field_values, gvf_parser.attributes, vcf_format_values)
         else:
             logger.warning(f"Unsupported Field: {field}")
 

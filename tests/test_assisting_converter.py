@@ -84,7 +84,7 @@ class TestAssistingConverter(unittest.TestCase):
         col9 = "ID=1;Name=nssv1412199;Alias=CNV28955;parent=nsv811094;Start_range=.,1;End_range=2,.;sample_name=Wilds2-3"
         gvf_parser = GvfAttributeParser(col9)
         expected_dictionary = {'ID': '1', 'Name': 'nssv1412199', 'Alias': 'CNV28955', 'parent': 'nsv811094', 'Start_range': ['.', '1'], 'End_range': ['2', '.'], 'sample_name': 'Wilds2-3'}
-        assert gvf_parser._attributes == expected_dictionary
+        assert gvf_parser.attributes == expected_dictionary
 
     def test_convert_gvf_attributes_to_vcf_values(self):
         col9 = "ID=1;Name=nssv1412199;Alias=CNV28955;parent=nsv811094;Start_range=.,1;End_range=2,.;sample_name=Wilds2-3;Genotype=0:1"
