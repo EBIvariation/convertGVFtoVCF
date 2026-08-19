@@ -115,8 +115,8 @@ class TestAssistingConverter(unittest.TestCase):
         vcf_format_values = {}
 
         gvf_parser = GvfAttributeParser("sample_name=Wilds2-3")
-        transformer = GvfAttributeTransformer(None, None, None)
-        transformer.apply_genotype_inference(gvf_parser, vcf_format_values, vcf_info_values)
+        transformer = GvfAttributeTransformer(None, None, None, gvf_parser)
+        transformer.apply_genotype_inference(vcf_format_values, vcf_info_values)
 
         expected_format_values = {'Wilds2-3': {'GT': '1/.'}}
         assert vcf_format_values == expected_format_values

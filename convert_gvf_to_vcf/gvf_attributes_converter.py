@@ -39,7 +39,7 @@ class GvfAttributeParser:
         :param column9_of_gvf: column of the GVF file
         """
         self._raw_column9 = column9_of_gvf
-        self.attributes = self.get_gvf_attributes(self._raw_column9)
+        self.attributes = self.get_gvf_attributes()
 
     def get_gvf_attributes(self):
         """Get a dictionary of GVF attributes
@@ -60,25 +60,25 @@ class GvfAttributeParser:
 
 class GvfAttributeTransformer:
     """The responsibility of this class is to convert the GVF attributes to a VCF-compliant fields."""
-    def __init__(self, mapping_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary):
+    def __init__(self, mapping_attribute_dict, field_lines_dictionary, all_possible_lines_dictionary, gvf_parser):
         """Initialises the transformer with the dictionaries it  needs to convert GVF attributes
         :param mapping_attribute_dict: Dictionary mapping GVF attributes to VCF fields.
         :param field_lines_dictionary: Dictionaries for tracking header lines (ALT, INFO, FILTER, and FORMAT).
         :param all_possible_lines_dictionary: All possible VCF header lines.
+        :param gvf_parser: GvfAttributeParser object to obtain attributes column 9 of gvf file
         """
         self._mapping_attribute_dict = mapping_attribute_dict
         self._field_lines_dictionary = field_lines_dictionary
         self._all_possible_lines_dictionary = all_possible_lines_dictionary
+        self.gvf_parser = gvf_parser
 
-    def convert_gvf_attributes_to_vcf_values(self,
-                                             gvf_parser):
+    def convert_gvf_attributes_to_vcf_values(self):
         """Converts GVF attributes to a dictionary that will store VCF values.
         Populates ALT INFO FILTER FORMAT with the correct VCF values.
-        :param gvf_parser: GvfAttributeParser object to obtain attributes column 9 of gvf file
         :return gvf_attribute_dictionary, vcf_info_values, vcf_format_values: dict of GVF attributes and VCF values.
         """
         # parse GVF attributes
-        gvf_attribute_dictionary = gvf_parser.attributes
+        gvf_attribute_dictionary = self.gvf_parser.attributes
         # create dictionaries to store INFO and FORMAT values
         vcf_info_values = {} # key is info field value; value is value
         vcf_format_values = {} # key is format field value; value is value
@@ -88,38 +88,36 @@ class GvfAttributeTransformer:
             if attrib_key in self._mapping_attribute_dict:
                 field_values = self._mapping_attribute_dict[attrib_key]
                 for field in field_values:
-                    self.process_vcf_fields(attrib_key, field, field_values, gvf_parser,
+                    self.process_vcf_fields(attrib_key, field, field_values, self.gvf_parser,
                                             vcf_format_values, vcf_info_values)
             else:
                 logger.info(f"catching attribute keys for review at a later date {attrib_key} {attrib_value}")
                 dropped_gvf_attributes.append(attrib_key)
-        self.apply_genotype_inference(gvf_parser, vcf_format_values, vcf_info_values)
+        self.apply_genotype_inference(self.gvf_parser, vcf_format_values, vcf_info_values)
         return gvf_attribute_dictionary, vcf_info_values, vcf_format_values
 
-    def apply_genotype_inference(self, gvf_parser, vcf_format_values, vcf_info_values):
+    def apply_genotype_inference(self, vcf_format_values, vcf_info_values):
         """Determines and infers genotype values if the VCF record is SITES-ONLY.
-        :param gvf_parser: GvfAttributeParser object
         :param vcf_format_values: dictionary of sample names to FORMAT field key-value pairs
         :param vcf_info_values: dictionary of sample names to INFO field key-value pairs
         """
         vcf_type = self.determine_vcf_type(vcf_info_values, vcf_format_values)
         if vcf_type == "SITES-ONLY":
-            self.infer_genotype(gvf_parser.attributes, vcf_format_values)
+            self.infer_genotype(self.gvf_parser.attributes, vcf_format_values)
 
-    def process_vcf_fields(self, attrib_key, field, field_values, gvf_parser, vcf_format_values,
+    def process_vcf_fields(self, attrib_key, field, field_values, vcf_format_values,
                            vcf_info_values):
         """Process depending on VCF field.
         :param attrib_key: gvf attribute to be processed: key to extract value from gvf_attribute_dictionary
         :param field: current field to be processed
         :param field_values: configuration dictionary (FieldKey, Number, Type, Description) by field
-        :param gvf_parser: GvfAttributeParser object
         :param vcf_format_values: dictionary of sample names to FORMAT field key-value pairs
         :param vcf_info_values: dictionary of sample names to INFO field key-value pairs
         """
         if field == "INFO":
-            self.process_vcf_info_field(attrib_key, field, field_values, gvf_parser.attributes, vcf_info_values)
+            self.process_vcf_info_field(attrib_key, field, field_values, self.gvf_parser.attributes, vcf_info_values)
         elif field == "FORMAT":
-            self.process_vcf_format_field(attrib_key, field, field_values, gvf_parser.attributes, vcf_format_values)
+            self.process_vcf_format_field(attrib_key, field, field_values, self.gvf_parser.attributes, vcf_format_values)
         else:
             logger.warning(f"Unsupported Field: {field}")
 
