@@ -28,7 +28,7 @@ workflow {
     credentials_ch = PARSE_CREDENTIALS(config_file_ch)
     study_accession_ch = params.study_accession ? Channel.value(params.study_accession) : Channel.value('ALL_STUDIES')
     
-    finder_script_ch = Channel.value(file("${params.executable.convert_gvf.script_path}/convert_gvf_to_vcf/gvf_file_finder.py", checkIfExists: true))
+    finder_script_ch = Channel.value(file("${params.executable.convert_gvf.script_path}/gvf_file_finder.py", checkIfExists: true))
     
     // Step 2: FIND PATHS
     gvf_files_ch   = Channel.fromPath("${params.input_dir}/**/*.gvf")
