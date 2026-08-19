@@ -122,21 +122,23 @@ class TestAssistingConverter(unittest.TestCase):
         assert vcf_format_values == expected_format_values
 
     def test_process_vcf_fields(self):
-        gvf_parser = GvfAttributeParser("ID=1;sample_name=Wilds1;Genotype=0:1")
+        col9 = "ID=1;Name=nssv1412199;Alias=CNV28955;parent=nsv811094;Start_range=.,1;End_range=2,.;sample_name=Wilds2-3;Genotype=0:1"
+        gvf_parser = GvfAttributeParser(col9)
         vcf_info_values = {}
         vcf_format_values = {}
 
         info_field_values = {"INFO": {"FieldKey": "ID", "Number": "1", "Type": "String", "Description": "ID"}}
-        transformer = GvfAttributeTransformer(self.mapping_dictionary, self.field_lines_dictionary, self.all_possible_lines_dictionary)
-        transformer.process_vcf_fields("ID", "INFO", info_field_values, gvf_parser, vcf_format_values, vcf_info_values)
+        transformer = GvfAttributeTransformer(self.mapping_dictionary, self.field_lines_dictionary, self.all_possible_lines_dictionary, gvf_parser)
+        transformer.process_vcf_fields("ID", "INFO", info_field_values, vcf_format_values, vcf_info_values)
         assert vcf_info_values == {"ID": "1"}
 
         format_field_values = {"FORMAT": {"FieldKey": "GT"}}
-        transformer.process_vcf_fields("Genotype", "FORMAT", format_field_values, gvf_parser, vcf_format_values, vcf_info_values)
-        assert vcf_format_values == {"Wilds1": {"GT": "0:1"}}
+        transformer.process_vcf_fields("Genotype", "FORMAT", format_field_values, vcf_format_values, vcf_info_values)
+        assert vcf_format_values == {"Wilds2-3": {"GT": "0:1"}}
 
     def test_infer_genotype(self):
-        transformer = GvfAttributeTransformer(self.mapping_dictionary, self.field_lines_dictionary, self.all_possible_lines_dictionary)
+        gvf_parser = GvfAttributeParser("sample_name=Wilds2-3")
+        transformer = GvfAttributeTransformer(self.mapping_dictionary, self.field_lines_dictionary, self.all_possible_lines_dictionary, gvf_parser)
 
         gvf_attributes = {"sample_name": "Wilds2-3"}
         vcf_format_values = {}
@@ -147,7 +149,8 @@ class TestAssistingConverter(unittest.TestCase):
         assert vcf_format_values == expected_format_values
 
     def test_determine_vcf_type(self):
-        transformer = GvfAttributeTransformer(self.mapping_dictionary, self.field_lines_dictionary, self.all_possible_lines_dictionary)
+        gvf_parser = GvfAttributeParser("ID=1")
+        transformer = GvfAttributeTransformer(self.mapping_dictionary, self.field_lines_dictionary, self.all_possible_lines_dictionary, gvf_parser)
 
         vcf_info_values = {}
         vcf_format_values = {'Wilds2-3': {'GT': '0/1'}}
@@ -165,8 +168,9 @@ class TestAssistingConverter(unittest.TestCase):
         assert result == "SITES-ONLY"
 
     def test_process_vcf_format_field(self):
-
-        transformer = GvfAttributeTransformer(self.mapping_dictionary, self.field_lines_dictionary, self.all_possible_lines_dictionary)
+        col9 = "ID=1;Name=nssv1412199;Alias=CNV28955;parent=nsv811094;Start_range=.,1;End_range=2,.;sample_name=Wilds2-3;Genotype=0:1"
+        gvf_parser = GvfAttributeParser(col9)
+        transformer = GvfAttributeTransformer(self.mapping_dictionary, self.field_lines_dictionary, self.all_possible_lines_dictionary, gvf_parser)
 
         attrib_key = "Genotype"
         field = "FORMAT"
@@ -187,7 +191,9 @@ class TestAssistingConverter(unittest.TestCase):
 
 
     def test_process_vcf_info_field(self):
-        transformer = GvfAttributeTransformer(self.mapping_dictionary, self.field_lines_dictionary, self.all_possible_lines_dictionary)
+        col9 = "ID=1;Name=nssv1412199;Alias=CNV28955;parent=nsv811094;Start_range=.,1;End_range=2,.;sample_name=Wilds2-3;Genotype=0:1"
+        gvf_parser = GvfAttributeParser(col9)
+        transformer = GvfAttributeTransformer(self.mapping_dictionary, self.field_lines_dictionary, self.all_possible_lines_dictionary, gvf_parser)
 
         attrib_key = "ID"
         field = "INFO"
