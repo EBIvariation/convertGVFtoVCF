@@ -1,0 +1,28 @@
+process RENAME_CONTIGS {
+    tag "Renaming contigs for ${assembly_accession}"
+    
+    publishDir { "${params.clean_assembly_dir}/${species}/${assembly_accession}" }, mode: 'copy'
+ 
+    input:
+    tuple path(gvf_file), val(assembly_name), val(assembly_fasta), val(assembly_report), val(assembly_accession), val(species)
+
+    output:
+    path "${assembly_accession}.fa", emit: renamed_fasta
+    path "*_assembly_report.txt", emit: safe_report
+    script:
+    def accession    = assembly_accession
+    def output_fasta = "${accession}.fa"
+
+    """
+    export PYTHONPATH="${params.executable.eva_submission.script_path}"
+    export REF_PATH="${params.REF_PATH}"
+    ${params.executable.eva_submission.interpreter} -m eva_submission.steps.rename_contigs_from_insdc_in_assembly \\
+        --get_contig_from_vcf data \\
+        --assembly_accession "${accession}" \\
+        --custom_fasta "${output_fasta}" \\
+        --assembly_fasta "${assembly_fasta}" \\
+        --assembly_report "${assembly_report}" \\
+        --vcf_files "${gvf_file}"
+    cp "${assembly_report}" "${assembly_accession}_assembly_report.txt"
+    """
+}
