@@ -1,0 +1,10 @@
+name: convertgvftovcf_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - openjdk=17.0.18
+  - samtools
+  - nextflow
+
