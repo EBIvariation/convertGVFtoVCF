@@ -12,6 +12,7 @@ process SUBMIT_TO_EVA {
 
     script:
     """
+    source ${params.executable.eva_sub_cli.script_path}
     eva-sub-cli.py --submission_dir "${submit_study_dir}" \
 		           --metadata_json "${metadata_json}" \
 		           --tasks submit \
