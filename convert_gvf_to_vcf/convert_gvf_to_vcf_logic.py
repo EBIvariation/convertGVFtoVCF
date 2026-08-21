@@ -356,7 +356,7 @@ def create_sorted_gvf_directory(gvf_input, output_dir_name="output"):
     """
     *base_directories, input_dir, study_dir, gvf_dir, gvf_file_basename = split_gvf_path(gvf_input)
     sorted_gvf_dir = "sorted_gvf"
-    target_dir = "/" + os.path.join(*base_directories, output_dir_name, study_dir, sorted_gvf_dir)
+    target_dir = os.path.join(*base_directories, output_dir_name, study_dir, sorted_gvf_dir)
     logger.info(f"Sorted GVF folder: {target_dir}")
     os.makedirs(target_dir, exist_ok=True)
     return target_dir
