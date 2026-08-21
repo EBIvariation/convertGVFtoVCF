@@ -134,10 +134,10 @@ def main():
     logger.info(f"Total number of studies found: {len(gvf_data)}")
     logger.info(f"Total number of GVF files: {sum(len(files) for files in gvf_data.values())}")
     logger.info(f"Searching for GVF files complete: {args.search_dir}")
-
+    output_dir_name = os.path.basename(os.path.normpath(args.output))
     #########################################
     # for gvf file co ordination only
-    GvfMetadataCoordinator(gvf_data, args.output, args.config).process_studies()
+    GvfMetadataCoordinator(gvf_data, args.output, args.config, output_dir_name).process_studies()
     #TODO: count studies stats and top dir stats
     #########################################
 
