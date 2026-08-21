@@ -502,7 +502,7 @@ def cleanup_temp_files(list_of_temp_files):
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("gvf_input", help="GVF tests file.")
+    parser.add_argument("gvf_input", help="GVF input file.")
     parser.add_argument("vcf_output", help="VCF output file.")
     parser.add_argument("--json_output_eva", help="EVA JSON output")
     parser.add_argument("--json_output_dgva", help="DGVa JSON output")
