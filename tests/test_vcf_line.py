@@ -17,7 +17,7 @@ class TestVcfLineBuilder(unittest.TestCase):
         # Prepare Outputs
         self.output_file = os.path.join(self.paths.test_dir, "input", "a.vcf")
         # Prepare References
-        self.assembly = os.path.join(self.paths.test_dir, "input", "zebrafish.fa")
+        self.assembly = os.path.join(self.paths.test_dir, "input", "reference_sequences","zebrafish.fa")
         self.reference_lookup = Lookup(self.assembly, self.paths)
         # Set up GVF line object
         gvf_feature_line = "chromosome1	DGVa	copy_number_loss	77	78	.	+	.	ID=1;Name=nssv1412199;Alias=CNV28955;variant_call_so_id=SO:0001743;parent=nsv811094;Start_range=.,776614;End_range=786127,.;submitter_variant_call_id=CNV28955;sample_name=Wilds2-3;remap_score=.98857;Variant_seq=."

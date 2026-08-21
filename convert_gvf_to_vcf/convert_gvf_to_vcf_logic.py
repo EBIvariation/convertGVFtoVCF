@@ -258,7 +258,7 @@ def write_header(vcf_output, pragmas_for_vcf, header_lines_per_type, header_fiel
         vcf_header_output.write(f"{header_fields}\n")
     return vcf_header_file
 
-def convert(gvf_input, vcf_output, assembly, paths):
+def convert(gvf_input, vcf_output, assembly, paths, output_dir_name="output"):
     # Log the inputs and outputs.
     logger.info("Running the GVF to VCF converter")
     logger.info(f"The provided input file is: {gvf_input}")
@@ -269,8 +269,9 @@ def convert(gvf_input, vcf_output, assembly, paths):
     assert os.path.isfile(gvf_input), f"GVF file does not exist {gvf_input}"
 
     # sort gvf and reassign so gvf_input is sorted.
+    sorted_gvf_dir = create_sorted_gvf_directory(gvf_input, output_dir_name)
     original_gvf_input = gvf_input
-    sorted_gvf_input = sort_gvf_file(gvf_input)
+    sorted_gvf_input = sort_gvf_file(gvf_input, sorted_gvf_dir)
     gvf_input = sorted_gvf_input
 
     # Creating lookup object to store important dictionaries and log what has been stored.
@@ -336,23 +337,49 @@ def convert(gvf_input, vcf_output, assembly, paths):
         reference_lookup.close()
 
 #helper functions for convert
-def sort_gvf_file(gvf_input):
+def split_gvf_path(gvf_input):
+    """Splits GVF file path into directories and file name
+    :params gvf_input: the unsorted raw file e.g.
+        /basepaths/data_dir/estd1_TEST_et_al_2006/gvf/estd1_TEST_et_al_2006.2014-04-01.GRCh38.Remapped.gvf
+    :return *base_directories, input_dir, study_dir, gvf_dir, gvf_file_basename
+    """
+    directories = [d for d in gvf_input.split("/") if d]
+    *base_directories, input_dir, study_dir, gvf_dir, gvf_file_basename = directories
+    return *base_directories, input_dir, study_dir, gvf_dir, gvf_file_basename
+
+def create_sorted_gvf_directory(gvf_input, output_dir_name="output"):
+    """Creates a separate directory for sorted GVF files
+    :params gvf_input: the unsorted raw file e.g.
+        /basepaths/data_dir/estd1_TEST_et_al_2006/gvf/estd1_TEST_et_al_2006.2014-04-01.GRCh38.Remapped.gvf
+    :params output_dir_name: provided output dir name (not full path)
+    :return target_dir: path to the created directory to store sorted gvfs
+    """
+    *base_directories, input_dir, study_dir, gvf_dir, gvf_file_basename = split_gvf_path(gvf_input)
+    sorted_gvf_dir = "sorted_gvf"
+    target_dir = os.path.join(*base_directories, output_dir_name, study_dir, sorted_gvf_dir)
+    logger.info(f"Sorted GVF folder: {target_dir}")
+    os.makedirs(target_dir, exist_ok=True)
+    return target_dir
+
+
+def sort_gvf_file(gvf_input, sorted_gvf_dir):
     """Sorts the GVF file and returns a sorted gvf file.
     :params gvf_input: the unsorted file
+    :params sorted_gvf_directory: the directory to store the sorted files
     :return sorted_gvf_input: the sorted file"""
     logger.info("Sorting unsorted GVF input")
-    sorted_gvf_input = gvf_input + ".sorted.gvf"
-
+    *base_directories, input_dir, study_dir, gvf_dir, gvf_file_basename =split_gvf_path(gvf_input)
+    sorted_gvf_base_name = gvf_file_basename + ".sorted.gvf"
+    sorted_gvf_input = os.path.join(sorted_gvf_dir, sorted_gvf_base_name)
     sort_command = (
         f'(grep "^#" \'{gvf_input}\'; '
         f'grep -v "^#" \'{gvf_input}\' | sort -k1,1 -k4,4n) > \'{sorted_gvf_input}\''
     )
-
     try:
         subprocess.run(sort_command, shell=True, check=True)
         return sorted_gvf_input
     except subprocess.CalledProcessError as e:
-        logger.error(f"System sort failed: {e}")
+        logger.error(f"Sorting GVF file failed: {e}")
         raise
 
 
@@ -472,7 +499,7 @@ def cleanup_temp_files(list_of_temp_files):
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("gvf_input", help="GVF tests file.")
+    parser.add_argument("gvf_input", help="GVF input file.")
     parser.add_argument("vcf_output", help="VCF output file.")
     parser.add_argument("--json_output_eva", help="EVA JSON output")
     parser.add_argument("--json_output_dgva", help="DGVa JSON output")

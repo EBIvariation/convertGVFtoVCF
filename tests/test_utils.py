@@ -17,11 +17,11 @@ class TestUtils(unittest.TestCase):
         self.etc_folder =  self.paths.etc_dir
 
         # Prepare Inputs
-        self.input_file = os.path.join(self.tests_folder, "input", "zebrafish.gvf")
+        self.input_file = os.path.join(self.tests_folder, "input", "estd1_TEST_et_al_2006", "gvf", "zebrafish.gvf")
         # Prepare Outputs
         self.output_file = os.path.join(self.tests_folder, "input", "a.vcf")
         # Prepare References
-        self.assembly = os.path.join(self.tests_folder, "input", "zebrafish.fa")
+        self.assembly = os.path.join(self.tests_folder, "input", "reference_sequences", "zebrafish.fa")
         self.reference_lookup = Lookup(self.assembly, self.paths)
 
 

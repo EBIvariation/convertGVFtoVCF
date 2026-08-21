@@ -11,12 +11,12 @@ logger = log_cfg.get_logger(__name__)
 
 class GvfMetadataCoordinator:
     # the responsibility of this class is to co-ordinate multiple GVFs with their Metadata. Feeds into gather metadata script
-    def __init__(self, study_and_gvf_files, base_output_dir, config_path):
+    def __init__(self, study_and_gvf_files, base_output_dir, config_path, output_folder="output"):
         self.scan_results = study_and_gvf_files #{study_accession:[gvf_files]}
         self.base_output_dir = base_output_dir # top level output
         self.config_path = config_path
         self.project_paths = ProjectPaths()
-
+        self.output_folder = output_folder
     def process_studies(self):
         """ Processes the dictionary result of scanning the directories {study_accession:[gvf_files]}.
         If multiple files it will reconfigure the JSON file separated out by assembly.
@@ -195,7 +195,8 @@ class GvfMetadataCoordinator:
             gvf_input=individual_gvf,
             vcf_output=individual_vcf_output,
             assembly=self.assembly_path,
-            paths=self.project_paths
+            paths=self.project_paths,
+            output_dir_name=self.output_folder
         )
 
         if hasattr(self, 'eva_retriever') and self.eva_retriever:

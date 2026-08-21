@@ -44,10 +44,10 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         study_and_gvf_files_input_data = {"estd1": single_gvf_file}
         coordinator = GvfMetadataCoordinator(study_and_gvf_files_input_data, self.output_dir, self.config)
         coordinator.base_output_dir = self.output_dir
-        coordinator.parse_gvf_filename = MagicMock(return_value=("estd1_Redon_et_al_2006", None, None))
+        coordinator.parse_gvf_filename = MagicMock(return_value=("estd1_TEST_et_al_2006", None, None))
         coordinator._process_gvf_files = MagicMock()
         coordinator.process_studies()
-        expected_json_1 = os.path.join(self.output_dir, "submission", "estd1_Redon_et_al_2006",
+        expected_json_1 = os.path.join(self.output_dir, "submission", "estd1_TEST_et_al_2006",
                                        "eva_submission_estd1.json")
         coordinator._process_gvf_files.assert_called_once_with(single_gvf_file, "estd1", expected_json_1)
 
@@ -55,17 +55,17 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         study_and_gvf_files_input_data = {"estd1": multiple_gvf_files}
         coordinator = GvfMetadataCoordinator(study_and_gvf_files_input_data, self.output_dir, self.config)
         coordinator.base_output_dir = self.output_dir
-        coordinator.parse_gvf_filename = MagicMock(return_value=("estd1_Redon_et_al_2006", None, None))
+        coordinator.parse_gvf_filename = MagicMock(return_value=("estd1_TEST_et_al_2006", None, None))
         coordinator._process_gvf_files = MagicMock()
         coordinator.process_studies()
-        expected_json_2 = os.path.join(self.output_dir, "submission", "estd1_Redon_et_al_2006",
+        expected_json_2 = os.path.join(self.output_dir, "submission", "estd1_TEST_et_al_2006",
                                        "eva_submission_estd1.json")
         coordinator._process_gvf_files.assert_called_once_with(multiple_gvf_files, "estd1", expected_json_2)
 
     def test_process_gvf_files(self):
         coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
 
-        study_name = "estd1_Redon_et_al_2006"
+        study_name = "estd1_TEST_et_al_2006"
         date = "2014-04-01"
         assembly_name = "GRCh38"
         study_accession = "estd1"
@@ -130,14 +130,15 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         coordinator.base_output_dir = "tests/output"
         coordinator.project_paths = self.paths
 
-        assembly = "tests/input/human.fa"
+        assembly = "tests/input/reference_sequences/human.fa"
         coordinator.assembly_path = assembly
         coordinator.json_eva_path = "eva.json"
         coordinator.eva_retriever = "mock_retriever"
+        output_dir_name = "output"
 
         study_accession = "estd1"
-        vcf_file = "tests/output/submission/estd1_Redon_et_al_2006/estd1_Redon_et_al_2006.2014-04-01.GRCh37.Remapped.vcf"
-        input_gvf = "tests/data_dir/estd1_Redon_et_al_2006/gvf/estd1_Redon_et_al_2006.2014-04-01.GRCh37.Remapped.gvf"
+        vcf_file = "tests/output/submission/estd1_TEST_et_al_2006/estd1_TEST_et_al_2006.2014-04-01.GRCh37.Remapped.vcf"
+        input_gvf = "tests/data_dir/estd1_TEST_et_al_2006/gvf/estd1_TEST_et_al_2006.2014-04-01.GRCh37.Remapped.gvf"
 
         output_result = coordinator.convert_individual_gvf(individual_gvf=input_gvf)
 
@@ -145,7 +146,9 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
             gvf_input=input_gvf,
             vcf_output=vcf_file,
             assembly=assembly,
-            paths=self.paths
+            paths=self.paths,
+            output_dir_name= output_dir_name
+
         )
 
         mock_update.assert_called_once_with(
@@ -239,7 +242,7 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
 
     def test_group_files_by_assembly(self):
         coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
-        study_name = "estd1_Redon_et_al_2006"
+        study_name = "estd1_TEST_et_al_2006"
         date = "2014-04-01"
         gvf_files = [f"{study_name}.{date}.GRCh37.Remapped.gvf",
                      f"{study_name}.{date}.GRCh38.Remapped.gvf",
@@ -261,7 +264,7 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
 
     def test_parse_gvf_filename(self):
         coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
-        study_name = "estd1_Redon_et_al_2006"
+        study_name = "estd1_TEST_et_al_2006"
         date = "2014-04-01"
         gvf_files = [f"{study_name}.{date}.GRCh37.Remapped.gvf",
                      f"{study_name}.{date}.GRCh38.Remapped.gvf",
@@ -310,7 +313,7 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
 
     def test_add_multiple_assemblies_into_metadata(self):
         coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
-        study_name = "estd1_Redon_et_al_2006"
+        study_name = "estd1_TEST_et_al_2006"
         gvf_files = [
             f"{study_name}.2014-04-01.GRCh38.Remapped.gvf",
             f"{study_name}.2015-04-01.GRCh38.Remapped.gvf"
@@ -362,7 +365,7 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
 
     def test_update_analysis_and_file_blocks(self):
         coordinator = GvfMetadataCoordinator(MagicMock(), MagicMock(), MagicMock())
-        study_name = "estd1_Redon_et_al_2006"
+        study_name = "estd1_TEST_et_al_2006"
         date_1 = "2014-04-01"
         date_2 = "2015-04-01"
         gvf_files = [f"{study_name}.{date_1}.GRCh38.Remapped.gvf",
