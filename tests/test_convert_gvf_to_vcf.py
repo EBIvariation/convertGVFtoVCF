@@ -242,6 +242,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_sort_gvf_file(self):
         sorted_gvf_dir = os.path.join(self.tests_folder, "output", "estd1_TEST_et_al_2006", "sorted_gvf")
+        os.makedirs(sorted_gvf_dir, exist_ok=True)
         sorted_gvf_file = sort_gvf_file(self.unsorted_input_file, sorted_gvf_dir)
         with open(sorted_gvf_file, "r") as generated_sorted_file, open(self.input_file, "r") as expected_sorted_file:
             self.assertListEqual(generated_sorted_file.readlines(), expected_sorted_file.readlines())
