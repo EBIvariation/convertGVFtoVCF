@@ -130,10 +130,11 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         coordinator.base_output_dir = "tests/output"
         coordinator.project_paths = self.paths
 
-        assembly = "tests/input/human.fa"
+        assembly = "tests/input/reference_sequences/human.fa"
         coordinator.assembly_path = assembly
         coordinator.json_eva_path = "eva.json"
         coordinator.eva_retriever = "mock_retriever"
+        output_dir_name = "output"
 
         study_accession = "estd1"
         vcf_file = "tests/output/submission/estd1_TEST_et_al_2006/estd1_TEST_et_al_2006.2014-04-01.GRCh37.Remapped.vcf"
@@ -145,7 +146,9 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
             gvf_input=input_gvf,
             vcf_output=vcf_file,
             assembly=assembly,
-            paths=self.paths
+            paths=self.paths,
+            output_dir_name= output_dir_name
+
         )
 
         mock_update.assert_called_once_with(
