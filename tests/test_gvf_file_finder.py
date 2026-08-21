@@ -14,7 +14,7 @@ class TestGvfFileFinder(unittest.TestCase):
         self.study_accession = "estd1"
 
     def test_deduplicate_files(self):
-        files = ['estd1_Redon_et_al_2006.2014-04-01.GRCh37.Remapped.gvf', 'estd1_Redon_et_al_2006.2014-04-01.NCBI35.Submitted.gvf', 'estd1_Redon_et_al_2006.2014-04-01.GRCh37.p13.Remapped.gvf', 'estd1_Redon_et_al_2006.2014-04-01.GRCh38.Remapped.gvf']
+        files = ['estd1_TEST_et_al_2006.2014-04-01.GRCh37.Remapped.gvf', 'estd1_TEST_et_al_2006.2014-04-01.NCBI35.Submitted.gvf', 'estd1_TEST_et_al_2006.2014-04-01.GRCh37.p13.Remapped.gvf', 'estd1_TEST_et_al_2006.2014-04-01.GRCh38.Remapped.gvf']
         expected_paths = []
         for file in files:
             expected_paths.append(os.path.join(self.current_dir, file))
@@ -32,16 +32,16 @@ class TestGvfFileFinder(unittest.TestCase):
 
         mock_listdir.return_value = [
             'nstd1_Tuzun_et_al_2005',
-            'estd1_Redon_et_al_2006',
+            'estd1_TEST_et_al_2006',
             '.hidden_file',
             'wrong_prefix'
         ]
 
         result_all = file_finder._find_study_dirs(study_accession=None)
-        self.assertEqual(result_all, ['estd1_Redon_et_al_2006', 'nstd1_Tuzun_et_al_2005'])
+        self.assertEqual(result_all, ['estd1_TEST_et_al_2006', 'nstd1_Tuzun_et_al_2005'])
 
         result_specific = file_finder._find_study_dirs(study_accession="estd1")
-        self.assertEqual(result_specific, ['estd1_Redon_et_al_2006'])
+        self.assertEqual(result_specific, ['estd1_TEST_et_al_2006'])
 
     @patch('os.path.isfile', return_value=True)
     @patch('os.listdir')
@@ -65,12 +65,12 @@ class TestGvfFileFinder(unittest.TestCase):
 
     def test_scan(self):
         file_finder = GvfFileFinder(search_dir=self.top_dir)
-        study_name = "estd1_Redon_et_al_2006"
+        study_name = "estd1_TEST_et_al_2006"
 
         study_path = os.path.join(self.top_dir, study_name)
         gvf_path = os.path.join(study_path, "gvf")
 
-        files = ['estd1_Redon_et_al_2006.2014-04-01.GRCh37.Remapped.gvf', 'estd1_Redon_et_al_2006.2014-04-01.NCBI35.Submitted.gvf', 'estd1_Redon_et_al_2006.2014-04-01.GRCh37.p13.Remapped.gvf', 'estd1_Redon_et_al_2006.2014-04-01.GRCh38.Remapped.gvf']
+        files = ['estd1_TEST_et_al_2006.2014-04-01.GRCh37.Remapped.gvf', 'estd1_TEST_et_al_2006.2014-04-01.NCBI35.Submitted.gvf', 'estd1_TEST_et_al_2006.2014-04-01.GRCh37.p13.Remapped.gvf', 'estd1_TEST_et_al_2006.2014-04-01.GRCh38.Remapped.gvf']
         expected_paths = []
         for file in files:
             expected_paths.append(os.path.join(gvf_path, file))

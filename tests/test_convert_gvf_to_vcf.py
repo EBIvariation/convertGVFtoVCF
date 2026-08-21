@@ -7,7 +7,8 @@ from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import generate_vcf_header_unst
     convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line, parse_pragma, get_pragma_name_and_value, \
     get_pragma_tokens, \
     get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
-    convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert, sort_gvf_file
+    convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert, sort_gvf_file, \
+    create_sorted_gvf_directory
 from convert_gvf_to_vcf.project_paths import ProjectPaths
 
 
@@ -19,12 +20,13 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.input_folder = self.paths.package_dir
         self.tests_folder = self.paths.test_dir
         # Prepare Inputs
-        self.input_file = os.path.join(self.tests_folder, "input", "zebrafish.gvf")
-        self.unsorted_input_file= os.path.join(self.tests_folder, "input", "zebrafish.gvf")
+        # expected: basedirectories/data_directory/study_directory/gvf/file.gvf
+        self.input_file = os.path.join(self.tests_folder, "input", "estd1_TEST_et_al_2006", "gvf", "zebrafish.gvf")
+        self.unsorted_input_file= os.path.join(self.tests_folder, "input", "estd1_TEST_et_al_2006", "gvf","zebrafish.gvf")
         # Prepare Outputs
         self.output_file = os.path.join(self.tests_folder, "output", "a.vcf")
         # Prepare References
-        self.assembly = os.path.join(self.tests_folder, "input", "zebrafish.fa")
+        self.assembly = os.path.join(self.tests_folder, "input", "reference_sequences","zebrafish.fa")
         self.reference_lookup = Lookup(self.assembly, self.paths)
         self.ordered_list_of_samples = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
 
@@ -201,11 +203,11 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         input_folder = os.path.join(self.tests_folder, "input")
         output_folder = os.path.join(self.tests_folder, "output")
         # Prepare Inputs
-        input_file = os.path.join(input_folder, "drosophila_estd205_lines_500_sorted.gvf")
+        input_file = os.path.join(input_folder, "estd1_TEST_et_al_2006", "gvf", "drosophila_estd205_lines_500_sorted.gvf")
         output_file = os.path.join(output_folder, "drosophila_estd205_lines_500.vcf")
         os.makedirs(output_folder, exist_ok=True)
         # Prepare References
-        assembly = os.path.join(input_folder, "drosophila_GCA_000001215.2_chr4.fa")
+        assembly = os.path.join(input_folder, "reference_sequences", "drosophila_GCA_000001215.2_chr4.fa")
         assert os.path.exists(input_file) == True
         assert os.path.exists(assembly) == True
         convert(input_file, output_file, assembly, self.paths)
@@ -219,7 +221,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         input_folder = os.path.join(self.tests_folder, "input")
         output_folder = os.path.join(self.tests_folder, "output")
         os.makedirs(output_folder, exist_ok=True)
-        input_file = os.path.join(input_folder, "zebrafish_position_shift.gvf")
+        input_file = os.path.join(input_folder, "estd1_TEST_et_al_2006", "gvf", "zebrafish_position_shift.gvf")
         output_file = os.path.join(output_folder, "zebrafish_position_shift.vcf")
 
         convert(input_file, output_file, self.assembly, self.paths)
@@ -239,9 +241,17 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert data_lines[1][4] == 'G'
 
     def test_sort_gvf_file(self):
-        sorted_gvf_file = sort_gvf_file(self.unsorted_input_file)
+        sorted_gvf_dir = os.path.join(self.tests_folder, "output", "estd1_TEST_et_al_2006", "sorted_gvf")
+        sorted_gvf_file = sort_gvf_file(self.unsorted_input_file, sorted_gvf_dir)
         with open(sorted_gvf_file, "r") as generated_sorted_file, open(self.input_file, "r") as expected_sorted_file:
             self.assertListEqual(generated_sorted_file.readlines(), expected_sorted_file.readlines())
+
+    def test_create_sorted_gvf_directory(self):
+        mock_input = os.path.join(self.tests_folder, "data_dir", "estd1_TEST_et_al_2006", "gvf", "estd1_TEST_et_al_2006.2014-04-01.GRCh38.Remapped.gvf")
+        result_path = create_sorted_gvf_directory(mock_input)
+        self.assertTrue(result_path.endswith("output/estd1_TEST_et_al_2006/sorted_gvf"))
+        self.assertTrue(os.path.exists(result_path))
+
 
 if __name__ == '__main__':
     unittest.main()

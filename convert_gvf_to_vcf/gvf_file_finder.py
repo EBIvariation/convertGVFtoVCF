@@ -20,7 +20,7 @@ class GvfFileFinder:
     def _find_study_dirs(self, study_accession):
         """ Gathers a list of study directories. This corresponds to level 2 of the structure: /data_dir/estd3_Name_et_al_2008/gvf
         :param: study_accession
-        :return: list of study directories e.g. ['estd1_Redon_et_al_2006', 'estd3_Wang_et_al_2008']
+        :return: list of study directories e.g. ['estd1_TEST_et_al_2006', 'estd3_Wang_et_al_2008']
         """
         return [
             d for d in sorted(os.listdir(self.search_dir))
