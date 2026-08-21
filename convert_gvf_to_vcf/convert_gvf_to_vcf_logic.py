@@ -369,8 +369,6 @@ def sort_gvf_file(gvf_input, sorted_gvf_dir):
     :params sorted_gvf_directory: the directory to store the sorted files
     :return sorted_gvf_input: the sorted file"""
     logger.info("Sorting unsorted GVF input")
-    print("gvf_input", gvf_input)
-    #TODO: parse gvf_input_path
     *base_directories, input_dir, study_dir, gvf_dir, gvf_file_basename =split_gvf_path(gvf_input)
     sorted_gvf_base_name = gvf_file_basename + ".sorted.gvf"
     sorted_gvf_input = os.path.join(sorted_gvf_dir, sorted_gvf_base_name)
