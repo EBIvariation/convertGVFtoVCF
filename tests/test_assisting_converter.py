@@ -14,7 +14,7 @@ class TestAssistingConverter(unittest.TestCase):
         self.input_folder_parent = self.paths.package_dir
         # the inputs below are INFO attribute files
         self.etc_folder =  self.paths.etc_dir
-        self.assembly = os.path.join(self.paths.test_dir,"input", "zebrafish.fa")
+        self.assembly = os.path.join(self.paths.test_dir,"input", "reference_sequences", "zebrafish.fa")
         self.output_file = os.path.join(self.paths.test_dir,"input", "a.vcf")
         self.reference_lookup = Lookup(self.assembly, self.paths)
         #
