@@ -52,7 +52,7 @@ workflow {
     }
     // Step 3 : ENSURE CONSISTENT CHROMOSOME NAMING CONVENTION FOR THE ASSEMBLY
     RENAME_CONTIGS(assembly_ch)
-    params.input_clean_assembly_dir = params.clean_assembly_dir
+
     // Step 4 : CONVERT GVF TO VCF
     CONVERT_GVF_TO_VCF(
         study_accession_ch, 
