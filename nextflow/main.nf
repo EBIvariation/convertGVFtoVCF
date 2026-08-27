@@ -38,8 +38,9 @@ workflow {
         def fasta_str = fasta_file.text.trim()
         def accession_str = accession_file.text.trim()
 
-        def match = (fasta_str =~ /\{REF_PATH\}\/([^\/]+)/)
-        def species_name = match ? match[0][1] : null
+        def match = (fasta_str =~ /\/([^\/]+)\/[^\/]+\/[^\/]+\.[a-zA-Z0-9]+$/)
+        def species_name = match.find() ? match[0][1] : "unknown_species"
+
 
         return tuple(
             gvf, 
