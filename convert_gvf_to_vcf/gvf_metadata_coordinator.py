@@ -22,11 +22,16 @@ class GvfMetadataCoordinator:
         If multiple files it will reconfigure the JSON file separated out by assembly.
         """
         empty_studies_log = []
+        skipped_studies_log = []
         for study_accession, gvf_files in self.scan_results.items():
             if gvf_files:
                 study_name, _, _ = self.parse_gvf_filename(gvf_files[0])
             else:
                 study_name = study_accession
+            if study_name is None or study_name == "":
+                logger.error(f"Skipping study accession {study_accession}. Skipping because study_name=None")
+                skipped_studies_log.append(study_accession)
+                continue
             study_master_json_path = os.path.join(self.base_output_dir, "submission", study_name,
                                        f"eva_submission_{study_accession}.json")
             # empty list of GVF files
@@ -40,6 +45,8 @@ class GvfMetadataCoordinator:
                 logger.info("Not in a recognised format")
 
         logger.info(f"Number of empty studies encountered: {len(empty_studies_log)}")
+        if skipped_studies_log:
+            logger.warning(f"Number of skipped studies: {len(skipped_studies_log)} due to missing study names. These are {', '.join(skipped_studies_log)}. ")
 
     @staticmethod
     def _process_no_gvf_files(empty_studies_log, study_accession):
