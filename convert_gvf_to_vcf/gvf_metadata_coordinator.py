@@ -29,7 +29,8 @@ class GvfMetadataCoordinator:
             else:
                 study_name = study_accession
             if study_name is None or study_name == "":
-                logger.error(f"Skipping study accession {study_accession}. Skipping because study_name=None")
+                logger.error(f"Skipping study accession {study_accession}. Skipping because study_name=None. "
+                             f"Check gvf file format: {gvf_files}")
                 skipped_studies_log.append(study_accession)
                 continue
             study_master_json_path = os.path.join(self.base_output_dir, "submission", study_name,
