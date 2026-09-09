@@ -1,5 +1,5 @@
 process CONVERT_GVF_TO_VCF {
-    tag { study_accession != 'ALL_STUDIES' ? "Finding and converting GVF files for: ${study_accession}" : "Finding and converting GVF files for all studies" }
+    tag {"Finding and converting GVF files for: ${study_accession}"}
     
     publishDir "${params.output_dir}", mode: 'copy' // copy to output directory
 
@@ -14,13 +14,6 @@ process CONVERT_GVF_TO_VCF {
     val "conversion_done", emit: status_trigger
     
     script:
-
-    def study_flag = ""
-    
-    if (study_accession != 'ALL_STUDIES') {
-        study_flag = "--study_accession ${study_accession}"
-    }
-
     """
     export REF_PATH="${params.clean_assembly_dir}"
     
@@ -29,6 +22,6 @@ process CONVERT_GVF_TO_VCF {
         --log hpc.log \\
         --output "${params.output_dir}" \\
         --config ${config_file} \\
-        ${study_flag}
+        --study_accession ${study_accession}
     """
 }

@@ -26,8 +26,7 @@ workflow {
     config_file_ch   = Channel.value(config_file)
 
     credentials_ch = PARSE_CREDENTIALS(config_file_ch)
-    study_accession_ch = params.study_accession ? Channel.value(params.study_accession) : Channel.value('ALL_STUDIES')
-    
+
     finder_script_ch = Channel.value(file("${params.executable.convert_gvf.script_path}/gvf_file_finder.py", checkIfExists: true))
     
     // Step 2: FIND PATHS
@@ -55,6 +54,8 @@ workflow {
     RENAME_CONTIGS(assembly_ch)
 
     // Step 4 : CONVERT GVF TO VCF
+    study_accession_ch = params.study_accession ? Channel.value(params.study_accession) : gvf_files_ch.map { file -> file.name.tokenize('_')[0] }.unique()
+
     CONVERT_GVF_TO_VCF(
         study_accession_ch, 
         input_dir_ch, 
