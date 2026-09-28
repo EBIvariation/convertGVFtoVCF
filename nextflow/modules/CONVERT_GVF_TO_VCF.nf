@@ -11,8 +11,8 @@ process CONVERT_GVF_TO_VCF {
     // e.g. homo_sapiens, GCA_000001405.1, estd1_Surname_et_al_2006, renamed_assembly(wrt GVF chromosome naming convention)
     tuple val(species), val(assembly_accession), val(gvf_simple_name), path(renamed_fasta)
     output:
-    //study_accession, study_name, conversion_done
-    tuple val({gvf_simple_name.split('_')[0]}), val(gvf_simple_name), val("conversion_done"), emit: status_trigger
+    //study_accession, study_name
+    tuple val({gvf_simple_name.split('_')[0]}), val(gvf_simple_name) emit: status_trigger
     
     script:
     def study_accession = gvf_simple_name.split('_')[0]
