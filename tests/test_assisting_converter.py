@@ -217,7 +217,7 @@ class TestAssistingConverter(unittest.TestCase):
 
         assert vcf_info_values == {"ID": "1"}
 
-    def test_vcf_fields_memory_spike_prevention(self):
+    def test_vcf_fields_stored_without_duplicates(self):
         # self.field_lines_dictionary["INFO"] starts off as empty []
         # self.field_lines_dictionary["FORMAT"] starts off as empty []
 
