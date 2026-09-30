@@ -103,26 +103,6 @@ def convert_gvf_pragmas_to_vcf_header(list_of_gvf_pragmas_to_convert,
     return list_of_converted_pragmas
 
 
-# def replace_additional_semicolons(pragma):
-#     """Replace additional semicolon if it will affect parsing
-#     :params pragma: to be cleaned
-#     :return clean_pragma
-#     """
-#     allowed_pragma_keys = [
-#         "First_author",
-#         "Description",
-#         "PMID",
-#         "Journal",
-#         "Paper_title",
-#         "Publication_year"
-#     ]
-#     pragma_keys = "|".join(allowed_pragma_keys)
-#     # find the additional semi-colon (i.e NOT before the keys above) but also ignore genetic notation t(4;8)(p16;p23)
-#     re_pattern = f";(?!(?:{pragma_keys})=|[\w\d.]+?\))"
-#     # substitute semi-colon with a comma
-#     clean_pragma = re.sub(re_pattern, ",", pragma)
-#     return clean_pragma
-
 def clean_pragma_value(unclean_pragma_value):
     """Cleans pragma values so they can be parsed accurately.
     :param unclean_pragma_value - raw pragma value
@@ -132,9 +112,6 @@ def clean_pragma_value(unclean_pragma_value):
     partially_unclean_pragma_value = unclean_pragma_value.replace("â", "'")
     # unescape html
     clean_pragma = html.unescape(partially_unclean_pragma_value, )
-    # replace semicolon with a comma
-    #TODO: remove this function
-    # clean_pragma_input = replace_additional_semicolons(clean_pragma)
     return clean_pragma
 
 def parse_pragma_value(pragma_value):
