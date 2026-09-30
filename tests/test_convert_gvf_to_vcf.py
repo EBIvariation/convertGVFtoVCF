@@ -8,7 +8,7 @@ from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import generate_vcf_header_unst
     get_pragma_tokens, \
     get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
     convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert, sort_gvf_file, \
-    create_sorted_gvf_directory, clean_pragma_value, replace_additional_semicolons, parse_pragma_value
+    create_sorted_gvf_directory, clean_pragma_value, parse_pragma_value
 from convert_gvf_to_vcf.project_paths import ProjectPaths
 
 
@@ -75,48 +75,47 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         expected_list = ['##gff-version=3', '##gvf-version=1.06', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10']
         assert list_of_converted_pragmas == expected_list
 
-    def test_replace_additional_semicolons(self):
+    # def test_replace_additional_semicolons(self):
+    #
+    #     input_study_pragma = "First_author=A Per;son,Description=Human genome assembly NCBI34;current human genome assembly, GRCh37. "
+    #     expected_study_pragma = "First_author=A Per,son,Description=Human genome assembly NCBI34,current human genome assembly, GRCh37. "
+    #     output_study_pragma =replace_additional_semicolons(input_study_pragma)
+    #     assert output_study_pragma == expected_study_pragma
+    #
+    #     input_publication_pragma = "PMID=12058347;Journal=American journal of human genetics;Paper_title=Heterozygous submicroscopic inversions involving olfactory receptor-gene clusters mediate the recurrent t(4;8)(p16;p23) translocation.;Publication_year=2002"
+    #     expected_publication_pragma = "PMID=12058347;Journal=American journal of human genetics;Paper_title=Heterozygous submicroscopic inversions involving olfactory receptor-gene clusters mediate the recurrent t(4;8)(p16;p23) translocation.;Publication_year=2002"
+    #     # NOTE: we wish to keep the genetic notation t(4;8)(p16;p23)
+    #     output_publication_pragma =replace_additional_semicolons(input_publication_pragma)
+    #
+    #     assert output_publication_pragma == expected_publication_pragma
 
-        input_study_pragma = "First_author=A Per;son,Description=Human genome assembly NCBI34;current human genome assembly, GRCh37. "
-        expected_study_pragma = "First_author=A Per,son,Description=Human genome assembly NCBI34,current human genome assembly, GRCh37. "
-        output_study_pragma =replace_additional_semicolons(input_study_pragma)
-        assert output_study_pragma == expected_study_pragma
-
-        input_publication_pragma = "PMID=12058347;Journal=American journal of human genetics;Paper_title=Heterozygous submicroscopic inversions involving olfactory receptor-gene clusters mediate the recurrent t(4;8)(p16;p23) translocation.;Publication_year=2002"
-        expected_publication_pragma = "PMID=12058347;Journal=American journal of human genetics;Paper_title=Heterozygous submicroscopic inversions involving olfactory receptor-gene clusters mediate the recurrent t(4;8)(p16;p23) translocation.;Publication_year=2002"
-        # NOTE: we wish to keep the genetic notation t(4;8)(p16;p23)
-        output_publication_pragma =replace_additional_semicolons(input_publication_pragma)
-
-        assert output_publication_pragma == expected_publication_pragma
     def test_clean_pragma_value(self):
-        # additional semi-colon
-        unclean_pragma_lineA = "First_author=A. Person;Description=Human genome assembly NCBI34; current human genome assembly, GRCh37."
+        # this cleans out html entities and 5â-TTTT/A-3â
+        # this does not clean out additional semi-colons because the pragma will be in double quotes
+
+        # 5â-TTTT/A-3â
+        unclean_pragma_valueA = "First_author=Name Surname;Description=TSIPs can be grouped into two classes, insertion at a 5â-TTTT/A-3â sequence."
+
         # html entity &lt;
-        unclean_pragma_lineB = "First_author=Name Surname;Description=CNV calls with &lt;50% concordance. Reproducibility in replicate experiments is &lt;70% for most platforms."
+        unclean_pragma_valueB = "First_author=Name Surname;Description=CNV calls with &lt;50% concordance. Reproducibility in replicate experiments is &lt;70% for most platforms."
         # html entity &gt;
-        unclean_pragma_lineC = "First_author=Name Surname;Description=We analyzed 24 liver cyst samples from 23 patients using high resolution microarray (homozygosity of autosomes (&gt;3.0Mb) large CNVs (&gt;1.0Mb))."
-        # html entity &gt; and additional semi-colon
-        unclean_pragma_lineD = "First_author=Name Surname;Description=Multi-copy CNPs do not (40% with r &gt;0.8). We selected a subset of CNPs from 62 populations;human diversity and selection."
-        # 5â-TTTT/A-3â  and additional semi-colon
-        unclean_pragma_lineE = "First_author=Name Surname;Description=TSIPs can be grouped into two classes; insertion at a 5â-TTTT/A-3â sequence."
+        unclean_pragma_valueC = "First_author=Name Surname;Description=We analyzed 24 liver cyst samples from 23 patients using high resolution microarray (homozygosity of autosomes (&gt;3.0Mb) large CNVs (&gt;1.0Mb))."
+
         # expected lines
-        expected_clean_pragma_lineA = "First_author=A. Person;Description=Human genome assembly NCBI34, current human genome assembly, GRCh37."
-        expected_clean_pragma_lineB = "First_author=Name Surname;Description=CNV calls with <50% concordance. Reproducibility in replicate experiments is <70% for most platforms."
-        expected_clean_pragma_lineC = "First_author=Name Surname;Description=We analyzed 24 liver cyst samples from 23 patients using high resolution microarray (homozygosity of autosomes (>3.0Mb) large CNVs (>1.0Mb))."
-        expected_clean_pragma_lineD = "First_author=Name Surname;Description=Multi-copy CNPs do not (40% with r >0.8). We selected a subset of CNPs from 62 populations,human diversity and selection."
-        expected_clean_pragma_lineE = "First_author=Name Surname;Description=TSIPs can be grouped into two classes, insertion at a 5'-TTTT/A-3' sequence."
+        expected_clean_pragma_valueA = "First_author=Name Surname;Description=TSIPs can be grouped into two classes, insertion at a 5'-TTTT/A-3' sequence."
+        expected_clean_pragma_valueB = "First_author=Name Surname;Description=CNV calls with <50% concordance. Reproducibility in replicate experiments is <70% for most platforms."
+        expected_clean_pragma_valueC = "First_author=Name Surname;Description=We analyzed 24 liver cyst samples from 23 patients using high resolution microarray (homozygosity of autosomes (>3.0Mb) large CNVs (>1.0Mb))."
+
         # output
-        clean_pragma_lineA = clean_pragma_value(unclean_pragma_lineA)
-        clean_pragma_lineB = clean_pragma_value(unclean_pragma_lineB)
-        clean_pragma_lineC = clean_pragma_value(unclean_pragma_lineC)
-        clean_pragma_lineD = clean_pragma_value(unclean_pragma_lineD)
-        clean_pragma_lineE = clean_pragma_value(unclean_pragma_lineE)
+        clean_pragma_valueA = clean_pragma_value(unclean_pragma_valueA)
+        clean_pragma_valueB = clean_pragma_value(unclean_pragma_valueB)
+        clean_pragma_valueC = clean_pragma_value(unclean_pragma_valueC)
+
         ############
-        assert clean_pragma_lineA == expected_clean_pragma_lineA
-        assert clean_pragma_lineB == expected_clean_pragma_lineB
-        assert clean_pragma_lineC == expected_clean_pragma_lineC
-        assert clean_pragma_lineD == expected_clean_pragma_lineD
-        assert clean_pragma_lineE == expected_clean_pragma_lineE
+        assert clean_pragma_valueA == expected_clean_pragma_valueA
+        assert clean_pragma_valueB == expected_clean_pragma_valueB
+        assert clean_pragma_valueC == expected_clean_pragma_valueC
+
 
     def test_parse_pragma_comments(self):
         gvf_pragma_value = "PMID=12058347;Journal=American journal of human genetics;Paper_title=Heterozygous submicroscopic inversions involving olfactory receptor-gene clusters mediate the recurrent t(4;8)(p16;p23) translocation.;Publication_year=2002"
@@ -160,10 +159,10 @@ class TestConvertGVFtoVCF(unittest.TestCase):
 
     def test_convert_gvf_pragmas_for_vcf_header(self):
         gvf_pragma = ['##gff-version 3', '##gvf-version 1.06', '##species http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##file-date 2015-07-15', '##genome-build NCBI GRCz10']
-        gvf_pragma_comments = ['#Study_accession: nstd62', '#Study_type: Control Set', '#Display_name: Brown_et_al_2012', '#Publication: PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year=2012', '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '#Assembly_name: GRCz10', '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7', '#testing_unknown_pragma']
+        gvf_pragma_comments = ['#Study_accession: nstd62', '#Study_type: Control Set', '#Display_name: Brown_et_al_2012', '#Publication: PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis t(4;8)(p16;p23) translocation.;Publication_year=2012', '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '#Assembly_name: GRCz10', '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7', '#testing_unknown_pragma']
         unique_converted_pragmas, unique_sample_name =convert_gvf_pragmas_for_vcf_header(gvf_pragma, gvf_pragma_comments, self.reference_lookup)
         expected_unique_converted_pragmas = ['##fileformat=VCFv4.4', '##gff-version=3', '##genome-build=NCBIGRCz10', '##subject=subject_name=JenMale6;subject_sex=Male',
-                                             '##Publication="PMID:22203992;Journal:Proceedings of the National Academy of Sciences of the United States of America;Paper_title:Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year:2012"',
+                                             '##Publication="PMID:22203992;Journal:Proceedings of the National Academy of Sciences of the United States of America;Paper_title:Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis t(4;8)(p16;p23) translocation.;Publication_year:2012"',
                                              '##Study_accession=nstd62', '##Assembly_name=GRCz10', '##sample=sample_name=JenMale7;subject_name=JenMale7', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##Study_type=Control Set', '##subject=subject_name=Zon9', '##gvf-version=1.06', '##subject=subject_name=Wilds2-3',
                                              '##Study="First_author:Kim Brown;Description:Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"',
                                              '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##Display_name=Brown_et_al_2012', '##sample=sample_name=Zon9;subject_name=Zon9', '##subject=subject_name=JenMale7;subject_sex=Male']
