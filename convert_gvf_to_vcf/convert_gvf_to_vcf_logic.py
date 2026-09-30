@@ -133,6 +133,7 @@ def clean_pragma_value(unclean_pragma_value):
     # unescape html
     clean_pragma = html.unescape(partially_unclean_pragma_value, )
     # replace semicolon with a comma
+    #TODO: remove this function
     clean_pragma_input = replace_additional_semicolons(clean_pragma)
     return clean_pragma_input
 
@@ -170,12 +171,12 @@ def convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
         vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(gvf_pragma_comment, ": ", list_of_gvf_pragma_comments, pragma_to_vcf_map)
         if pragma_name.startswith("#Publication"):
             if ";" in pragma_value:
-                formatted_pragma_value = pragma_value.replace("=", ":")
+                formatted_pragma_value = f'"{pragma_value.replace("=", ":")}"'
                 list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(pragma_name.lstrip("#"), formatted_pragma_value))
             else:
                 list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(pragma_name.lstrip("#"), pragma_value))
         elif pragma_name == "#Study":
-            formatted_pragma_value = pragma_value.replace("=", ":")
+            formatted_pragma_value = f'"{pragma_value.replace("=", ":")}"'
             list_of_converted_pragma_comments.append(
                 generate_vcf_header_unstructured_line(pragma_name.lstrip("#"), formatted_pragma_value))
         else:
