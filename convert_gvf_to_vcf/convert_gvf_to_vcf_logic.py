@@ -103,33 +103,7 @@ def convert_gvf_pragmas_to_vcf_header(list_of_gvf_pragmas_to_convert,
     return list_of_converted_pragmas
 
 
-def clean_pragma_value(unclean_pragma_value):
-    """Cleans pragma values so they can be parsed accurately.
-    :param unclean_pragma_value - raw pragma value
-    :return clean_pragma_input - clean value for input
-    """
-    # fix encoding for 5' and 3'
-    partially_unclean_pragma_value = unclean_pragma_value.replace("â", "'")
-    # unescape html
-    clean_pragma = html.unescape(partially_unclean_pragma_value, )
-    return clean_pragma
 
-def parse_pragma_value(pragma_value):
-    """Cleans and parses value of pragma comments and outputs a list of converted comments
-    :params pragma_value: to be parsed
-    :returns converted_comments: list of converted pragma comments
-    """
-    converted_comments = []
-    clean_pragma = clean_pragma_value(pragma_value)
-    tokens = get_pragma_tokens(clean_pragma, ";", "=")
-    for token in tokens:
-        try:
-            converted_comments.append(
-                generate_vcf_header_unstructured_line(token[0], token[1]))
-        except IndexError:
-            logger.error(f"IndexError for the following token: {token}\n"
-                         f"From the pragma value: {pragma_value}")
-    return converted_comments
 
 def convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
                                              list_of_gvf_pragma_comments,
@@ -253,23 +227,6 @@ def get_pragma_name_and_value(pragma_to_parse, delimiter, pragma_list, pragma_na
     else:
         vcf_header_key = None
     return vcf_header_key, pragma_name, pragma_value
-
-def get_pragma_tokens(pragma_value, first_delimiter, second_delimiter):
-    """Get pragma tokens for nested pragmas
-    :param pragma_value: value to parse
-    :param first_delimiter: first separator
-    :param second_delimiter: second separtor
-    :return pragma_tokens
-    """
-    # only split if the first_delimiter is followed by a key name and a second delimiter
-    # intended for publication titles that contain the delimiter ";" e.g. t(4;8)(p16;p23) translocation
-    split_rule = f"{first_delimiter}(?=\w+{second_delimiter})"
-    initial_list = re.split(split_rule, pragma_value)
-
-    pragma_tokens = []
-    for element in initial_list:
-        pragma_tokens.append(element.split(second_delimiter))
-    return pragma_tokens
 
 
 def write_header(vcf_output, pragmas_for_vcf, header_lines_per_type, header_fields, samples):

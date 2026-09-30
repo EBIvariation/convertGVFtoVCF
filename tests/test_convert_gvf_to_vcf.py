@@ -5,10 +5,9 @@ import unittest
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import generate_vcf_header_unstructured_line, \
     convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line, parse_pragma, get_pragma_name_and_value, \
-    get_pragma_tokens, \
     get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
     convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert, sort_gvf_file, \
-    create_sorted_gvf_directory, clean_pragma_value, parse_pragma_value
+    create_sorted_gvf_directory
 from convert_gvf_to_vcf.project_paths import ProjectPaths
 
 
@@ -75,40 +74,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         expected_list = ['##gff-version=3', '##gvf-version=1.06', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10']
         assert list_of_converted_pragmas == expected_list
 
-
-    def test_clean_pragma_value(self):
-        # this cleans out html entities and 5â-TTTT/A-3â
-        # this does not clean out additional semi-colons because the pragma will be in double quotes
-
-        # 5â-TTTT/A-3â
-        unclean_pragma_valueA = "First_author=Name Surname;Description=TSIPs can be grouped into two classes, insertion at a 5â-TTTT/A-3â sequence."
-
-        # html entity &lt;
-        unclean_pragma_valueB = "First_author=Name Surname;Description=CNV calls with &lt;50% concordance. Reproducibility in replicate experiments is &lt;70% for most platforms."
-        # html entity &gt;
-        unclean_pragma_valueC = "First_author=Name Surname;Description=We analyzed 24 liver cyst samples from 23 patients using high resolution microarray (homozygosity of autosomes (&gt;3.0Mb) large CNVs (&gt;1.0Mb))."
-
-        # expected lines
-        expected_clean_pragma_valueA = "First_author=Name Surname;Description=TSIPs can be grouped into two classes, insertion at a 5'-TTTT/A-3' sequence."
-        expected_clean_pragma_valueB = "First_author=Name Surname;Description=CNV calls with <50% concordance. Reproducibility in replicate experiments is <70% for most platforms."
-        expected_clean_pragma_valueC = "First_author=Name Surname;Description=We analyzed 24 liver cyst samples from 23 patients using high resolution microarray (homozygosity of autosomes (>3.0Mb) large CNVs (>1.0Mb))."
-
-        # output
-        clean_pragma_valueA = clean_pragma_value(unclean_pragma_valueA)
-        clean_pragma_valueB = clean_pragma_value(unclean_pragma_valueB)
-        clean_pragma_valueC = clean_pragma_value(unclean_pragma_valueC)
-
-        ############
-        assert clean_pragma_valueA == expected_clean_pragma_valueA
-        assert clean_pragma_valueB == expected_clean_pragma_valueB
-        assert clean_pragma_valueC == expected_clean_pragma_valueC
-
-
-    def test_parse_pragma_comments(self):
-        gvf_pragma_value = "PMID=12058347;Journal=American journal of human genetics;Paper_title=Heterozygous submicroscopic inversions involving olfactory receptor-gene clusters mediate the recurrent t(4;8)(p16;p23) translocation.;Publication_year=2002"
-        converted_values = parse_pragma_value(gvf_pragma_value)
-        expected_values = ['##PMID=12058347', '##Journal=American journal of human genetics', '##Paper_title=Heterozygous submicroscopic inversions involving olfactory receptor-gene clusters mediate the recurrent t(4;8)(p16;p23) translocation.', '##Publication_year=2002']
-        assert converted_values == expected_values
 
     def test_convert_gvf_pragma_comment_to_vcf_header(self):
         # this represents what a typical GVF header looks like
@@ -200,19 +165,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert pragma_name == "##file-date"
         assert pragma_value == "2015-07-15"
 
-    def test_get_pragma_tokens(self):
-        pragma_value = "First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"
-        pragma_tokens = get_pragma_tokens(pragma_value, ";", "=")
-        assert len(pragma_tokens) == 2
-        # Testing: expected
-        assert pragma_tokens[0][0] == "First_author"
-        assert pragma_tokens[0][1] == "Kim Brown"
-        assert pragma_tokens[1][0] == "Description"
-        assert pragma_tokens[1][1] == "Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"
-        # Testing: not expected
-        unexpected_pragma_tokens = [['A', '1'], ['B', '2']]
-        with self.assertRaises(AssertionError):
-            self.assertEqual(unexpected_pragma_tokens, pragma_tokens)
 
     def test_convert(self):
         convert(self.input_file , self.output_file, self.assembly, self.paths)
