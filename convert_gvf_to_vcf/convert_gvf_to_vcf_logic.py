@@ -260,7 +260,7 @@ def write_header(vcf_output, pragmas_for_vcf, header_lines_per_type, header_fiel
         vcf_header_output.write(f"{header_fields}\n")
     return vcf_header_file
 
-def convert(gvf_input, vcf_output, assembly, paths, output_dir_name="output"):
+def convert(gvf_input, vcf_output, assembly, paths, output_dir_name="output", debug=False):
     # Log the inputs and outputs.
     logger.info("Running the GVF to VCF converter")
     logger.info(f"The provided input file is: {gvf_input}")
@@ -315,7 +315,7 @@ def convert(gvf_input, vcf_output, assembly, paths, output_dir_name="output"):
         # NOTE: Main Logic lives here.
         gvf_reader = GvfFileReader(gvf_input) # Fresh instance required
         is_missing_format_value, vcf_data_file = stream_gvf_to_vcf_data(gvf_reader, report, samples, vcf_builder,
-                                                                        vcf_output)
+                                                                        vcf_output, debug)
 
 
         # VCF header generation
@@ -407,7 +407,7 @@ def _log_top_three_memory_allocations():
         logger.debug(f"#{index}: {stat}")
     tracemalloc.stop()
 
-def stream_gvf_to_vcf_data(gvf_reader, report, samples, vcf_builder, vcf_output):
+def stream_gvf_to_vcf_data(gvf_reader, report, samples, vcf_builder, vcf_output, debug=False):
     """Streams GVF rows to VCF
     :param gvf_reader: GvfFileReader instance
     :param report: statistics report object
@@ -453,7 +453,8 @@ def stream_gvf_to_vcf_data(gvf_reader, report, samples, vcf_builder, vcf_output)
         if not has_any_features:
             logger.warning("No feature lines were found for this GVF file.")
     # list top 3 lines of code for memory usage for diagnostic purposes
-    _log_top_three_memory_allocations()
+    if debug:
+        _log_top_three_memory_allocations()
     return is_missing_format_value, vcf_data_file
 
 
@@ -538,6 +539,7 @@ def main():
     parser.add_argument("--log", help="Path to log file")
     parser.add_argument("--config", required=True, help="Path to config file")
     parser.add_argument("--assembly_report", help="Path to assembly report file")
+    parser.add_argument("--debug", action="store_true", help="Debug for diagnostics")
 
 
     args = parser.parse_args()
@@ -561,7 +563,7 @@ def main():
         assembly_report=args.assembly_report
     )
     # Conversion: GVF to VCF
-    convert(args.gvf_input, args.vcf_output, args.assembly, paths)
+    convert(args.gvf_input, args.vcf_output, args.assembly, paths, args.debug)
     # Post-conversion: adding VCF details to the JSON file
     if eva_retriever:
         eva_update_metadata_with_vcf(eva_retriever=eva_retriever, json_eva=args.json_output_eva, vcf_output=args.vcf_output)
