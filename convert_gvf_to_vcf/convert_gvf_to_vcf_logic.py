@@ -539,7 +539,7 @@ def main():
     parser.add_argument("--log", help="Path to log file")
     parser.add_argument("--config", required=True, help="Path to config file")
     parser.add_argument("--assembly_report", help="Path to assembly report file")
-    parser.add_argument("--debug", help="Debug for diagnostics")
+    parser.add_argument("--debug", action="store_true", help="Debug for diagnostics")
 
 
     args = parser.parse_args()
