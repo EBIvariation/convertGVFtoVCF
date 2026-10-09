@@ -5,7 +5,6 @@ import unittest
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import generate_vcf_header_unstructured_line, \
     convert_gvf_pragmas_for_vcf_header, generate_vcf_header_line, parse_pragma, get_pragma_name_and_value, \
-    get_pragma_tokens, \
     get_sample_name_from_pragma, get_unique_sample_names, convert_gvf_pragmas_to_vcf_header, \
     convert_gvf_pragma_comment_to_vcf_header, generate_vcf_header_structured_lines, convert, sort_gvf_file, \
     create_sorted_gvf_directory
@@ -75,29 +74,55 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         expected_list = ['##gff-version=3', '##gvf-version=1.06', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10']
         assert list_of_converted_pragmas == expected_list
 
+
     def test_convert_gvf_pragma_comment_to_vcf_header(self):
-        gvf_pragma_comments_to_convert = ['#Study_accession: nstd62', '#Study_type: Control Set', '#Display_name: Brown_et_al_2012', '#Publication: PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year=2012', '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '#Assembly_name: GRCz10', '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7', '#testing_unknown_pragma']
-        list_of_gvf_pragma_comments = ['#sample', '#Study_accession', '#Study_type', '#Display_name', '#Publication#Study', '#Assembly_name',
-         '#subject']
+        # this represents what a typical GVF header looks like
+        gvf_pragma_comments_to_convert = [
+            '#Study_accession: nstd62',
+            '#Study_type: Control Set',
+            '#Display_name: Brown_et_al_2012',
+            '#Publication: PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year=2012',
+            '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants',
+            '#Assembly_name: GRCz10',
+            '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7',
+            '#testing_unknown_pragma'
+        ]
+        # this represents a list of names recognised as a GVF pragma comment
+        list_of_gvf_pragma_comments = ['#sample', '#Study_accession', '#Study_type', '#Display_name', '#Publication', '#Study', '#Assembly_name', '#subject']
+
         list_of_converted_pragma_comments, sample_names_from_pragma_comments = convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
                                                                                            list_of_gvf_pragma_comments,
                                                                                            self.reference_lookup.pragma_to_vcf_map)
-        expected_list_of_converted_pragma_comments = ['##Study_accession=nstd62', '##Study_type=Control Set', '##Display_name=Brown_et_al_2012', '##PMID=22203992', '##Journal=Proceedings of the National Academy of Sciences of the United States of America', '##Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.', '##Publication_year=2012', '##First_author=Kim Brown', '##Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '##Assembly_name=GRCz10', '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9', '##subject=subject_name=JenMale7;subject_sex=Male', '##subject=subject_name=JenMale6;subject_sex=Male', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3', '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
+        expected_list_of_converted_pragma_comments = [
+            '##Study_accession=nstd62',
+            '##Study_type=Control Set',
+            '##Display_name=Brown_et_al_2012',
+            '##Publication="PMID:22203992;Journal:Proceedings of the National Academy of Sciences of the United States of America;Paper_title:Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year:2012"',
+            '##Study="First_author:Kim Brown;Description:Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"',
+            '##Assembly_name=GRCz10',
+            '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9', '##subject=subject_name=JenMale7;subject_sex=Male', '##subject=subject_name=JenMale6;subject_sex=Male', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3', '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7'
+        ]
         expected_list_of_sample_names = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
         assert isinstance(list_of_converted_pragma_comments, list)
         assert isinstance(sample_names_from_pragma_comments, list)
+
         assert list_of_converted_pragma_comments == expected_list_of_converted_pragma_comments
         assert sample_names_from_pragma_comments == expected_list_of_sample_names
 
     def test_convert_gvf_pragmas_for_vcf_header(self):
         gvf_pragma = ['##gff-version 3', '##gvf-version 1.06', '##species http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##file-date 2015-07-15', '##genome-build NCBI GRCz10']
-        gvf_pragma_comments = ['#Study_accession: nstd62', '#Study_type: Control Set', '#Display_name: Brown_et_al_2012', '#Publication: PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.;Publication_year=2012', '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '#Assembly_name: GRCz10', '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7', '#testing_unknown_pragma']
+        gvf_pragma_comments = ['#Study_accession: nstd62', '#Study_type: Control Set', '#Display_name: Brown_et_al_2012', '#Publication: PMID=22203992;Journal=Proceedings of the National Academy of Sciences of the United States of America;Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis t(4;8)(p16;p23) translocation.;Publication_year=2012', '#Study: First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '#Assembly_name: GRCz10', '#subject: subject_name=Wilds2-3', '#subject: subject_name=Zon9', '#subject: subject_name=JenMale7;subject_sex=Male', '#subject: subject_name=JenMale6;subject_sex=Male', '#sample: sample_name=JenMale6;subject_name=JenMale6', '#sample: sample_name=Wilds2-3;subject_name=Wilds2-3', '#sample: sample_name=Zon9;subject_name=Zon9', '#sample: sample_name=JenMale7;subject_name=JenMale7', '#testing_unknown_pragma']
         unique_converted_pragmas, unique_sample_name =convert_gvf_pragmas_for_vcf_header(gvf_pragma, gvf_pragma_comments, self.reference_lookup)
-        expected_unique_converted_pragmas = ['##fileformat=VCFv4.4', '##gff-version=3', '##gvf-version=1.06', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##genome-build=NCBIGRCz10', '##Study_accession=nstd62', '##Study_type=Control Set', '##Display_name=Brown_et_al_2012', '##PMID=22203992', '##Journal=Proceedings of the National Academy of Sciences of the United States of America', '##Paper_title=Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis.', '##Publication_year=2012', '##First_author=Kim Brown', '##Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants', '##Assembly_name=GRCz10', '##subject=subject_name=Wilds2-3', '##subject=subject_name=Zon9', '##subject=subject_name=JenMale7;subject_sex=Male', '##subject=subject_name=JenMale6;subject_sex=Male', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3', '##sample=sample_name=Zon9;subject_name=Zon9', '##sample=sample_name=JenMale7;subject_name=JenMale7']
+        expected_unique_converted_pragmas = ['##fileformat=VCFv4.4', '##gff-version=3', '##genome-build=NCBIGRCz10', '##subject=subject_name=JenMale6;subject_sex=Male',
+                                             '##Publication="PMID:22203992;Journal:Proceedings of the National Academy of Sciences of the United States of America;Paper_title:Extensive genetic diversity and substructuring among zebrafish strains revealed through copy number variant analysis t(4;8)(p16;p23) translocation.;Publication_year:2012"',
+                                             '##Study_accession=nstd62', '##Assembly_name=GRCz10', '##sample=sample_name=JenMale7;subject_name=JenMale7', '##species=http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=7955', '##fileDate=2015-07-15', '##Study_type=Control Set', '##subject=subject_name=Zon9', '##gvf-version=1.06', '##subject=subject_name=Wilds2-3',
+                                             '##Study="First_author:Kim Brown;Description:Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"',
+                                             '##sample=sample_name=Wilds2-3;subject_name=Wilds2-3', '##sample=sample_name=JenMale6;subject_name=JenMale6', '##Display_name=Brown_et_al_2012', '##sample=sample_name=Zon9;subject_name=Zon9', '##subject=subject_name=JenMale7;subject_sex=Male']
         expected_unique_sample_name = ['JenMale6', 'Wilds2-3', 'Zon9', 'JenMale7']
         # test for mandatory first line
         expected_first_line = "##fileformat=VCFv4.4"
         assert unique_converted_pragmas[0] == expected_first_line
+
         for converted_pragma in unique_converted_pragmas:
             self.assertTrue(converted_pragma in expected_unique_converted_pragmas)
 
@@ -140,19 +165,6 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         assert pragma_name == "##file-date"
         assert pragma_value == "2015-07-15"
 
-    def test_get_pragma_tokens(self):
-        pragma_value = "First_author=Kim Brown;Description=Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"
-        pragma_tokens = get_pragma_tokens(pragma_value, ";", "=")
-        assert len(pragma_tokens) == 2
-        # Testing: expected
-        assert pragma_tokens[0][0] == "First_author"
-        assert pragma_tokens[0][1] == "Kim Brown"
-        assert pragma_tokens[1][0] == "Description"
-        assert pragma_tokens[1][1] == "Comparative genomic hybridization analysis of 3 laboratory and one wild zebrafish populations for Copy Number Variants"
-        # Testing: not expected
-        unexpected_pragma_tokens = [['A', '1'], ['B', '2']]
-        with self.assertRaises(AssertionError):
-            self.assertEqual(unexpected_pragma_tokens, pragma_tokens)
 
     def test_convert(self):
         convert(self.input_file , self.output_file, self.assembly, self.paths)
