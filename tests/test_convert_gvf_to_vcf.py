@@ -260,6 +260,21 @@ class TestConvertGVFtoVCF(unittest.TestCase):
     @patch('convert_gvf_to_vcf.convert_gvf_to_vcf_logic._log_memory_used_processing_gvf')
     @patch('convert_gvf_to_vcf.convert_gvf_to_vcf_logic._log_top_three_memory_allocations')
     def test_stream_gvf_to_vcf_data_optional_memory_diagnostics(self, mock_top_three, mock_line_log):
+        # TEST 0: TEST __init__.py sets MEMORY_DIAGNOSTICS from the environment
+        os.environ['MEMORY_DIAGNOSTIC'] = 'true'
+        sys.modules.pop('convert_gvf_to_vcf', None)
+        sys.modules.pop('convert_gvf_to_vcf.convert_gvf_to_vcf_logic', None)
+        import convert_gvf_to_vcf.convert_gvf_to_vcf_logic as test0_logic_true
+        assert test0_logic_true.MEMORY_DIAGNOSTIC is True
+
+        if 'MEMORY_DIAGNOSTIC' in os.environ:
+            del os.environ['MEMORY_DIAGNOSTIC']
+        sys.modules.pop('convert_gvf_to_vcf', None)
+        sys.modules.pop('convert_gvf_to_vcf.convert_gvf_to_vcf_logic', None)
+        import convert_gvf_to_vcf.convert_gvf_to_vcf_logic as test0_logic_false
+        assert test0_logic_false.MEMORY_DIAGNOSTIC is False
+        if 'MEMORY_DIAGNOSTIC' in os.environ:
+            del os.environ['MEMORY_DIAGNOSTIC']
         # TEST 1: TESTING TURNING ON MEMORY_DIAGNOSTICS
         convert_gvf_to_vcf_logic.MEMORY_DIAGNOSTIC = True
 
@@ -334,7 +349,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         sys.modules.pop('convert_gvf_to_vcf.convert_gvf_to_vcf_logic', None)
 
         import convert_gvf_to_vcf.convert_gvf_to_vcf_logic as logicA
-        # check string formatting works where `.strip().lower()` was used
+        # check string formatting works where .strip().lower() was used
         assert logicA.MEMORY_DIAGNOSTIC is True
 
         # TEST 4B: unexpected input =  unrecognised value - testing false
