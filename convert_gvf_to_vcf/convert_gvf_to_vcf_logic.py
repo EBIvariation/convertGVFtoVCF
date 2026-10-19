@@ -104,9 +104,6 @@ def convert_gvf_pragmas_to_vcf_header(list_of_gvf_pragmas_to_convert,
         list_of_converted_pragmas.append(generate_vcf_header_unstructured_line(vcf_header_key, pragma_value))
     return list_of_converted_pragmas
 
-
-
-
 def convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
                                              list_of_gvf_pragma_comments,
                                              pragma_to_vcf_map):
