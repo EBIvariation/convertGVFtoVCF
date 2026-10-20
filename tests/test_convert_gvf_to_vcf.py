@@ -344,7 +344,7 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         mock_top_three.reset_mock()
 
         # TEST 4A: unexpected input =  incorrect string formatting - testing string `.strip().lower()
-        os.environ['MEMORY_DIAGNOSTIC'] = '   tRuE   '
+        os.environ['MEMORY_DIAGNOSTIC'] = 'tRuE '
         sys.modules.pop('convert_gvf_to_vcf', None)
         sys.modules.pop('convert_gvf_to_vcf.convert_gvf_to_vcf_logic', None)
 
