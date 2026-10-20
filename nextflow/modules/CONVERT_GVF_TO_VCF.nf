@@ -13,7 +13,7 @@ process CONVERT_GVF_TO_VCF {
 
     output:
     //study_accession, study_name
-    tuple val({gvf_simple_name.split('_')[0]}), val(gvf_simple_name) emit: status_trigger
+    tuple val({gvf_simple_name.split('_')[0]}), val(gvf_simple_name), emit: status_trigger
     
     script:
     def study_accession = gvf_simple_name.split('_')[0]
