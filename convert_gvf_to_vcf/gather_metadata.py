@@ -92,7 +92,7 @@ def main():
     parser.add_argument("--json_output_dgva")
     parser.add_argument("--study_accession")
     parser.add_argument("--vcf_output")
-    parser.add_argument("--assembly")
+    parser.add_argument("--assembly", required=True)
     parser.add_argument("--assembly_report")
     args = parser.parse_args()
 
