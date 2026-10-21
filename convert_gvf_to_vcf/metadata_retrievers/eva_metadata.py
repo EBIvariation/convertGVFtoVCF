@@ -191,10 +191,10 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
             "description": analysis_analysis_description,
             "experimentType": analysis_experiment_type,
             "referenceGenome": analysis_reference_genome,
+            "referenceFasta": analysis_reference_fasta
         }
         analysis_object_not_required_all = {
             "evidenceType": analysis_evidence_type,
-            "referenceFasta": analysis_reference_fasta,
             "assemblyReport": analysis_assembly_report,
             "platform": analysis_platform,
             "software": analysis_software,
