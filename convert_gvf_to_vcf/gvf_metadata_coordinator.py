@@ -400,9 +400,14 @@ class GvfMetadataCoordinator:
         assembly_report_path = self.project_paths.assembly_report_paths.get(assembly_name)
 
         if not assembly_path:
-            logger.error(f"Assembly path not found for assembly: '{assembly_name}'")
+            raise ValueError(f"Assembly path not found for assembly: '{assembly_name}'")
+        if not os.path.exists(assembly_path):
+            raise ValueError(f"Assembly path does not exist: {assembly_path}")
+
         if not assembly_report_path:
-            logger.error(f"Assembly report path not found for assembly: '{assembly_report_path}'")
+            raise ValueError(f"Assembly report path not found for assembly: '{assembly_report_path}'")
+        if not os.path.exists(assembly_report_path):
+            raise ValueError(f"Assembly path does not exist: {assembly_report_path}")
 
         # programmatically generate the output files by assembly
         json_eva_path = os.path.join(self.base_output_dir, f"{study}.{date}.{assembly_name}.eva.json")
