@@ -1,5 +1,7 @@
 import argparse
+import html
 import os
+import re
 import subprocess
 import sys
 import tracemalloc
@@ -109,36 +111,25 @@ def convert_gvf_pragma_comment_to_vcf_header(gvf_pragma_comments_to_convert,
     Format of pragma comment = These tend to start with '#'. These comments are relevant to DGVa delimiter is ": "
     Function of pragma comment = These are non-essential and tend to be ignored by GVF processors. They can contain useful additional info.
     :param: gvf_pragma_comments_to_convert: pragma comments to be converted
-    :param: list_of_converted_pragma_comments: will append results to this list
     :param: list_of_gvf_pragma_comments : reference list
     :param: pragma_to_vcf_map: a mapping dict of GVF pragmas and their VCF counterpart
-    :param: sample_names_from_pragma_comments: will append results to this list
-    return: list_of_converted_pragma_comments, sample_names_from_pragma_comments
+    return: converted_pragma_comments, sample_names_from_pragma_comments
     """
-    list_of_converted_pragma_comments = []
+    converted_pragma_comments = []
     sample_names_from_pragma_comments = []
     for gvf_pragma_comment in gvf_pragma_comments_to_convert:
         vcf_header_key, pragma_name, pragma_value = get_pragma_name_and_value(gvf_pragma_comment, ": ", list_of_gvf_pragma_comments, pragma_to_vcf_map)
-        if pragma_name.startswith("#Publication"):
-            if ";" in pragma_value:
-                publication_tokens = get_pragma_tokens(pragma_value, ";", "=")
-                for pub_token in publication_tokens:
-                    list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(pub_token[0], pub_token[1]))
+        if vcf_header_key is not None:
+            if pragma_name.startswith("#Publication") or pragma_name == "#Study":
+                formatted_pragma_value = f'"{pragma_value.replace("=", ":")}"'
             else:
-                list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(pragma_name.lstrip("#"), pragma_value))
-        elif pragma_name == "#Study":
-            study_tokens = get_pragma_tokens(pragma_value, ";", "=")
-            for s_token in study_tokens:
-                list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(s_token[0], s_token[1]))
-        else:
-            if vcf_header_key is not None:
-                list_of_converted_pragma_comments.append(generate_vcf_header_unstructured_line(vcf_header_key, pragma_value))
+                formatted_pragma_value = pragma_value
+            converted_pragma_comments.append(generate_vcf_header_unstructured_line(vcf_header_key.lstrip("#"), formatted_pragma_value))
         # populating sample headers
         sample_name = get_sample_name_from_pragma(pragma_name, pragma_value)
         if sample_name is not None:
             sample_names_from_pragma_comments.append(sample_name)
-    return list_of_converted_pragma_comments, sample_names_from_pragma_comments
-
+    return converted_pragma_comments, sample_names_from_pragma_comments
 
 def convert_gvf_pragmas_for_vcf_header(gvf_pragmas,
                                        gvf_pragma_comments,
@@ -214,33 +205,20 @@ def parse_pragma(pragma_to_parse, delimiter):
         logger.error(f"Skipping this, can't be parsed {pragma_to_parse}: {e}")
         raise AttributeError(f"Cannot parse {pragma_to_parse}")
 
-def get_pragma_name_and_value(pragma_to_parse, delimiter, pragma_list, pragma_name_to_vcf_dict):
+def get_pragma_name_and_value(pragma_to_parse, delimiter, pragmas_to_search, pragma_name_to_vcf_dict):
     """Get pragma name and value and its corresponding VCF header key.
     :param pragma_to_parse: pragma that will be parsed
     :param delimiter: the separator
-    :param pragma_list: list of pragmas to search through
-    :param pragma_name_to_vcf_dict: dictionary pragma name and its vcf entry
+    :param pragmas_to_search: list of pragmas to search through
+    :param pragma_name_to_vcf_dict: dictionary pragma name and its vcf entry - from etc/pragma_mapper.tsv
     :return vcf_header_key, pragma_name, pragma_value
     """
     pragma_name, pragma_value = parse_pragma(pragma_to_parse, delimiter)
-    if pragma_name in pragma_list:
+    if pragma_name in pragmas_to_search:
         vcf_header_key = pragma_name_to_vcf_dict.get(pragma_name)
     else:
         vcf_header_key = None
     return vcf_header_key, pragma_name, pragma_value
-
-def get_pragma_tokens(pragma_value, first_delimiter, second_delimiter):
-    """Get pragma tokens for nested pragmas
-    :param pragma_value: value to parse
-    :param first_delimiter: first separator
-    :param second_delimiter: second separtor
-    :return pragma_tokens
-    """
-    initial_list = pragma_value.split(first_delimiter)
-    pragma_tokens = []
-    for element in initial_list:
-        pragma_tokens.append(element.split(second_delimiter))
-    return pragma_tokens
 
 
 def write_header(vcf_output, pragmas_for_vcf, header_lines_per_type, header_fields, samples):
