@@ -9,7 +9,7 @@ from unittest.mock import patch, MagicMock, mock_open
 
 from convert_gvf_to_vcf.gvf_metadata_coordinator import GvfMetadataCoordinator
 from convert_gvf_to_vcf.project_paths import ProjectPaths
-
+from convert_gvf_to_vcf.metadata_retrievers.eva_metadata import EVAMetadataRetriever
 
 class TestGvfMetadataCoordinator(unittest.TestCase):
     def setUp(self):
@@ -410,6 +410,55 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
 
         self.assertEqual(master_metadata["files"][1]["analysisAlias"], "study1_alias_file_2")
         self.assertEqual(master_metadata["files"][1]["fileName"], f"/a/test/output/path.vcf")
+
+    @patch('convert_gvf_to_vcf.gvf_metadata_coordinator.logger')
+    @patch('convert_gvf_to_vcf.gvf_metadata_coordinator.os.path.exists')
+    def test_set_up_inputs_and_outputs(self, mock_exists, mock_logger):
+        mock_exists.return_value = True
+        coordinator = GvfMetadataCoordinator(
+            study_and_gvf_files={},
+            base_output_dir="/mock/base/dir",
+            config_path="/mock/config.cfg"
+        )
+        coordinator.project_paths = MagicMock()
+        coordinator.project_paths.assembly_paths = {"GRCh37": "/paths/to/GRCh37.fa"}
+        coordinator.project_paths.assembly_report_paths = {"GRCh37": "/paths/to/GRCh37_report.txt"}
+
+        study = "estd1_Redon_et_al_2006"
+        date = "2014-04-01"
+        assembly_name = "GRCh37"
+
+        expected_json_eva = os.path.join("/mock/base/dir", f"{study}.{date}.{assembly_name}.eva.json")
+        expected_json_dgva = os.path.join("/mock/base/dir", f"{study}.{date}.{assembly_name}.dgva.json")
+        expected_vcf_output = os.path.join("/mock/base/dir", f"{study}.{date}.{assembly_name}.vcf")
+
+        results = coordinator.set_up_inputs_and_outputs(study, date, assembly_name)
+
+        assembly_path, assembly_report_path, json_dgva_path, json_eva_path, vcf_output_path = results
+
+        self.assertEqual(assembly_path, "/paths/to/GRCh37.fa")
+        self.assertEqual(assembly_report_path, "/paths/to/GRCh37_report.txt")
+        self.assertEqual(json_eva_path, expected_json_eva)
+        self.assertEqual(json_dgva_path, expected_json_dgva)
+        self.assertEqual(vcf_output_path, expected_vcf_output)
+        #reset
+        assembly_path, assembly_report_path, json_dgva_path, json_eva_path, vcf_output_path = None, None, None, None, None
+        # no assembly path
+        coordinator = GvfMetadataCoordinator(
+            study_and_gvf_files={},
+            base_output_dir="/mock/base/dir",
+            config_path="/mock/config.cfg"
+        )
+
+        coordinator.project_paths = MagicMock()
+        coordinator.project_paths.assembly_paths = {}
+        coordinator.project_paths.assembly_report_paths = {}
+
+        with self.assertRaises(ValueError) as context:
+            coordinator.set_up_inputs_and_outputs("estd1_Redon_et_al_2006", "2014-04-01", None)
+
+
+        self.assertIn("Assembly path not found", str(context.exception))
 
 if __name__ == '__main__':
     unittest.main()
