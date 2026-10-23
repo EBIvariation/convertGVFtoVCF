@@ -1,6 +1,7 @@
 import os.path
+import sys
 import unittest
-
+from unittest.mock import patch, MagicMock
 
 from convert_gvf_to_vcf.lookup import Lookup
 from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import generate_vcf_header_unstructured_line, \
@@ -10,6 +11,7 @@ from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import generate_vcf_header_unst
     create_sorted_gvf_directory
 from convert_gvf_to_vcf.project_paths import ProjectPaths
 
+from convert_gvf_to_vcf import convert_gvf_to_vcf_logic
 
 class TestConvertGVFtoVCF(unittest.TestCase):
     def setUp(self):
@@ -266,5 +268,109 @@ class TestConvertGVFtoVCF(unittest.TestCase):
         self.assertTrue(os.path.exists(result_path))
 
 
+
+    @patch('convert_gvf_to_vcf.convert_gvf_to_vcf_logic._log_memory_used_processing_gvf')
+    @patch('convert_gvf_to_vcf.convert_gvf_to_vcf_logic._log_top_three_memory_allocations')
+    def test_stream_gvf_to_vcf_data_optional_memory_diagnostics(self, mock_top_three, mock_line_log):
+        # TEST 0: TEST __init__.py sets MEMORY_DIAGNOSTICS from the environment
+        os.environ['MEMORY_DIAGNOSTIC'] = 'true'
+        sys.modules.pop('convert_gvf_to_vcf', None)
+        sys.modules.pop('convert_gvf_to_vcf.convert_gvf_to_vcf_logic', None)
+        import convert_gvf_to_vcf.convert_gvf_to_vcf_logic as test0_logic_true
+        assert test0_logic_true.MEMORY_DIAGNOSTIC is True
+
+        if 'MEMORY_DIAGNOSTIC' in os.environ:
+            del os.environ['MEMORY_DIAGNOSTIC']
+        sys.modules.pop('convert_gvf_to_vcf', None)
+        sys.modules.pop('convert_gvf_to_vcf.convert_gvf_to_vcf_logic', None)
+        import convert_gvf_to_vcf.convert_gvf_to_vcf_logic as test0_logic_false
+        assert test0_logic_false.MEMORY_DIAGNOSTIC is False
+        if 'MEMORY_DIAGNOSTIC' in os.environ:
+            del os.environ['MEMORY_DIAGNOSTIC']
+        # TEST 1: TESTING TURNING ON MEMORY_DIAGNOSTICS
+        convert_gvf_to_vcf_logic.MEMORY_DIAGNOSTIC = True
+
+        mock_gvf_reader = MagicMock()
+        mock_gvf_reader.gvf_file = "test.gvf"
+        mock_gvf_reader.__iter__.return_value = [MagicMock(), MagicMock()]
+
+        mock_report = MagicMock()
+        mock_builder = MagicMock()
+        mock_builder.build_vcf_line.return_value = MagicMock(chrom="chr1", pos=100, format_keys=['.'])
+
+
+        convert_gvf_to_vcf_logic.stream_gvf_to_vcf_data(
+            gvf_reader=mock_gvf_reader,
+            report=mock_report,
+            samples=[],
+            vcf_builder=mock_builder,
+            vcf_output="test_output"
+        )
+
+        assert mock_line_log.call_count == 2
+        assert mock_top_three.call_count == 1
+        mock_line_log.reset_mock()
+        mock_top_three.reset_mock()
+        # TEST 2: TESTING TURNING OFF MEMORY_DIAGNOSTICS
+        convert_gvf_to_vcf_logic.MEMORY_DIAGNOSTIC = False
+
+        mock_gvf_reader = MagicMock()
+        mock_gvf_reader.gvf_file = "test.gvf"
+        mock_gvf_reader.__iter__.return_value = [MagicMock(), MagicMock()]
+
+        mock_report = MagicMock()
+        mock_builder = MagicMock()
+        mock_builder.build_vcf_line.return_value = MagicMock(chrom="chr1", pos=100, format_keys=['.'])
+
+
+        convert_gvf_to_vcf_logic.stream_gvf_to_vcf_data(
+            gvf_reader=mock_gvf_reader,
+            report=mock_report,
+            samples=[],
+            vcf_builder=mock_builder,
+            vcf_output="test_output"
+        )
+
+        assert mock_line_log.call_count == 0
+        assert mock_top_three.call_count == 0
+
+        # TEST 3: Empty GVF reader
+        convert_gvf_to_vcf_logic.MEMORY_DIAGNOSTIC = True
+
+        mock_gvf_reader_empty = MagicMock()
+        mock_gvf_reader_empty.gvf_file = "empty_test.gvf"
+        mock_gvf_reader_empty.__iter__.return_value = [] # the test case is empty
+
+        mock_report_empty = MagicMock()
+        mock_builder_empty = MagicMock()
+
+        convert_gvf_to_vcf_logic.stream_gvf_to_vcf_data(
+            gvf_reader=mock_gvf_reader_empty, report=mock_report_empty, samples=[], vcf_builder=mock_builder_empty, vcf_output="test_output"
+        )
+
+        # because gvf_reader was empty the for loop was never entered and _log_memory_used_processing_gvf never called
+        assert mock_line_log.call_count == 0
+        # _log_top_three_memory_allocations was called because it was outside of the for loop
+        assert mock_top_three.call_count == 1
+        mock_line_log.reset_mock()
+        mock_top_three.reset_mock()
+
+        # TEST 4A: unexpected input =  incorrect string formatting - testing string `.strip().lower()
+        os.environ['MEMORY_DIAGNOSTIC'] = 'tRuE '
+        sys.modules.pop('convert_gvf_to_vcf', None)
+        sys.modules.pop('convert_gvf_to_vcf.convert_gvf_to_vcf_logic', None)
+
+        import convert_gvf_to_vcf.convert_gvf_to_vcf_logic as logicA
+        # check string formatting works where .strip().lower() was used
+        assert logicA.MEMORY_DIAGNOSTIC is True
+
+        # TEST 4B: unexpected input =  unrecognised value - testing false
+        os.environ['MEMORY_DIAGNOSTIC'] = "NOT_A_RECOGNISED_VALUE"
+        sys.modules.pop('convert_gvf_to_vcf', None)
+        sys.modules.pop('convert_gvf_to_vcf.convert_gvf_to_vcf_logic', None)
+
+        import convert_gvf_to_vcf.convert_gvf_to_vcf_logic as logic_B
+        # check unrecognised values are treated as false
+        assert logic_B.MEMORY_DIAGNOSTIC is False
 if __name__ == '__main__':
     unittest.main()

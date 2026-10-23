@@ -1,4 +1,5 @@
 import argparse
+import logging
 import html
 import os
 import re
@@ -8,6 +9,7 @@ import tracemalloc
 
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
 
+from convert_gvf_to_vcf import MEMORY_DIAGNOSTIC
 from convert_gvf_to_vcf.conversion_statistics import FileStatistics
 from convert_gvf_to_vcf.gather_metadata import  gather_metadata_workflow, eva_update_metadata_with_vcf
 from convert_gvf_to_vcf.lookup import Lookup
@@ -394,10 +396,12 @@ def stream_gvf_to_vcf_data(gvf_reader, report, samples, vcf_builder, vcf_output)
     :param vcf_output: file path for vcf_output
     :return is_missing_format_value, vcf_data_file: boolean, file path
     """
-    tracemalloc.start()
+    if MEMORY_DIAGNOSTIC:
+        tracemalloc.start()
+        line_processed_counter = 0
     is_missing_format_value = True
     vcf_data_file = vcf_output + '_data_lines'
-    line_processed_counter = 0
+
     with open(vcf_data_file, "w") as open_data_lines:
         logger.info("Generating the VCF datalines")
         chrom_vcf_lines = []
@@ -422,8 +426,9 @@ def stream_gvf_to_vcf_data(gvf_reader, report, samples, vcf_builder, vcf_output)
             current_chrom = current_vcf_line.chrom
             chrom_vcf_lines.append(current_vcf_line)
             # logging memory
-            line_processed_counter += 1
-            _log_memory_used_processing_gvf(line_processed_counter, chrom_vcf_lines)
+            if MEMORY_DIAGNOSTIC:
+                line_processed_counter += 1
+                _log_memory_used_processing_gvf(line_processed_counter, chrom_vcf_lines)
         # Sort then flush the final chromosome vcf_lines
         if chrom_vcf_lines:
             chrom_vcf_lines.sort(key=lambda x: int(x.pos))
@@ -431,7 +436,8 @@ def stream_gvf_to_vcf_data(gvf_reader, report, samples, vcf_builder, vcf_output)
         if not has_any_features:
             logger.warning("No feature lines were found for this GVF file.")
     # list top 3 lines of code for memory usage for diagnostic purposes
-    _log_top_three_memory_allocations()
+    if MEMORY_DIAGNOSTIC:
+        _log_top_three_memory_allocations()
     return is_missing_format_value, vcf_data_file
 
 
@@ -518,6 +524,7 @@ def main():
     parser.add_argument("--assembly_report", help="Path to assembly report file")
 
 
+
     args = parser.parse_args()
 
     # Set up logging functionality
@@ -526,6 +533,10 @@ def main():
         logger.info(f"The log file is {args.log}")
     else:
         log_cfg.add_stdout_handler()
+    if MEMORY_DIAGNOSTIC:
+        log_cfg.set_log_level(logging.DEBUG)
+    else:
+        log_cfg.set_log_level(logging.INFO)
     # Gathering of metadata
     logger.info(f"The config file is {args.config}. Gathering metadata")
     paths = ProjectPaths()
