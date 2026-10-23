@@ -412,7 +412,9 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         self.assertEqual(master_metadata["files"][1]["fileName"], f"/a/test/output/path.vcf")
 
     @patch('convert_gvf_to_vcf.gvf_metadata_coordinator.logger')
-    def test_set_up_inputs_and_outputs(self, mock_logger):
+    @patch('convert_gvf_to_vcf.gvf_metadata_coordinator.os.path.exists')
+    def test_set_up_inputs_and_outputs(self, mock_exists, mock_logger):
+        mock_exists.return_value = True
         coordinator = GvfMetadataCoordinator(
             study_and_gvf_files={},
             base_output_dir="/mock/base/dir",
@@ -452,25 +454,11 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         coordinator.project_paths.assembly_paths = {}
         coordinator.project_paths.assembly_report_paths = {}
 
-        study = "estd1_Redon_et_al_2006"
-        date = "2014-04-01"
-        assembly_name = None
+        with self.assertRaises(ValueError) as context:
+            coordinator.set_up_inputs_and_outputs("estd1_Redon_et_al_2006", "2014-04-01", None)
 
-        expected_json_eva = os.path.join("/mock/base/dir", f"{study}.{date}.{assembly_name}.eva.json")
-        expected_json_dgva = os.path.join("/mock/base/dir", f"{study}.{date}.{assembly_name}.dgva.json")
-        expected_vcf_output = os.path.join("/mock/base/dir", f"{study}.{date}.{assembly_name}.vcf")
 
-        results = coordinator.set_up_inputs_and_outputs(study, date, assembly_name)
-        assembly_path, assembly_report_path, json_dgva_path, json_eva_path, vcf_output_path = results
-
-        self.assertIsNone(assembly_path)
-        self.assertIsNone(assembly_report_path)
-
-        self.assertEqual(json_eva_path, expected_json_eva)
-        self.assertEqual(json_dgva_path, expected_json_dgva)
-        self.assertEqual(vcf_output_path, expected_vcf_output)
-
-        self.assertEqual(mock_logger.error.call_count, 2) # for assembly and assembly report
+        self.assertIn("Assembly path not found", str(context.exception))
 
 if __name__ == '__main__':
     unittest.main()
