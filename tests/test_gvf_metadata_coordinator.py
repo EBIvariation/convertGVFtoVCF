@@ -80,7 +80,7 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
             return_value=(mock_assembly_to_paths, mock_gvf_name_groups))
 
         mock_initial_master = {
-            "submitterDetails": None, "project": None, "analysis": [], "sample": [], "files": []
+            "submitterDetails": None, "statements": [], "project": None, "analysis": [], "sample": [], "files": []
         }
         coordinator._initialize_master_metadata = MagicMock(return_value=mock_initial_master)
         coordinator.set_up_inputs_and_outputs = MagicMock(return_value=(
