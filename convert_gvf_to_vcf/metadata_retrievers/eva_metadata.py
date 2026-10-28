@@ -109,6 +109,8 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
     def _get_project_new(self, study_accession):
         logger.info("Fetching Project details.")
         project_title = self._fetch_project_title(study_accession)
+        project_title_prefix = f"dgva_{study_accession}_"
+        project_title = project_title_prefix + project_title
         project_description = self._fetch_project_description(study_accession)
         project_tax_id = self._fetch_tax_id(study_accession)
         project_centre_per_submitter = self._fetch_centre(study_accession)
