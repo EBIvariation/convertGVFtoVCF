@@ -864,7 +864,7 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
         analysis_pipeline_descriptions_list = self.load_from_db(analysis_pipeline_descriptions_query.get_sql(quote_char=None))
         [analysis_pipeline_descriptions, *_] = self.fetch_results_from_rows("pipelineDescriptions",
                                                                             analysis_pipeline_descriptions_list) or [""]
-        analysis_pipeline_description_set = self.create_set(analysis_pipeline_descriptions)
+        analysis_pipeline_description_set = self.create_set([analysis_pipeline_descriptions])
         analysis_pipeline_description = self.concatenate_elements_to_string(analysis_pipeline_description_set)
         return analysis_pipeline_description
 
