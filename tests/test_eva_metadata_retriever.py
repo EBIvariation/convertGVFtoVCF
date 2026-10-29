@@ -179,6 +179,7 @@ class TestEVAMetadataRetriever(TestCase):
     @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_project_description")
     @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_project_title")
     def test__get_project_new(self, mock_title, mock_description, mock_tax_id, mock_centre, mock_publications, mock_parent, mock_links, mock_date):
+
         # all present
         mock_title.return_value = "title"
         mock_description.return_value = "description"
@@ -193,7 +194,8 @@ class TestEVAMetadataRetriever(TestCase):
 
         metadata_client = EVAMetadataRetriever(self.config)
         result = metadata_client._get_project_new("STUDY123")
-        expected = {"title": mock_title.return_value,
+        project_title_prefix = "dgva_STUDY123_"
+        expected = {"title": project_title_prefix + mock_title.return_value,
                     "description": mock_description.return_value,
                     "taxId": mock_tax_id.return_value,
                     "centre":centre,
@@ -216,7 +218,8 @@ class TestEVAMetadataRetriever(TestCase):
 
         metadata_client = EVAMetadataRetriever(self.config)
         result = metadata_client._get_project_new("STUDY123")
-        expected = {"title": mock_title.return_value,
+        project_title_prefix = "dgva_STUDY123_"
+        expected = {"title": project_title_prefix + mock_title.return_value,
                     "description": mock_description.return_value,
                     "taxId": mock_tax_id.return_value,
                     "centre":centre
