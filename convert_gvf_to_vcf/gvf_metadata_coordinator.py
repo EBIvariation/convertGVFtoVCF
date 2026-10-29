@@ -81,6 +81,8 @@ class GvfMetadataCoordinator:
                 if master_metadata["submitterDetails"] is None:
                     master_metadata["submitterDetails"] = eva_metadata.get("submitterDetails")
                     master_metadata["project"] = eva_metadata.get("project")
+                if not master_metadata["statements"]:
+                    master_metadata["statements"] = eva_metadata.get("statements")
             remapped_files, submitted_files = self.determine_submitted_and_remapped_files(gvf_files_for_assembly)
             vcf_path = None
             for individual_gvf in gvf_files_for_assembly:
@@ -97,6 +99,7 @@ class GvfMetadataCoordinator:
         """Set up an empty dictionary for master metadata."""
         return {
             "submitterDetails": None,
+            "statements": [],
             "project": None,
             "analysis": [],
             "sample": [],
