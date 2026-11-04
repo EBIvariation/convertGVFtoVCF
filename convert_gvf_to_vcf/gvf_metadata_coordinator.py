@@ -2,7 +2,7 @@ import copy
 import os
 import json
 from collections import defaultdict
-
+import time
 
 from convert_gvf_to_vcf.gather_metadata import gather_metadata_workflow, eva_update_metadata_with_vcf
 from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import convert, ProjectPaths
@@ -401,6 +401,17 @@ class GvfMetadataCoordinator:
         # get the inputs
         assembly_path = self.project_paths.assembly_paths.get(assembly_name)
         assembly_report_path = self.project_paths.assembly_report_paths.get(assembly_name)
+
+        # determine latency issue
+        retries = 0
+        while assembly_path and not os.path.exists(assembly_path) and retries < 3:
+            time.sleep(3)
+            retries += 1
+
+        retries = 0
+        while assembly_report_path and not os.path.exists(assembly_report_path) and retries < 3:
+            time.sleep(3)
+            retries += 1
 
         if not assembly_path:
             raise ValueError(f"Assembly path not found for assembly: '{assembly_name}'. Value of assembly_path={assembly_path}.")
