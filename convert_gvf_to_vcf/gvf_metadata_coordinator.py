@@ -402,7 +402,7 @@ class GvfMetadataCoordinator:
         assembly_path = self.project_paths.assembly_paths.get(assembly_name)
         assembly_report_path = self.project_paths.assembly_report_paths.get(assembly_name)
 
-        # determine latency issue
+        # resolve latency issue
         retries = 0
         while assembly_path and not os.path.exists(assembly_path) and retries < 3:
             time.sleep(3)
