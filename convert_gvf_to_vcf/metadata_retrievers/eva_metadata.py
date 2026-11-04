@@ -44,6 +44,7 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
                 sample_metadata_array.append(sample_metadata)
         json_in_eva_format = {
             "submitterDetails": self._get_submitter_details(study_accession),
+            "statements": self._set_statements(study_accession),
             "project": project_metadata,
             "analysis": self._get_analysis(study_accession, assembly, assembly_report),
             "sample": sample_metadata_array,
@@ -54,6 +55,19 @@ class EVAMetadataRetriever(BaseMetadataRetriever):
             json.dump(json_in_eva_format, f, indent=4)
         logger.info(f"Write JSON file for {study_accession}- SUCCESS: {json_file_path}")
 
+    def _set_statements(self, study_accession):
+        """Sets the acknowledgement of the Data Access and Sharing statement to True.
+        :param: study_accession - expected format ^(estd|nstd)\d+$
+        :return statements_array
+        """
+        logger.info("Setting data access and sharing to True.")
+        statements_array = [
+            {
+                "statement": "To the best of my knowledge, the data being submitted are not subject to any restrictions that prohibit their open sharing and are submitted in compliance with applicable national and international access and benefit-sharing obligations, in accordance with the EMBL-EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/).",
+                "acknowledgement": True
+            }
+        ]
+        return statements_array
     # THESE GETTERS GET THE RELEVANT JSON OBJECT FOR THE SECTION
     def _get_submitter_details(self, study_accession):
         """ Formats the submitter details from the DGVa database. Creates a submitter object for each submitter.

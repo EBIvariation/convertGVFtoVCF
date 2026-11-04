@@ -80,7 +80,7 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
             return_value=(mock_assembly_to_paths, mock_gvf_name_groups))
 
         mock_initial_master = {
-            "submitterDetails": None, "project": None, "analysis": [], "sample": [], "files": []
+            "submitterDetails": None, "statements": [], "project": None, "analysis": [], "sample": [], "files": []
         }
         coordinator._initialize_master_metadata = MagicMock(return_value=mock_initial_master)
         coordinator.set_up_inputs_and_outputs = MagicMock(return_value=(
@@ -88,6 +88,7 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
         ))
         mock_eva_metadata = {
             "submitterDetails": [{"firstName": "John", "lastName": "Doe", "email": "john@doe.com"}],
+            "statements": [{"statement": "Test Statement", "acknowledgement": True}],
             "project": {"title": "Test Variant Project"}
         }
         coordinator._stage_assembly_metadata = MagicMock(return_value=mock_eva_metadata)
@@ -122,6 +123,7 @@ class TestGvfMetadataCoordinator(unittest.TestCase):
             vcf_path="/path/to/submission/out.vcf"
         )
         coordinator._save_master_metadata.assert_called_once_with(mock_initial_master, master_json)
+        self.assertEqual(mock_initial_master["statements"], [{"statement": "Test Statement", "acknowledgement": True}])
 
     @patch('convert_gvf_to_vcf.gvf_metadata_coordinator.eva_update_metadata_with_vcf')
     @patch('convert_gvf_to_vcf.gvf_metadata_coordinator.convert')

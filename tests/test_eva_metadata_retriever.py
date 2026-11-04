@@ -1,3 +1,4 @@
+import json
 import os
 from unittest import TestCase
 from unittest.mock import patch, MagicMock, Mock
@@ -14,6 +15,7 @@ class TestEVAMetadataRetriever(TestCase):
         self.vcf_output = os.path.join(input_folder, "output", "a.vcf")
         self.paths = ProjectPaths()
         self.full_config_path = self.paths.full_config_path
+        self.eva_json_file = os.path.join(input_folder, "output", "eva.json")
 
     def test_init(self):
         # testing the __init__ function has loaded the config correctly
@@ -103,11 +105,110 @@ class TestEVAMetadataRetriever(TestCase):
         result = metadata_client.load_from_db("SQL_QUERY")
         self.assertEqual(result, expected_data)
 
-    def test_create_json_file(self):
-        pass
+    def test_create_json_eva(self):
+        retriever = EVAMetadataRetriever(path_to_config_yaml=self.config)
+        json_file_path = self.eva_json_file
+        mock_submitter_details = [{
+                'firstName': 'John',
+                'lastName': 'Smith',
+                'telephone': '0123456789',
+                'laboratory': '',
+                'email': 'e1@mail.com',
+                'centre': 'centre1',
+                'address': '123 Road Name, City, Country'
+            }
+        ]
+        mock_statements = [
+            {
+                "statement": "To the best of my knowledge, the data being submitted are not subject to any restrictions that prohibit their open sharing and are submitted in compliance with applicable national and international access and benefit-sharing obligations, in accordance with the EMBL-EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/).",
+                "acknowledgement": True
+            }
+        ]
+        mock_project_new = {"title": "TestTitle",
+                    "description": "TestDescription",
+                    "taxId": 9606,
+                    "centre": "TestCentre",
+                    "publications": ['PubMed:12345'],
+                    "parentProject": "PRJNB5502",
+                    "links": ["www.link.com", "www.another.com"],
+                    "holdDate": str("2018-11-13")
+        }
+        mock_analysis = [{'analysisTitle': 'estd123',
+                            'analysisAlias': 'alias_1_2',
+                            'description': 'mock_desc',
+                            'experimentType': 'genotyping_by_sequencing',
+                            'referenceGenome': 'GCA000000000',
+                            'referenceFasta': "test.fa",
+                            'assemblyReport': "test_report.txt",
+        }]
+        mock_files = [{'analysisAlias': 'alias_1_2', 'fileName': ''}]
+
+        mock_sample_new = {
+            'analysisAlias': ['alias_1_2'],
+            'sampleInVCF': 'favourite_sample',
+            'bioSampleObject': {
+                'name': 'favourite_sample',
+                'characteristics': {
+                    'organism': [{'text': 'homo sapiens'}],
+                    'taxId': [{'text': '9606'}],
+                    'collection date': [{'text': 'not provided'}],
+                    'geographic location (country and/or sea)': [{'text': 'not provided'}]
+                }
+            }
+        }
+        retriever._get_submitter_details = MagicMock(return_value=mock_submitter_details)
+        retriever._set_statements = MagicMock(return_value=mock_statements)
+        retriever._get_project_new = MagicMock(return_value=mock_project_new)
+        retriever._get_analysis = MagicMock(return_value=mock_analysis)
+        retriever._get_files = MagicMock(return_value=mock_files)
+
+        mock_status = MagicMock()
+        mock_status.is_sample_preregistered = False
+        mock_status.sample_id = "sample_id_1"
+        retriever._determine_sample_pre_registered = MagicMock(return_value=[mock_status])
+        retriever._get_sample_new = MagicMock(return_value=mock_sample_new)
+
+        retriever.create_json_eva(json_file_path, "estd1", "GRCh38", "report.txt")
+        assert os.path.exists(json_file_path)
+
+        with open(json_file_path, 'r') as f:
+            metadata = json.load(f)
+
+        # assert submitterDetails is not empty
+        assert metadata["submitterDetails"]
+        # assert the required fields are present in submitterDetails
+        submitter = metadata["submitterDetails"][0]
+        assert {"lastName", "firstName", "email", "laboratory", "centre"}.issubset(submitter)
+
+        # assert the exact legal wording in statements
+        assert metadata["statements"] == [{'statement': 'To the best of my knowledge, the data being submitted are not subject to any restrictions that prohibit their open sharing and are submitted in compliance with applicable national and international access and benefit-sharing obligations, in accordance with the EMBL-EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/).', 'acknowledgement': True}]
+
+        # assert project is not empty
+        project = metadata["project"]
+        assert {"title", "description", "taxId", "centre"}.issubset(project)
+
+        # assert analysis
+        analysis = metadata["analysis"][0]
+        assert {"analysisTitle", "analysisAlias", "description", "experimentType", "referenceGenome"}.issubset(analysis)
+
+        # assert sample
+        sample = metadata["sample"][0]
+        assert "analysisAlias" in sample
+        assert "bioSampleObject" in sample
+
+        # assert files
+        file = metadata["files"][0]
+        assert "analysisAlias" in file
+        assert "fileName" in file
 
     def test__get_validated_value(self):
         pass
+
+    def test__set_statements(self):
+        retriever = EVAMetadataRetriever(path_to_config_yaml=self.config)
+        result = retriever._set_statements("estd1")
+        expected = [{'statement': 'To the best of my knowledge, the data being submitted are not subject to any restrictions that prohibit their open sharing and are submitted in compliance with applicable national and international access and benefit-sharing obligations, in accordance with the EMBL-EBI Terms of Use (https://www.ebi.ac.uk/about/terms-of-use/).', 'acknowledgement': True}]
+        self.assertEqual(result, expected)
 
     @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_submitter_details_all_addresses")
     @patch("convert_gvf_to_vcf.metadata_retrievers.eva_metadata.EVAMetadataRetriever._fetch_submitter_details_all_centres")
