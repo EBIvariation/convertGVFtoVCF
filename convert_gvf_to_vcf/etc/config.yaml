@@ -6,7 +6,8 @@ paths:
   test_folder: "../tests"
 # external paths relative to package directory and mapping assembly name with accession
 assembly_accession:
-  Bos_taurus_UMD_3: "GCA_000003055.5"
+  Bos_taurus_UMD_3.1: "GCA_000003055.5"
+  Bos_taurus_UMD_3.1.1: "GCA_000003055.5"
   Btau_4: "GCF_000003205.2"
   Btau_5: "GCA_000003205.6"
   CanFam2: "GCA_000002285.1"
@@ -43,7 +44,8 @@ assembly_accession:
   Zv8: "GCA_000002035.1"
   Zv9: "GCA_000002035.2"
 assembly_paths:
-  Bos_taurus_UMD_3: "${REF_PATH}/bos_taurus/GCA_000003055.5/GCA_000003055.5.fa"
+  Bos_taurus_UMD_3.1: "${REF_PATH}/bos_taurus/GCA_000003055.5/GCA_000003055.5.fa"
+  Bos_taurus_UMD_3.1.1: "${REF_PATH}/bos_taurus/GCA_000003055.5/GCA_000003055.5.fa"
   Btau_4: "${REF_PATH}/bos_taurus/GCF_000003205.2/GCF_000003205.2.fa"
   Btau_5: "${REF_PATH}/bos_taurus/GCA_000003205.6/GCA_000003205.6.fa"
   CanFam2: "${REF_PATH}/canis_lupus_familiaris/GCA_000002285.1/GCA_000002285.1.fa"
@@ -80,7 +82,8 @@ assembly_paths:
   Zv8: "${REF_PATH}/danio_rerio/GCA_000002035.1/GCA_000002035.1.fa"
   Zv9: "${REF_PATH}/danio_rerio/GCA_000002035.2/GCA_000002035.2.fa"
 assembly_report_paths:
-  Bos_taurus_UMD_3: "${REF_PATH}/bos_taurus/GCA_000003055.5/GCA_000003055.5_assembly_report.txt"
+  Bos_taurus_UMD_3.1: "${REF_PATH}/bos_taurus/GCA_000003055.5/GCA_000003055.5_assembly_report.txt"
+  Bos_taurus_UMD_3.1.1: "${REF_PATH}/bos_taurus/GCA_000003055.5/GCA_000003055.5_assembly_report.txt"
   Btau_4: "${REF_PATH}/bos_taurus/GCF_000003205.2/GCF_000003205.2_assembly_report.txt"
   Btau_5: "${REF_PATH}bos_taurus/GCA_000003205.6/GCA_000003205.6_assembly_report.txt"
   CanFam2: "${REF_PATH}/canis_lupus_familiaris/GCA_000002285.1/GCA_000002285.1_assembly_report.txt"
