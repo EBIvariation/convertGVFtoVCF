@@ -85,7 +85,7 @@ assembly_report_paths:
   Bos_taurus_UMD_3.1: "${REF_PATH}/bos_taurus/GCA_000003055.5/GCA_000003055.5_assembly_report.txt"
   Bos_taurus_UMD_3.1.1: "${REF_PATH}/bos_taurus/GCA_000003055.5/GCA_000003055.5_assembly_report.txt"
   Btau_4.0: "${REF_PATH}/bos_taurus/GCF_000003205.2/GCF_000003205.2_assembly_report.txt"
-  Btau_5.0.1: "${REF_PATH}bos_taurus/GCA_000003205.6/GCA_000003205.6_assembly_report.txt"
+  Btau_5.0.1: "${REF_PATH}/bos_taurus/GCA_000003205.6/GCA_000003205.6_assembly_report.txt"
   CanFam2.0: "${REF_PATH}/canis_lupus_familiaris/GCA_000002285.1/GCA_000002285.1_assembly_report.txt"
   CanFam3.1: "${REF_PATH}/canis_lupus_familiaris/GCA_000002285.2/GCA_000002285.2_assembly_report.txt"
   Chlorocebus_sabeus1.1: "${REF_PATH}/chlorocebus_sabaeus/GCA_000409795.2/GCA_000409795.2_assembly_report.txt"
