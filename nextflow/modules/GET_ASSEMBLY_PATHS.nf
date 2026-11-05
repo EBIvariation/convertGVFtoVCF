@@ -8,13 +8,12 @@ process GET_ASSEMBLY_PATHS {
     tuple path(gvf_file), path("assembly.txt"), path("fasta.txt"), path("report.txt"), path("accession.txt")
 
     script:
-
-    def p = gvf_file.name.tokenize('.')
-    def ASSEMBLY = gvf_file.name.contains(".p13.") ? "${p[2]}.${p[3]}" : p[2]
-
     def CONVERT_CONFIG_PATH = "${params.executable.convert_gvf.config}"
-
     def yaml_data = new org.yaml.snakeyaml.Yaml().load(new File(CONVERT_CONFIG_PATH).text)
+
+    def ASSEMBLY = yaml_data.assembly_accession.keySet().sort { -it.length() }.find { config_key ->
+        gvf_file.name.contains(config_key)
+    }
 
     def ASSEMBLY_FASTA     = yaml_data?.assembly_paths?."${ASSEMBLY}"
     def ASSEMBLY_REPORT    = yaml_data?.assembly_report_paths?."${ASSEMBLY}"
