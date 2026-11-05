@@ -37,7 +37,7 @@ assembly_accession:
   #Release4: drosophila - ucsc - no genbank
   Release5: "GCA_000001215.2"
   Release6plusISO1MT: "GCA_000001215.4"
-  ssorbi1: "GCA_000003195.1"
+  Sorbi1: "GCA_000003195.1"
   Sscrofa10: "GCA_000003025.3"
   Sscrofa3: "GCA_000003025.4" #USCC website says susScr3 => GCA_000003025.4
   Zv8: "GCA_000002035.1"
@@ -74,7 +74,7 @@ assembly_paths:
   #Release4: drosophila - ucsc - no genbank
   Release5: "${REF_PATH}/drosophila_melanogaster/GCA_000001215.2/GCA_000001215.2/GCA_000001215.2.fa"
   Release6plusISO1MT: "${REF_PATH}/drosophila_melanogaster/GCA_000001215.4/GCA_000001215.4.fa"
-  ssorbi1: "${REF_PATH}/sorghum_bicolor/GCA_000003195.1/GCA_000003195.1.fa"
+  Sorbi1: "${REF_PATH}/sorghum_bicolor/GCA_000003195.1/GCA_000003195.1.fa"
   Sscrofa10: "${REF_PATH}/sus_scrofa/GCA_000003025.3/GCA_000003025.3.fa"
   Sscrofa3: "${REF_PATH}/sus_scrofa/GCA_000003025.4/GCA_000003025.4.fa"   #USCC website says susScr3 => GCA_000003025.4
   Zv8: "${REF_PATH}/danio_rerio/GCA_000002035.1/GCA_000002035.1.fa"
@@ -111,7 +111,7 @@ assembly_report_paths:
   #Release4: drosophila - ucsc - no genbank
   Release5: "${REF_PATH}/drosophila_melanogaster/GCA_000001215.2/GCA_000001215.2_assembly_report.txt"
   Release6plusISO1MT: "${REF_PATH}/drosophila_melanogaster/GCA_000001215.4/GCA_000001215.4_assembly_report.txt"
-  ssorbi1: "${REF_PATH}/sorghum_bicolor/GCA_000003195.1/GCA_000003195.1_assembly_report.txt"
+  Sorbi1: "${REF_PATH}/sorghum_bicolor/GCA_000003195.1/GCA_000003195.1_assembly_report.txt"
   Sscrofa10: "${REF_PATH}/sus_scrofa/GCA_000003025.3/GCA_000003025.3_assembly_report.txt"
   Sscrofa3: "${REF_PATH}/sus_scrofa/GCA_000003025.4/GCA_000003025.4_assembly_report.txt"   #USCC website says susScr3 => GCA_000003025.4
   Zv8: "${REF_PATH}/danio_rerio/GCA_000002035.1/GCA_000002035.1_assembly_report.txt"
