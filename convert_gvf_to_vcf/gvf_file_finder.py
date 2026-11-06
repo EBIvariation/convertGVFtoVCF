@@ -27,7 +27,7 @@ class GvfFileFinder:
             if os.path.isdir(os.path.join(self.search_dir, d))
             and not d.startswith('.')
             and d.startswith(("estd", "nstd"))
-            and (study_accession is None or d.startswith(study_accession))
+            and (study_accession is None or d.split("_")[0] == study_accession)
         ]
 
     def _collect_gvf_files(self, gvf_dir):
