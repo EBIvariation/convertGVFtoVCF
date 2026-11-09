@@ -1,0 +1,5 @@
+# Output of the saved queries. The figures are recorded in eva-development-planning/reference/dgva-oracle-schema.md.
+*.out
+# Files rebuilt from STUDY_FILE and their search results: study data, kept out of git.
+remapping/exchange_xml/*.xml
+remapping/exchange_xml/*.tsv
