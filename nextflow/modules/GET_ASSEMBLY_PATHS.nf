@@ -10,7 +10,9 @@ process GET_ASSEMBLY_PATHS {
     script:
     def CONVERT_CONFIG_PATH = "${params.executable.convert_gvf.config}"
     def yaml_data = new org.yaml.snakeyaml.Yaml().load(new File(CONVERT_CONFIG_PATH).text)
-
+    // Gets all assembly names in config.yaml, sorts those keys in config.yaml by length and finds the first match.
+    // The sorting intends to stop collisions (i.e Bos_taurus_UMD_3.1.1 and Bos_taurus_UMD_3.1).
+    // Longer names are checked before shorter ones.
     def ASSEMBLY = yaml_data.assembly_accession.keySet().sort { -it.length() }.find { config_key ->
         gvf_file.name.contains(config_key)
     }
