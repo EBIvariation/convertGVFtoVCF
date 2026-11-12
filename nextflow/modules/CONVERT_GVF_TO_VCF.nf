@@ -19,7 +19,16 @@ process CONVERT_GVF_TO_VCF {
     def study_accession = gvf_simple_name.split('_')[0]
     """
     export REF_PATH="${params.clean_assembly_dir}/${gvf_simple_name}"
-    
+
+    # Wait up to 60seconds for asynchronous publishDir symlink and shared filesystem updates
+    for i in {1..6}; do [ -s "\${REF_PATH}/${species}/${assembly_accession}/${assembly_accession}.fa" ] && break || sleep 10; done
+
+    # Fail if the FASTA file is still missing or empty after 60s
+    if [ ! -s "\${REF_PATH}/${species}/${assembly_accession}/${assembly_accession}.fa" ]; then
+        echo "FASTA file not found after 60s"
+        exit 1
+    fi
+
     ${params.executable.convert_gvf.interpreter} ${finder_script} \\
         --search_dir ${input_dir} \\
         --log hpc.log \\

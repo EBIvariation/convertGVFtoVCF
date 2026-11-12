@@ -3,7 +3,6 @@ import os
 import json
 from collections import defaultdict
 
-
 from convert_gvf_to_vcf.gather_metadata import gather_metadata_workflow, eva_update_metadata_with_vcf
 from convert_gvf_to_vcf.convert_gvf_to_vcf_logic import convert, ProjectPaths
 from ebi_eva_common_pyutils.logger import logging_config as log_cfg
