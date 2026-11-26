@@ -34,7 +34,6 @@ classifiers = [
 'convert_gvf_to_vcf_logic.py'='convert_gvf_to_vcf.convert_gvf_to_vcf_logic:main'
 'gather_metadata.py'='convert_gvf_to_vcf.gather_metadata:main'
 'gvf_file_finder.py'='convert_gvf_to_vcf.gvf_file_finder:main'
-'dgva_readonly_query.py'='convert_gvf_to_vcf.dgva_readonly_query:main'
 
 
 

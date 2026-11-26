@@ -1,0 +1,7 @@
+# Output of the queries and of the scripts.
+*.out
+*.tsv
+*.log
+*.summary.txt
+# Files rebuilt from STUDY_FILE.
+remapping/exchange_xml/*.xml
